@@ -1,0 +1,13 @@
+# Directorios Generados
+
+node_modules/
+
+/uploads
+/csv-convertido/
+/csv-unidos/
+
+# Archivos de Log
+*.log
+
+# Archivos de configuración locales
+.env
