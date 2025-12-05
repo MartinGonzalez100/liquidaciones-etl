@@ -1,0 +1,4 @@
+const COLUMNAS_A_LIMPIAR = [
+    1,2,193,195,202,205,212,213,214   
+    // ... AJUSTA ESTA LISTA
+];

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interfaz ETL de Liquidaciones</title>
+    
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <style>
+        /* Tus estilos CSS existentes aquí */
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f9; }
+        .sidebar { height: 100%; width: 0; position: fixed; z-index: 10; top: 0; left: 0; background-color: #333; overflow-x: hidden; transition: 0.5s; padding-top: 60px; white-space: nowrap; }
+        .sidebar a { padding: 8px 8px 8px 32px; text-decoration: none; font-size: 18px; color: #f1f1f1; display: block; transition: 0.3s; }
+        .sidebar a:hover { color: #fff; background-color: #5c67f2; }
+        .sidebar .closebtn { position: absolute; top: 0; right: 25px; font-size: 36px; margin-left: 50px; }
+        .main-content { transition: margin-left .5s; padding: 20px; margin-left: 0; }
+        .menu-btn { font-size: 30px; cursor: pointer; background-color: #5c67f2; color: white; padding: 5px 10px; border: none; border-radius: 4px; margin-bottom: 20px; display: block; }
+        .container { max-width: 100%; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 2px solid #5c67f2; padding-bottom: 10px; }
+        .mode-selection { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background-color: #5c67f2; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
+        button:hover { background-color: #4a54e1; }
+        #status-message { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .status-success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .status-error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .info { font-size: 0.9em; color: #666; margin-left: 20px; font-weight: normal; }
+        #table-container { overflow-x: auto; margin-top: 20px; }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+    
+</head>
+<body>
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
+        <h2>Menú de Procesos</h2>
+        <a href="#" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
+        <a href="#" id="menu-liquidacion-completa">Liquidación Completa</a> 
+        <a href="#" id="menu-residentes">Residentes</a>
+        <a href="#" id="menu-ley100">Ley 100%</a>
+        <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')">Pago Familiar Discapacitado</a>
+        <a href="#" id="menu-prueba-csv" onclick="closeNav()">Prueba CSV Simple</a>
+    </div>
+
+    <div id="main-content" class="main-content">
+        <button class="menu-btn" onclick="openNav()">☰ Menú</button>
+        
+        <div id="conversion-form" class="container">
+            <h1>Procesador de Lotes de Liquidaciones</h1>
+
+            <div class="mode-selection">
+                <h2>Modo de Carga</h2>
+                <label>
+                    <input type="radio" name="processMode" value="default" checked onchange="toggleUpload(false)">
+                    Usar archivos de la carpeta: <code>excel-a-convertir/</code>
+                    <span class="info">(Procesa todos los archivos `.xlsx` que ya estén ahí)</span>
+                </label>
+                <label>
+                    <input type="radio" name="processMode" value="upload" onchange="toggleUpload(true)">
+                    Cargar archivos Excel ahora
+                    <span class="info">(Mueve los archivos cargados a la carpeta por defecto para su procesamiento)</span>
+                </label>
+            </div>
+            
+            <div id="upload-area" style="display: none; margin-bottom: 20px;">
+                <label for="file-input">Seleccionar Archivos Excel (.xlsx/.xls):</label>
+                <input type="file" id="file-input" name="excelFiles" accept=".xlsx,.xls" multiple>
+            </div>
+
+            <button onclick="iniciarProceso()">Iniciar Conversión y Unificación</button>
+
+            <div id="status-message">
+                <span id="status-text">Esperando para iniciar el proceso...</span>
+                <span id="loading-dots" style="color: #1f202c; display: none; font-size: 25px;"></span> 
+            </div>
+        </div>
+
+        <div id="liquidacion-completa-view" class="container" style="display: none;">
+            <h1>Liquidación Completa Mensual</h1>
+            <div id="table-status">Cargando datos...</div>
+            <div id="table-container">
+                <table id="liquidacion-table" class="display" style="width:100%">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <!-- NUEVA SECCION-->>
+        <div id="prueba-csv-view" class="container" style="display: none;">
+            <h1>Prueba de PapaParse (Aislada)</h1>
+            <div id="prueba-csv-output"></div>
+        </div>
+    </div>
+
+    <script>
+        const pruebaCsvView = document.getElementById('prueba-csv-view');
+        const pruebaCsvOutput = document.getElementById('prueba-csv-output');
+        const menuPruebaCsv = document.getElementById('menu-prueba-csv');
+        // --- CONSTANTES Y ELEMENTOS ---
+        const statusMessage = document.getElementById('status-message');
+        const statusText = document.getElementById('status-text');
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const loadingDots = document.getElementById('loading-dots');
+        const sidebar = document.getElementById("mySidebar");
+        const mainContent = document.getElementById("main-content");
+        const sidebarWidth = '250px';
+
+        const conversionForm = document.getElementById('conversion-form');
+        const liquidacionView = document.getElementById('liquidacion-completa-view');
+        const tableStatus = document.getElementById('table-status');
+
+        let intervalId;
+        const PHASES = ['', 'Ca', 'Carg', 'Carga', 'Cargand', 'Cargando'];
+
+        // --- FUNCIONES DE NAVEGACIÓN ---
+        function openNav() { sidebar.style.width = sidebarWidth; }
+        function closeNav() { sidebar.style.width = '0'; }
+
+        // --- Funciones de navegación (modificar showSection) ---
+        function showSection(sectionId) {
+            conversionForm.style.display = 'none';
+            liquidacionView.style.display = 'none';
+            pruebaCsvView.style.display = 'none'; // Asegurar que la nueva vista esté oculta
+
+            if (sectionId === 'conversion-form') {
+                conversionForm.style.display = 'block';
+            } else if (sectionId === 'liquidacion-completa-view') {
+                liquidacionView.style.display = 'block';
+            } else if (sectionId === 'prueba-csv-view') { // NUEVA VISTA
+                pruebaCsvView.style.display = 'block';
+            }
+        }
+        
+        // --- FUNCIONES DE ANIMACIÓN Y STATUS ---
+        function startLoadingAnimation() {
+            let step = 0;
+            statusText.textContent = 'Procesando archivos y unificando: ';
+            loadingDots.style.display = 'inline';
+            statusMessage.className = ''; 
+            loadingDots.textContent = PHASES[0];
+
+            intervalId = setInterval(() => {
+                step = (step + 1) % PHASES.length;
+                loadingDots.textContent = PHASES[step];
+            }, 200);
+        }
+
+        function stopLoadingAnimation() {
+            clearInterval(intervalId);
+            loadingDots.style.display = 'none';
+        }
+
+        function mostrarStatus(message, type) {
+            statusText.textContent = message;
+            statusMessage.className = type === 'success' ? 'status-success' : 'status-error';
+        }
+
+        // --- LÓGICA ETL ---
+        function toggleUpload(isUpload) {
+            uploadArea.style.display = isUpload ? 'block' : 'none';
+        }
+
+        async function iniciarProceso() {
+            startLoadingAnimation();
+            const selectedMode = document.querySelector('input[name="processMode"]:checked').value;
+            const formData = new FormData();
+            formData.append('processMode', selectedMode);
+
+            if (selectedMode === 'upload') {
+                if (fileInput.files.length === 0) {
+                    stopLoadingAnimation();
+                    mostrarStatus('Por favor, selecciona al menos un archivo Excel para cargar.', 'error');
+                    return;
+                }
+                for (const file of fileInput.files) {
+                    formData.append('excelFiles', file);
+                }
+            }
+
+            try {
+                const response = await fetch('/api/process', { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                stopLoadingAnimation();
+
+                if (result.success) {
+                    mostrarStatus(result.message, 'success');
+                } else {
+                    mostrarStatus(result.message, 'error');
+                }
+            } catch (error) {
+                stopLoadingAnimation();
+                mostrarStatus('Error de conexión con el servidor.', 'error');
+            }
+        }
+
+        
+        // --- FUNCIÓN DE UTILIDAD: Esperar a que una variable exista ---
+        function waitForPapaParse() {
+            return new Promise((resolve, reject) => {
+                // Chequea cada 100ms si PapaParse existe
+                const checkInterval = setInterval(() => {
+                    if (typeof PapaParse !== 'undefined') {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 100);
+
+                // Seguridad: timeout de 5 segundos
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    reject(new Error("Timeout: La librería PapaParse no se cargó después de 5 segundos."));
+                }, 5000);
+            });
+        }
+
+        // --- NUEVA FUNCIÓN DE PRUEBA (Usa la espera) ---
+        async function loadPruebaCsv() {
+            showSection('prueba-csv-view');
+            pruebaCsvOutput.innerHTML = '<h2>Ejecutando prueba (Esperando librería)...</h2>';
+
+            try {
+                await waitForPapaParse(); // 🚨 ESPERA ACTIVA AQUÍ
+
+                const csvData = "columna_a,columna_b\r\nvalor1,valorA\r\nvalor2,valorB";
+
+                const parsed = PapaParse.parse(csvData, {
+                    header: true,
+                    skipEmptyLines: true
+                });
+
+                pruebaCsvOutput.innerHTML = `
+                    <h2>Resultado de PapaParse (Éxito):</h2>
+                    <pre>${JSON.stringify(parsed.data, null, 2)}</pre>
+                    <p>✅ ¡Funcionalidad PapaParse verificada!</p>
+                `;
+
+            } catch (error) {
+                pruebaCsvOutput.innerHTML = `
+                    <h2>Resultado de PapaParse (Falla Crítica):</h2>
+                    <p style="color: red;">Error: ${error.message}</p>
+                `;
+            }
+        }
+
+            // --- LÓGICA DE LA TABLA (Liquidación Completa) ---
+        let dataTableInitialized = false;
+
+        async function loadDataAndRenderTable(endpointUrl, title) {
+            showSection('liquidacion-completa-view'); // Reutilizamos el contenedor de la tabla
+            document.querySelector('#liquidacion-completa-view h1').textContent = title; // Actualizamos el título
+            tableStatus.textContent = 'Obteniendo datos del servidor... Esto puede tardar varios segundos.';
+            
+            try {
+                const response = await fetch(endpointUrl); // Usa la URL pasada
+
+                if (!response.ok) {
+                    const error = await response.json(); 
+                    tableStatus.textContent = `Error: ${error.error || 'Falla de conexión con el servidor.'}`;
+                    return;
+                }
+
+                const data = await response.json(); 
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    tableStatus.textContent = 'El servidor no devolvió datos. (Array vacío o error).';
+                    return;
+                }
+
+                // 1. Determinar columnas (DataTables lo hace automáticamente)
+                const columns = Object.keys(data[0]).map(field => ({ title: field, data: field }));
+
+                // 2. Inicializar o Recargar DataTables
+                if (dataTableInitialized) {
+                    $('#liquidacion-table').DataTable().destroy(); 
+                    $('#liquidacion-table').empty(); 
+                }
+
+                $('#liquidacion-table').DataTable({
+                    data: data,
+                    columns: columns,
+                    scrollX: true, 
+                    scrollY: '60vh', 
+                    scrollCollapse: true,
+                    paging: true, 
+                    pageLength: 25, 
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+                    }
+                });
+
+                dataTableInitialized = true;
+                tableStatus.textContent = `Tabla cargada exitosamente. Total de registros: ${data.length}`;
+                
+            } catch (error) {
+                console.error('Error general al cargar la tabla:', error);
+                tableStatus.textContent = `Error crítico al cargar los datos: ${error.message}`;
+            }
+        }
+
+        // --- AJUSTAR LA FUNCIÓN ORIGINAL DE LIQUIDACIÓN COMPLETA PARA USAR LA NUEVA FUNCIÓN ---
+        async function loadLiquidacionCompleta() {
+            // Llama a la nueva función genérica con la URL y el título específicos
+            loadDataAndRenderTable('/api/liquidacion-completa', 'Liquidación Completa Unificada');
+        }
+        
+        // --- INICIALIZACIÓN DE LA APLICACIÓN ---
+        // --- Modificación en el DOMContentLoaded para asignar el evento ---
+        document.addEventListener('DOMContentLoaded', () => {
+            showSection('conversion-form');
+
+            // Asignar evento a Liquidación Completa (con la solución de inicialización segura)
+            const menuLiquidacionCompleta = document.getElementById('menu-liquidacion-completa');
+            if (menuLiquidacionCompleta) {
+                menuLiquidacionCompleta.addEventListener('click', function(e) {
+                    e.preventDefault(); 
+                    loadLiquidacionCompleta();
+                    closeNav(); 
+                });
+            }
+            // Conexión del menú Residentes
+            const menuResidentes = document.getElementById('menu-residentes');
+            if (menuResidentes) {
+                menuResidentes.addEventListener('click', function(e) {
+                    e.preventDefault(); 
+                    // Llamamos a la función genérica de carga, pero le pasamos la URL del nuevo endpoint.
+                    loadDataAndRenderTable('/api/residentes', 'Residentes Filtrados');
+                    closeNav(); 
+                });
+            } else {
+                console.error("Elemento 'menu-residentes' no encontrado.");
+            }
+            // Conexión del menú Ley 100%
+            const menuLey100 = document.getElementById('menu-ley100');
+            if (menuLey100) {
+                menuLey100.addEventListener('click', function(e) {
+                    e.preventDefault(); 
+                    // Llama a la función genérica de carga con el nuevo endpoint y título.
+                    loadDataAndRenderTable('/api/ley100', 'Liquidaciones Ley 100%');
+                    closeNav(); 
+                });
+            } else {
+                console.error("Elemento 'menu-ley100' no encontrado.");
+            }
+            // Asignar evento a la Prueba CSV Simple (NUEVO)
+            if (menuPruebaCsv) {
+                menuPruebaCsv.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loadPruebaCsv();
+                    closeNav();
+                });
+            }
+        });
+        // --- NUEVA FUNCIÓN DE PRUEBA ASÍNCRONA ---
+        
+    </script>
+</body>
+</html>
