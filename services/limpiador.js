@@ -8,98 +8,86 @@ const { stringify } = require('csv-stringify');
 const FILAS_PARA_ANALIZAR = 10; 
 
 /**
- * Limpia los espacios finales y los formatos numéricos (positivos y negativos) de forma selectiva.
+ * Limpia los espacios y formatos numéricos por nombre de columna.
+ * @param {string} csvFileName - Nombre del archivo CSV.
+ * @param {string[]} columnNamesToClean - Lista de nombres de encabezados a limpiar.
  */
-function limpiarColumnasCsv(csvFileName, columnsToCleanSpaces) {
+function limpiarColumnasCsv(csvFileName, columnNamesToClean) {
     const INPUT_DIR = path.join(__dirname, '..', 'csv-convertido');
     
+    // Definimos las rutas aquí para que estén disponibles en toda la función
     const inputPath = path.join(INPUT_DIR, csvFileName);
     const outputFileName = csvFileName.replace('.csv', '_limpio.csv');
     const outputPath = path.join(INPUT_DIR, outputFileName);
     
-    console.log(`[LIMPIEZA] Iniciando limpieza inteligente de: ${csvFileName} (incluyendo negativos)`);
+    console.log(`[LIMPIEZA] Iniciando limpieza por nombre en: ${csvFileName}`);
 
     const input = fs.readFileSync(inputPath, 'utf8');
-    const columnasNumericas = new Set(); // Almacena los índices (base 0)
+    const columnasNumericas = new Set(); // Índices detectados automáticamente
+    const nombresParaLimpiar = new Set(columnNamesToClean);
 
     return new Promise((resolve, reject) => {
-        // --- 1. PRIMER PARSEO: Detección de columnas ---
-        parse(input, {
-            delimiter: ',',
-        }, (err, records) => {
+        // --- 1. PRIMER PARSEO: Detección automática de columnas numéricas ---
+        parse(input, { delimiter: ',' }, (err, records) => {
             if (err) return reject(new Error(`Error de parseo (Detección): ${err.message}`));
-            if (records.length === 0) {
-                 console.log("[LIMPIEZA] El archivo CSV está vacío.");
-                 return resolve(csvFileName);
-            }
-            
-            const filasDeDatos = records.slice(1, FILAS_PARA_ANALIZAR + 1);
-            
-            for (let c = 0; c < records[0].length; c++) {
-                let esNumerica = false;
-                
-                for (let r = 0; r < filasDeDatos.length; r++) {
-                    const valor = filasDeDatos[r][c];
-                    if (!valor) continue; 
+            if (records.length === 0) return resolve(csvFileName);
 
-                    // CLAVE: Ajuste de RegEx para incluir signo negativo (-) opcional
-                    // Patrón: opcionalmente espacios/comillas, opcionalmente '-', números, opcionalmente comas, opcionalmente decimales.
-                    if (valor.match(/^\s*"?-?\d{1,3}(?:,\d{3})*(?:\.\d+)?"?\s*$/)) {
-                        esNumerica = true;
-                        break; 
+            const filasATestear = records.slice(0, FILAS_PARA_ANALIZAR);
+            const numColumnas = records[0].length;
+
+            for (let i = 0; i < numColumnas; i++) {
+                let esProbableNumerica = false;
+                for (let j = 1; j < filasATestear.length; j++) {
+                    let valor = filasATestear[j][i] ? filasATestear[j][i].trim() : "";
+                    // Detecta números, incluyendo negativos y formatos con comas
+                    if (valor !== "" && /^-?[\d,.]+$/.test(valor)) {
+                        esProbableNumerica = true;
+                        break;
                     }
                 }
-                
-                if (esNumerica) {
-                    columnasNumericas.add(c);
-                }
+                if (esProbableNumerica) columnasNumericas.add(i);
             }
 
-            console.log(`[LIMPIEZA] Columnas numéricas detectadas (Base 1): ${Array.from(columnasNumericas).map(i => i + 1).join(', ')}`);
-            
-            // --- 2. SEGUNDO PARSEO: Aplicar limpieza ---
-            const inputParaLimpieza = fs.readFileSync(inputPath, 'utf8');
+            // --- 2. SEGUNDO PARSEO: Limpieza real usando nombres de columnas ---
             const registrosLimpios = [];
-            
-            parse(inputParaLimpieza, {
+
+            parse(input, {
                 delimiter: ',',
-                on_record: (record) => {
-                    const registroModificado = record.map((valor, indice) => {
-                        if (typeof valor !== 'string' || !valor) return valor;
+                columns: true, // Esto nos permite usar row['NOMBRE_COLUMNA']
+                skip_empty_lines: true
+            }, (err, records) => {
+                if (err) return reject(new Error(`Error de parseo (Limpieza): ${err.message}`));
 
-                        const numeroColumnaBase1 = indice + 1; 
+                records.forEach(row => {
+                    const headers = Object.keys(row);
+                    const registroModificado = headers.map((header, index) => {
+                        let valor = row[header] || '';
 
-                        // 1. Limpieza de Espacios (según lista manual)
-                        if (columnsToCleanSpaces.includes(numeroColumnaBase1)) {
-                            valor = valor.replace(/\s+$/, '');
+                        // A. Limpieza por NOMBRE (especificado en etl_runner.js)
+                        if (nombresParaLimpiar.has(header)) {
+                            valor = valor.trim();
                         }
 
-                        // 2. Limpieza de Formato Numérico (detección automática)
-                        if (columnasNumericas.has(indice)) {
-                            
-                            // ELIMINACIÓN DE FORMATO: Quitamos comillas y comas (separador de miles)
-                            // Esto transforma " -382,372.17" en -382372.17, que es lo que espera PostgreSQL.
-                            valor = valor.replace(/"/g, ''); 
-                            valor = valor.replace(/,/g, ''); 
-                            
-                            // Usamos trim() para eliminar cualquier espacio residual antes/después del número
-                            return valor.trim();
+                        // B. Limpieza por ÍNDICE (Detección automática de montos)
+                        if (columnasNumericas.has(index)) {
+                            valor = valor.replace(/"/g, '').replace(/,/g, '').trim();
                         }
 
                         return valor;
                     });
-
                     registrosLimpios.push(registroModificado);
-                    return null;
-                }
-            }, (err) => {
-                if (err) return reject(new Error(`Error de parseo (Limpieza): ${err.message}`));
+                });
 
+                // Volvemos a insertar los encabezados al principio para el archivo final
+                const encabezadosFinales = Object.keys(records[0]);
+                registrosLimpios.unshift(encabezadosFinales);
+
+                // --- 3. ESCRITURA DEL ARCHIVO ---
                 stringify(registrosLimpios, { delimiter: ',' }, (err, output) => {
-                    if (err) return reject(new Error(`Error de stringify CSV: ${err.message}`));
+                    if (err) return reject(new Error(`Error de stringify: ${err.message}`));
                     
                     fs.writeFileSync(outputPath, output, 'utf8');
-                    console.log(`[LIMPIEZA] ✅ Limpieza finalizada. Archivo final: ${outputFileName}`);
+                    console.log(`[LIMPIEZA] ✅ Finalizado por nombre: ${outputFileName}`);
                     resolve(outputFileName);
                 });
             });

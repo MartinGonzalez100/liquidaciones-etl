@@ -79,8 +79,11 @@ app.get('/api/liquidacion-completa', (req, res) => {
     fs.createReadStream(csvPath)
       .pipe(csv())
       .on('data', (row) => {
+        // [MODIFICACIÓN DE OPTIMIZACIÓN PENDIENTE]
+        const periodoImputadoLimpio = row.PERIODO_IMPUTADO ? row.PERIODO_IMPUTADO.trim() : '';
+        const periodoLiquidadoLimpio = row.PERIODO_LIQUIDADO ? row.PERIODO_LIQUIDADO.trim() : '';
         // 1. APLICAR FILTRO: PERIODO_IMPUTADO = PERIODO_LIQUIDADO
-        if (row.PERIODO_IMPUTADO === row.PERIODO_LIQUIDADO) {
+        if (periodoImputadoLimpio === periodoLiquidadoLimpio) {
             
             // 2. PROYECCIÓN DE COLUMNAS: Crear un nuevo objeto solo con los campos deseados
             const projectedRow = {};

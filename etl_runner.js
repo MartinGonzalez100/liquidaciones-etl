@@ -11,10 +11,33 @@ const { cargarCsvAPostgres } = require('./services/cargador');
 const CARGA_ACTIVADA = false; 
 
 // Columnas de TEXTO con espacios (base 1) que necesitan limpieza
-const COLUMNAS_A_LIMPIAR = [
+/*const COLUMNAS_A_LIMPIAR = [
     1,2,193,194,195,202,205,209,212,213,214,216
     // ... AJUSTA ESTA LISTA
+];*/
+
+const NOMBRES_COLUMNAS_A_LIMPIAR = [
+    // Campos de texto que pueden tener espacios (Ej: Planilla y Descripciones)
+    'NIVEL', 'DESCAGENTE', 'PLANTA', 'ORGANISMO', 'FUNCION', 'AGRUPAMIENTO', 'OB_ALTA', 'OB_BAJA', 'AREA'
+, 'SEXO', 'TIT_EDUCATIVO', 'AREA_TEMATICA', 'DURACION', 'ESTADO_LIQUIDACION'
+
+
+
+
+ 
+
+
+    /*
+    // Campos numéricos/de monto que deben limpiarse de comas/comillas
+    'HAB_C_AP', 'HAB_S_AP', 'ASIG_FAM', 'TOT_HAB', 'RETENCIONES', 'DESCUENTOS', 'LIQUIDO', 
+    'BRUTO_LEY7991', 'PENSION_229_92', 'LIQUIDO_LEY7991', 'COSTO_LABORAL_01', 
+    'COSTO_LABORAL_02', 'SUELDO_MANO', 'SUELDO', 'MONTO_ANTIGUEDAD', 'AP100_090_54' 
+    // ... Incluye aquí todos los encabezados relevantes.
+    */
 ];
+
+
+
 
 // ------------------------------
 
@@ -37,7 +60,7 @@ async function ejecutarProcesoETL(excelFilesToProcess) {
             const rawCsvFile = convertirExcelACsv(excelFile);
 
             // b. Limpieza
-            await limpiarColumnasCsv(rawCsvFile, COLUMNAS_A_LIMPIAR);
+            await limpiarColumnasCsv(rawCsvFile, NOMBRES_COLUMNAS_A_LIMPIAR);
         }
 
         // 2. UNIFICACIÓN DE CSVs
