@@ -37,11 +37,19 @@
         <h2>Menú de Procesos</h2>
         <a href="#" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
         <a href="#" id="menu-liquidacion-completa">Liquidación Completa</a> 
+        <a href="#" id="menu-acumulado"><i class="fas fa-calculator"></i> Acumulado Aporte Jub.</a>
         <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
         <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')">Pago Familiar Discapacitado</a>
         <a href="#" id="menu-prueba-csv" onclick="closeNav()">Prueba CSV Simple</a>
     </div>
+    <!-- <div id="section-acumulado" style="display:none; margin-bottom: 20px;">
+        <div style="background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; position: sticky; top: 10px; z-index: 100;">
+            <label for="input-tope"><b>Tope Jubilatorio ($):</b></label>
+            <input type="number" id="input-tope" placeholder="Ingrese valor..." style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <button id="btn-generar-acumulado" class="btn-convertir" style="margin:0; padding: 8px 20px;">Generar Listado</button>
+        </div>
+    </div> -->
 
     <div id="main-content" class="main-content">
         <button class="menu-btn" onclick="openNav()">☰ Menú</button>
@@ -73,6 +81,22 @@
             <div id="status-message">
                 <span id="status-text">Esperando para iniciar el proceso...</span>
                 <span id="loading-dots" style="color: #1f202c; display: none; font-size: 25px;"></span> 
+            </div>
+        </div>
+
+        <div id="panel-tope-jubilatorio" style="display:none; background: #fdfdfd; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 25px; border-left: 6px solid #4e73df;">
+            <h3 style="margin-top:0; color: #4e73df;"><i class="fas fa-calculator"></i> Configuración de Reporte Acumulado</h3>
+            <p style="color: #666; font-size: 14px;">Defina el tope para calcular el acumulado de aportes por agente (ordenado por DNI).</p>
+            
+            <div style="display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display:block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">VALOR DEL TOPE JUBILATORIO ($)</label>
+                    <input type="number" id="input-tope-valor" value="0" step="0.01" style="width: 100%; padding: 12px; border: 2px solid #eaecf4; border-radius: 8px; font-size: 18px; outline: none; transition: border-color 0.2s;">
+                </div>
+                
+                <button id="btn-generar-acumulado" class="btn-convertir" style="margin-bottom: 0; height: 50px; padding: 0 30px; font-weight: bold;">
+                    <i class="fas fa-play-circle"></i> GENERAR LISTADO
+                </button>
             </div>
         </div>
 
@@ -111,8 +135,62 @@
         const liquidacionView = document.getElementById('liquidacion-completa-view');
         const tableStatus = document.getElementById('table-status');
 
+
+
+
+
         let intervalId;
         const PHASES = ['', 'Ca', 'Carg', 'Carga', 'Cargand', 'Cargando'];
+
+
+        // --- LÓGICA VISTA ACUMULADO ---
+
+        // 1. Manejo del Menú Lateral
+        const menuAcumulado = document.getElementById('menu-acumulado');
+        if (menuAcumulado) {
+            menuAcumulado.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log("✅ Click en Menú: Cambiando a vista Acumulado");
+                
+                // Ocultar lo que no necesitamos
+                document.getElementById('conversion-form').style.display = 'none';
+                
+                // Mostrar el panel de configuración
+                const panel = document.getElementById('panel-tope-jubilatorio');
+                panel.style.display = 'block';
+                
+                // Ocultar tabla hasta que se genere
+                document.getElementById('table-container').style.display = 'none';
+                
+                closeNav(); // Cierra sidebar
+            });
+        } 
+
+        // 2. Manejo del Botón "GENERAR LISTADO"
+        const btnGenerar = document.getElementById('btn-generar-acumulado');
+        if (btnGenerar) {
+            console.log("🚀 Listener del botón vinculado correctamente"); // Esto debería salir al cargar la página
+
+            btnGenerar.addEventListener('click', function() {
+                const topeValue = document.getElementById('input-tope-valor').value;
+                console.log("⚡ Botón Presionado. Valor del tope:", topeValue);
+
+                if (topeValue === "" || parseFloat(topeValue) < 0) {
+                    alert("⚠️ Por favor, ingrese un valor de tope válido (mayor o igual a 0).");
+                    return;
+                }
+
+                // Mostrar tabla y cargar
+                document.getElementById('table-container').style.display = 'block';
+                
+                const url = `/api/acumulado-jubilatorio?tope=${topeValue}`;
+                console.log("🌐 Llamando a API:", url);
+                
+                loadDataAndRenderTable(url, `Acumulado Jubilatorio (Tope: $${topeValue})`);
+            });
+        } else {
+            console.error("❌ ERROR: No se encontró el botón 'btn-generar-acumulado' en el HTML.");
+        }
 
         // --- FUNCIONES DE NAVEGACIÓN ---
         function openNav() { sidebar.style.width = sidebarWidth; }
@@ -248,56 +326,48 @@
             // --- LÓGICA DE LA TABLA (Liquidación Completa) ---
         let dataTableInitialized = false;
 
-        async function loadDataAndRenderTable(endpointUrl, title) {
-            showSection('liquidacion-completa-view'); // Reutilizamos el contenedor de la tabla
-            document.querySelector('#liquidacion-completa-view h1').textContent = title; // Actualizamos el título
-            tableStatus.textContent = 'Obteniendo datos del servidor... Esto puede tardar varios segundos.';
+        function loadDataAndRenderTable(url, title) {
+            console.log("Cargando datos desde:", url);
             
-            try {
-                const response = await fetch(endpointUrl); // Usa la URL pasada
-
-                if (!response.ok) {
-                    const error = await response.json(); 
-                    tableStatus.textContent = `Error: ${error.error || 'Falla de conexión con el servidor.'}`;
-                    return;
-                }
-
-                const data = await response.json(); 
-
-                if (!Array.isArray(data) || data.length === 0) {
-                    tableStatus.textContent = 'El servidor no devolvió datos. (Array vacío o error).';
-                    return;
-                }
-
-                // 1. Determinar columnas (DataTables lo hace automáticamente)
-                const columns = Object.keys(data[0]).map(field => ({ title: field, data: field }));
-
-                // 2. Inicializar o Recargar DataTables
-                if (dataTableInitialized) {
-                    $('#liquidacion-table').DataTable().destroy(); 
-                    $('#liquidacion-table').empty(); 
-                }
-
-                $('#liquidacion-table').DataTable({
-                    data: data,
-                    columns: columns,
-                    scrollX: true, 
-                    scrollY: '60vh', 
-                    scrollCollapse: true,
-                    paging: true, 
-                    pageLength: 25, 
-                    language: {
-                        url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
-                    }
-                });
-
-                dataTableInitialized = true;
-                tableStatus.textContent = `Tabla cargada exitosamente. Total de registros: ${data.length}`;
-                
-            } catch (error) {
-                console.error('Error general al cargar la tabla:', error);
-                tableStatus.textContent = `Error crítico al cargar los datos: ${error.message}`;
+            // Si la tabla ya existe, la destruimos para que se pueda recrear con nuevas columnas
+            if ($.fn.DataTable.isDataTable('#tabla-datos')) {
+                $('#tabla-datos').DataTable().destroy();
+                $('#tabla-datos').empty(); 
             }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        alert("No se encontraron registros.");
+                        return;
+                    }
+
+                    // EXTRAER COLUMNAS DINÁMICAMENTE
+                    // Esto permite que aparezcan 'Tope_Des_ap_jub', etc., automáticamente
+                    const columns = Object.keys(data[0]).map(key => ({
+                        title: key,
+                        data: key
+                    }));
+
+                    $('#tabla-datos').DataTable({
+                        data: data,
+                        columns: columns,
+                        pageLength: 25,
+                        responsive: true,
+                        dom: 'Bfrtip',
+                        buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+                        language: {
+                            url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                        }
+                    });
+
+                    document.getElementById('table-title').innerText = title;
+                })
+                .catch(error => {
+                    console.error("Error cargando tabla:", error);
+                    alert("Error al cargar los datos.");
+                });
         }
 
         // --- AJUSTAR LA FUNCIÓN ORIGINAL DE LIQUIDACIÓN COMPLETA PARA USAR LA NUEVA FUNCIÓN ---
