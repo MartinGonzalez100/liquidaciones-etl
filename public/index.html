@@ -101,13 +101,11 @@
         </div>
 
         <div id="liquidacion-completa-view" class="container" style="display: none;">
-            <h1>Liquidación Completa Mensual</h1>
-            <div id="table-status">Cargando datos...</div>
+            <h1 id="table-title">Cargando...</h1> <div id="table-status">Esperando comandos...</div>
+            
             <div id="table-container">
-                <table id="liquidacion-table" class="display" style="width:100%">
-                    <thead></thead>
-                    <tbody></tbody>
-                </table>
+                <div id="table-wrapper">
+                    <table id="tabla-datos" class="display responsive nowrap" style="width:100%"></table> </div>
             </div>
         </div>
         <!-- NUEVA SECCION-->>
@@ -327,29 +325,37 @@
         let dataTableInitialized = false;
 
         function loadDataAndRenderTable(url, title) {
-            console.log("Cargando datos desde:", url);
+            console.log("📥 Iniciando carga desde:", url);
             
-            // Si la tabla ya existe, la destruimos para que se pueda recrear con nuevas columnas
-            if ($.fn.DataTable.isDataTable('#tabla-datos')) {
-                $('#tabla-datos').DataTable().destroy();
-                $('#tabla-datos').empty(); 
+            // 1. Mostrar la vista y el título
+            showSection('liquidacion-completa-view');
+            const titleElement = document.getElementById('table-title');
+            if (titleElement) titleElement.innerText = title;
+
+            // 2. LIMPIEZA TOTAL: Evita el error de "Cannot reinitialise DataTable"
+            const wrapper = document.getElementById('table-wrapper');
+            if (wrapper) {
+                wrapper.innerHTML = '<table id="tabla-datos" class="display responsive nowrap" style="width:100%"></table>';
             }
 
             fetch(url)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error("Error en el servidor: " + response.statusText);
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.length === 0) {
-                        alert("No se encontraron registros.");
+                    if (!data || data.length === 0) {
+                        alert("No se encontraron registros para este reporte.");
                         return;
                     }
 
-                    // EXTRAER COLUMNAS DINÁMICAMENTE
-                    // Esto permite que aparezcan 'Tope_Des_ap_jub', etc., automáticamente
+                    // 3. DETECCIÓN DINÁMICA DE COLUMNAS
                     const columns = Object.keys(data[0]).map(key => ({
-                        title: key,
+                        title: key.replace(/_/g, ' '),
                         data: key
                     }));
 
+                    // 4. INICIALIZACIÓN
                     $('#tabla-datos').DataTable({
                         data: data,
                         columns: columns,
@@ -361,15 +367,13 @@
                             url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                         }
                     });
-
-                    document.getElementById('table-title').innerText = title;
                 })
                 .catch(error => {
-                    console.error("Error cargando tabla:", error);
-                    alert("Error al cargar los datos.");
+                    console.error("❌ Error Crítico:", error);
+                    alert("Hubo un fallo al cargar la tabla: " + error.message);
                 });
         }
-
+      
         // --- AJUSTAR LA FUNCIÓN ORIGINAL DE LIQUIDACIÓN COMPLETA PARA USAR LA NUEVA FUNCIÓN ---
         async function loadLiquidacionCompleta() {
             // Llama a la nueva función genérica con la URL y el título específicos
