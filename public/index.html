@@ -200,6 +200,9 @@
             liquidacionView.style.display = 'none';
             pruebaCsvView.style.display = 'none'; // Asegurar que la nueva vista esté oculta
 
+            const panel = document.getElementById('panel-tope-jubilatorio');
+                panel.style.display = 'none';
+
             if (sectionId === 'conversion-form') {
                 conversionForm.style.display = 'block';
             } else if (sectionId === 'liquidacion-completa-view') {
@@ -327,6 +330,7 @@
         function loadDataAndRenderTable(url, title) {
             console.log("📥 Iniciando carga desde:", url);
             
+            
             // 1. Mostrar la vista y el título
             showSection('liquidacion-completa-view');
             const titleElement = document.getElementById('table-title');
@@ -387,45 +391,45 @@
 
             // Asignar evento a Liquidación Completa (con la solución de inicialización segura)
             const menuLiquidacionCompleta = document.getElementById('menu-liquidacion-completa');
-            if (menuLiquidacionCompleta) {
-                menuLiquidacionCompleta.addEventListener('click', function(e) {
-                    e.preventDefault(); 
-                    loadLiquidacionCompleta();
-                    closeNav(); 
-                });
-            }
-            // Conexión del menú Residentes
+                if (menuLiquidacionCompleta) {
+                    menuLiquidacionCompleta.addEventListener('click', function(e) {
+                        e.preventDefault(); 
+                        loadLiquidacionCompleta();
+                        closeNav(); 
+                    });
+                }
+                // Conexión del menú Residentes
             const menuResidentes = document.getElementById('menu-residentes');
-            if (menuResidentes) {
-                menuResidentes.addEventListener('click', function(e) {
-                    e.preventDefault(); 
-                    // Llamamos a la función genérica de carga, pero le pasamos la URL del nuevo endpoint.
-                    loadDataAndRenderTable('/api/residentes', 'Residentes Filtrados');
-                    closeNav(); 
-                });
-            } else {
-                console.error("Elemento 'menu-residentes' no encontrado.");
-            }
-            // Conexión del menú Ley 100%
+                if (menuResidentes) {
+                    menuResidentes.addEventListener('click', function(e) {
+                        e.preventDefault(); 
+                        // Llamamos a la función genérica de carga, pero le pasamos la URL del nuevo endpoint.
+                        loadDataAndRenderTable('/api/residentes', 'Residentes Filtrados');
+                        closeNav(); 
+                    });
+                } else {
+                    console.error("Elemento 'menu-residentes' no encontrado.");
+                }
+                // Conexión del menú Ley 100%
             const menuLey100 = document.getElementById('menu-ley100');
-            if (menuLey100) {
-                menuLey100.addEventListener('click', function(e) {
-                    e.preventDefault(); 
-                    // Llama a la función genérica de carga con el nuevo endpoint y título.
-                    loadDataAndRenderTable('/api/ley100', 'Liquidaciones Ley 100%');
-                    closeNav(); 
-                });
-            } else {
-                console.error("Elemento 'menu-ley100' no encontrado.");
-            }
-            // Asignar evento a la Prueba CSV Simple (NUEVO)
-            if (menuPruebaCsv) {
-                menuPruebaCsv.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    loadPruebaCsv();
-                    closeNav();
-                });
-            }
+                if (menuLey100) {
+                    menuLey100.addEventListener('click', function(e) {
+                        e.preventDefault(); 
+                        // Llama a la función genérica de carga con el nuevo endpoint y título.
+                        loadDataAndRenderTable('/api/ley100', 'Liquidaciones Ley 100%');
+                        closeNav(); 
+                    });
+                } else {
+                    console.error("Elemento 'menu-ley100' no encontrado.");
+                }
+                // Asignar evento a la Prueba CSV Simple (NUEVO)
+                if (menuPruebaCsv) {
+                    menuPruebaCsv.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        loadPruebaCsv();
+                        closeNav();
+                    });
+                }
         });
         // --- NUEVA FUNCIÓN DE PRUEBA ASÍNCRONA ---
         
