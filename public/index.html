@@ -43,13 +43,13 @@
         <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')">Pago Familiar Discapacitado</a>
         <a href="#" id="menu-prueba-csv" onclick="closeNav()">Prueba CSV Simple</a>
     </div>
-    <!-- <div id="section-acumulado" style="display:none; margin-bottom: 20px;">
+    <div id="section-acumulado" style="display:none; margin-bottom: 20px;">
         <div style="background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; position: sticky; top: 10px; z-index: 100;">
             <label for="input-tope"><b>Tope Jubilatorio ($):</b></label>
             <input type="number" id="input-tope" placeholder="Ingrese valor..." style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
             <button id="btn-generar-acumulado" class="btn-convertir" style="margin:0; padding: 8px 20px;">Generar Listado</button>
         </div>
-    </div> -->
+    </div>
 
     <div id="main-content" class="main-content">
         <button class="menu-btn" onclick="openNav()">☰ Menú</button>
@@ -101,14 +101,16 @@
         </div>
 
         <div id="liquidacion-completa-view" class="container" style="display: none;">
-            <h1>Liquidación Completa Mensual</h1>
-            <div id="table-status">Cargando datos...</div>
+            <h1 id="table-title">Cargando...</h1> <div id="table-status">Esperando comandos...</div>
+            
             <div id="table-container">
-                <table id="liquidacion-table" class="display" style="width:100%">
-                    <thead></thead>
-                    <tbody></tbody>
-                </table>
+                <div id="table-wrapper">
+                    <table id="tabla-datos" class="display responsive nowrap" style="width:100%"></table> </div>
             </div>
+        </div>
+
+
+
         </div>
         <!-- NUEVA SECCION-->>
         <div id="prueba-csv-view" class="container" style="display: none;">
@@ -167,8 +169,20 @@
         } 
 
         // 2. Manejo del Botón "GENERAR LISTADO"
-        const btnGenerar = document.getElementById('btn-generar-acumulado');
-        if (btnGenerar) {
+        // index.html
+
+        document.getElementById('btn-generar-acumulado').addEventListener('click', function() {
+            console.log("🚀 Paso 1: Generando archivo AcApJub.csv y visualizando...");
+            
+            // Mostramos la tabla y el título
+            document.getElementById('table-container').style.display = 'block';
+            
+            // Llamamos al nuevo endpoint de preparación
+            const url = '/api/preparar-acumulado';
+            loadDataAndRenderTable(url, "Vista Previa: AcApJub.csv (Estructura Base)");
+        });
+
+        /* if (btnGenerar) {
             console.log("🚀 Listener del botón vinculado correctamente"); // Esto debería salir al cargar la página
 
             btnGenerar.addEventListener('click', function() {
@@ -190,7 +204,7 @@
             });
         } else {
             console.error("❌ ERROR: No se encontró el botón 'btn-generar-acumulado' en el HTML.");
-        }
+        } */
 
         // --- FUNCIONES DE NAVEGACIÓN ---
         function openNav() { sidebar.style.width = sidebarWidth; }
@@ -327,29 +341,37 @@
         let dataTableInitialized = false;
 
         function loadDataAndRenderTable(url, title) {
-            console.log("Cargando datos desde:", url);
+            console.log("📥 Iniciando carga desde:", url);
             
-            // Si la tabla ya existe, la destruimos para que se pueda recrear con nuevas columnas
-            if ($.fn.DataTable.isDataTable('#tabla-datos')) {
-                $('#tabla-datos').DataTable().destroy();
-                $('#tabla-datos').empty(); 
+            // 1. Mostrar la vista y el título
+            showSection('liquidacion-completa-view');
+            const titleElement = document.getElementById('table-title');
+            if (titleElement) titleElement.innerText = title;
+
+            // 2. LIMPIEZA TOTAL: Evita el error de "Cannot reinitialise DataTable"
+            const wrapper = document.getElementById('table-wrapper');
+            if (wrapper) {
+                wrapper.innerHTML = '<table id="tabla-datos" class="display responsive nowrap" style="width:100%"></table>';
             }
 
             fetch(url)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error("Error en el servidor: " + response.statusText);
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.length === 0) {
-                        alert("No se encontraron registros.");
+                    if (!data || data.length === 0) {
+                        alert("No se encontraron registros para este reporte.");
                         return;
                     }
 
-                    // EXTRAER COLUMNAS DINÁMICAMENTE
-                    // Esto permite que aparezcan 'Tope_Des_ap_jub', etc., automáticamente
+                    // 3. DETECCIÓN DINÁMICA DE COLUMNAS
                     const columns = Object.keys(data[0]).map(key => ({
-                        title: key,
+                        title: key.replace(/_/g, ' '),
                         data: key
                     }));
 
+                    // 4. INICIALIZACIÓN
                     $('#tabla-datos').DataTable({
                         data: data,
                         columns: columns,
@@ -361,14 +383,12 @@
                             url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                         }
                     });
-
-                    document.getElementById('table-title').innerText = title;
                 })
                 .catch(error => {
-                    console.error("Error cargando tabla:", error);
-                    alert("Error al cargar los datos.");
+                    console.error("❌ Error Crítico:", error);
+                    alert("Hubo un fallo al cargar la tabla: " + error.message);
                 });
-        }
+        }    
 
         // --- AJUSTAR LA FUNCIÓN ORIGINAL DE LIQUIDACIÓN COMPLETA PARA USAR LA NUEVA FUNCIÓN ---
         async function loadLiquidacionCompleta() {
