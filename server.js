@@ -270,6 +270,10 @@ app.get('/api/acumulado-jubilatorio', (req, res) => {
 
         res.json(datosFinales);
     });
+    stream.on('error', (error) => {
+        console.error("Error en el stream del acumulado:", error);
+        res.status(500).json({ success: false, message: error.message });
+    });
 });
 
 // Endpoint para el procesamiento
