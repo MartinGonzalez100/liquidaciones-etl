@@ -43,13 +43,13 @@
         <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')">Pago Familiar Discapacitado</a>
         <a href="#" id="menu-prueba-csv" onclick="closeNav()">Prueba CSV Simple</a>
     </div>
-    <!-- <div id="section-acumulado" style="display:none; margin-bottom: 20px;">
+    <div id="section-acumulado" style="display:none; margin-bottom: 20px;">
         <div style="background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; position: sticky; top: 10px; z-index: 100;">
             <label for="input-tope"><b>Tope Jubilatorio ($):</b></label>
             <input type="number" id="input-tope" placeholder="Ingrese valor..." style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
             <button id="btn-generar-acumulado" class="btn-convertir" style="margin:0; padding: 8px 20px;">Generar Listado</button>
         </div>
-    </div> -->
+    </div>
 
     <div id="main-content" class="main-content">
         <button class="menu-btn" onclick="openNav()">☰ Menú</button>
@@ -108,6 +108,10 @@
                     <table id="tabla-datos" class="display responsive nowrap" style="width:100%"></table> </div>
             </div>
         </div>
+
+
+
+        </div>
         <!-- NUEVA SECCION-->>
         <div id="prueba-csv-view" class="container" style="display: none;">
             <h1>Prueba de PapaParse (Aislada)</h1>
@@ -165,8 +169,20 @@
         } 
 
         // 2. Manejo del Botón "GENERAR LISTADO"
-        const btnGenerar = document.getElementById('btn-generar-acumulado');
-        if (btnGenerar) {
+        // index.html
+
+        document.getElementById('btn-generar-acumulado').addEventListener('click', function() {
+            console.log("🚀 Paso 1: Generando archivo AcApJub.csv y visualizando...");
+            
+            // Mostramos la tabla y el título
+            document.getElementById('table-container').style.display = 'block';
+            
+            // Llamamos al nuevo endpoint de preparación
+            const url = '/api/preparar-acumulado';
+            loadDataAndRenderTable(url, "Vista Previa: AcApJub.csv (Estructura Base)");
+        });
+
+        /* if (btnGenerar) {
             console.log("🚀 Listener del botón vinculado correctamente"); // Esto debería salir al cargar la página
 
             btnGenerar.addEventListener('click', function() {
@@ -188,7 +204,7 @@
             });
         } else {
             console.error("❌ ERROR: No se encontró el botón 'btn-generar-acumulado' en el HTML.");
-        }
+        } */
 
         // --- FUNCIONES DE NAVEGACIÓN ---
         function openNav() { sidebar.style.width = sidebarWidth; }

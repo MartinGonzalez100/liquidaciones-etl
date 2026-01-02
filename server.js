@@ -198,77 +198,55 @@ app.get('/api/ley100', (req, res) => {
 });        
 // ... (El resto de tu código server.js) ...
 
-// 2. NUEVO ENDPOINT: /api/acumulado-jubilatorio
-app.get('/api/acumulado-jubilatorio', (req, res) => {
-    console.log("Ingreso a server.js, /api/acumulado-jubilatorio: "+req.query.tope)
-    const topeIngresado = parseFloat(req.query.tope) || 0;
+// server.js
+
+app.get('/api/preparar-acumulado', (req, res) => {
+    const inputPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    const outputPath = path.join(CSV_UNIDOS_DIR, 'AcApJub.csv');
     const resultados = [];
-    
-    let documentoActual = null;
-    let sumaAcumulada = 0;
 
-    const stream = fs.createReadStream(path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME))
-        .pipe(csv());
+    console.log("🛠️ Iniciando creación de AcApJub.csv...");
 
-    stream.on('data', (data) => resultados.push(data));
+    if (!fs.existsSync(inputPath)) {
+        return res.status(404).json({ success: false, message: "No existe el archivo unificado base." });
+    }
+
+    const stream = fs.createReadStream(inputPath).pipe(csv());
+
+    stream.on('data', (row) => {
+        // 1. Crear el nuevo objeto con la columna nueva al inicio
+        const nuevoRegistro = {
+            'Tope_Des_ap_jub': "0.0"
+        };
+
+        // 2. Agregar solo las columnas de CAMPOS_LIQUIDACION
+        CAMPOS_LIQUIDACION.forEach(campo => {
+            nuevoRegistro[campo] = row[campo] || "";
+        });
+
+        resultados.push(nuevoRegistro);
+    });
 
     stream.on('end', () => {
-        // --- ORDENAMIENTO MULTI-CRITERIO ---
-        let auxnum = 0; // para probar valores
-        resultados.sort((a, b) => {
-            // A. NRO_DOCUMENTO (Numérico ASC)
+        // 3. Crear el contenido CSV para guardar el archivo físicamente
+        const encabezados = Object.keys(resultados[0]).join(',');
+        const filas = resultados.map(r => Object.values(r).join(',')).join('\n');
+        const contenidoCompleto = encabezados + '\n' + filas;
 
+        try {
+            fs.writeFileSync(outputPath, contenidoCompleto, 'utf8');
+            console.log("✅ Archivo AcApJub.csv creado exitosamente en carpeta csv-unidos");
             
-            
-            const docA = parseInt(a.NRO_DOCUMENTO) || 0;
-            const docB = parseInt(b.NRO_DOCUMENTO) || 0;
-            if (docA !== docB) return docA - docB;
+            // 4. Enviar los datos al frontend para visualización
+            res.json(resultados);
+        } catch (err) {
+            console.error("❌ Error al escribir AcApJub.csv:", err);
+            res.status(500).send("Error al guardar el archivo.");
+        }
+    });
 
-            if (auxnum < 4) console.log("El DNI: ", auxnum); //probar valores
-
-            auxnum = auxnum + 1 //probar valores
-
-            // B. ESTADO_LIQUIDACION (ASC)
-            if (a.ESTADO_LIQUIDACION !== b.ESTADO_LIQUIDACION) 
-                return (a.ESTADO_LIQUIDACION || "").localeCompare(b.ESTADO_LIQUIDACION || "");
-
-            // C. PLANTA (DESC)
-            if (a.PLANTA !== b.PLANTA) 
-                return (b.PLANTA || "").localeCompare(a.PLANTA || "");
-
-            // D. ApJubPer (Numérico DESC)
-            const aporteA = parseFloat(a.ApJubPer) || 0;
-            const aporteB = parseFloat(b.ApJubPer) || 0;
-            return aporteB - aporteA;
-        });
-
-        // --- GENERACIÓN DE COLUMNAS CALCULADAS ---
-        const datosFinales = resultados.map((row) => {
-            const doc = parseInt(row.NRO_DOCUMENTO) || 0;
-            const valorAporte = parseFloat(row.ApJubPer) || 0;
-
-            if (doc !== documentoActual) {
-                documentoActual = doc;
-                sumaAcumulada = 0;
-            }
-            sumaAcumulada += valorAporte;
-
-            // Construir el nuevo objeto con las 3 columnas al inicio
-            const nuevoRegistro = {
-                'Tope_Des_ap_jub': topeIngresado.toFixed(2),
-                'Acumulado_Ap_Jub': sumaAcumulada.toFixed(2),
-                'Dif_top_Vs_Acumulado': (topeIngresado - sumaAcumulada).toFixed(2)
-            };
-
-            // Copiar el resto de los campos de CAMPOS_LIQUIDACION
-            CAMPOS_LIQUIDACION.forEach(campo => {
-                nuevoRegistro[campo] = row[campo] || '';
-            });
-
-            return nuevoRegistro;
-        });
-
-        res.json(datosFinales);
+    stream.on('error', (err) => {
+        res.status(500).json({ success: false, message: err.message });
     });
 });
 
