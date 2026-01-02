@@ -344,6 +344,11 @@
         let dataTableInitialized = false;
 
         function loadDataAndRenderTable(url, title) {
+
+            conversionForm.style.display = 'none';
+            liquidacionView.style.display = 'none';
+            pruebaCsvView.style.display = 'none'; // Asegurar que la nueva vista esté oculta
+            
             console.log("📥 Iniciando carga desde:", url);
             
             // 1. Mostrar la vista y el título
