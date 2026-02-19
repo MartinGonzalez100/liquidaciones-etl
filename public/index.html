@@ -1,42 +1,154 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interfaz ETL de Liquidaciones</title>
-    
+
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
     <style>
         /* Tus estilos CSS existentes aquí */
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f9; }
-        .sidebar { height: 100%; width: 0; position: fixed; z-index: 10; top: 0; left: 0; background-color: #333; overflow-x: hidden; transition: 0.5s; padding-top: 60px; white-space: nowrap; }
-        .sidebar a { padding: 8px 8px 8px 32px; text-decoration: none; font-size: 18px; color: #f1f1f1; display: block; transition: 0.3s; }
-        .sidebar a:hover { color: #fff; background-color: #5c67f2; }
-        .sidebar .closebtn { position: absolute; top: 0; right: 25px; font-size: 36px; margin-left: 50px; }
-        .main-content { transition: margin-left .5s; padding: 20px; margin-left: 0; }
-        .menu-btn { font-size: 30px; cursor: pointer; background-color: #5c67f2; color: white; padding: 5px 10px; border: none; border-radius: 4px; margin-bottom: 20px; display: block; }
-        .container { max-width: 100%; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h1 { color: #333; border-bottom: 2px solid #5c67f2; padding-bottom: 10px; }
-        .mode-selection { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background-color: #5c67f2; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
-        button:hover { background-color: #4a54e1; }
-        #status-message { margin-top: 20px; padding: 15px; border-radius: 4px; }
-        .status-success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
-        .status-error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-        .info { font-size: 0.9em; color: #666; margin-left: 20px; font-weight: normal; }
-        #table-container { overflow-x: auto; margin-top: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 10;
+            top: 0;
+            left: 0;
+            background-color: #333;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            white-space: nowrap;
+        }
+
+        .sidebar a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #f1f1f1;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #fff;
+            background-color: #5c67f2;
+        }
+
+        .sidebar .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        .main-content {
+            transition: margin-left .5s;
+            padding: 20px;
+            margin-left: 0;
+        }
+
+        .menu-btn {
+            font-size: 30px;
+            cursor: pointer;
+            background-color: #5c67f2;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #5c67f2;
+            padding-bottom: 10px;
+        }
+
+        .mode-selection {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #5c67f2;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #4a54e1;
+        }
+
+        #status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+
+        .info {
+            font-size: 0.9em;
+            color: #666;
+            margin-left: 20px;
+            font-weight: normal;
+        }
+
+        #table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
-    
+    <script type="text/javascript" charset="utf8"
+        src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
 </head>
+
 <body>
     <div id="mySidebar" class="sidebar">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
         <h2>Menú de Procesos</h2>
         <a href="#" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
-        <a href="#" id="menu-liquidacion-completa">Liquidación Completa</a> 
+        <a href="#" id="menu-liquidacion-completa">Liquidación Completa</a>
         <a href="#" id="menu-acumulado"><i class="fas fa-calculator"></i> Acumulado Aporte Jub.</a>
         <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
@@ -44,16 +156,19 @@
         <a href="#" id="menu-prueba-csv" onclick="closeNav()">Prueba CSV Simple</a>
     </div>
     <div id="section-acumulado" style="display:none; margin-bottom: 20px;">
-        <div style="background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; position: sticky; top: 10px; z-index: 100;">
+        <div
+            style="background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; position: sticky; top: 10px; z-index: 100;">
             <label for="input-tope"><b>Tope Jubilatorio ($):</b></label>
-            <input type="number" id="input-tope" placeholder="Ingrese valor..." style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-            <button id="btn-generar-acumulado" class="btn-convertir" style="margin:0; padding: 8px 20px;">Generar Listado</button>
+            <input type="number" id="input-tope" placeholder="Ingrese valor..."
+                style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <button id="btn-generar-acumulado" class="btn-convertir" style="margin:0; padding: 8px 20px;">Generar
+                Listado</button>
         </div>
     </div>
 
     <div id="main-content" class="main-content">
         <button class="menu-btn" onclick="openNav()">☰ Menú</button>
-        
+
         <div id="conversion-form" class="container">
             <h1>Procesador de Lotes de Liquidaciones</h1>
 
@@ -67,10 +182,11 @@
                 <label>
                     <input type="radio" name="processMode" value="upload" onchange="toggleUpload(true)">
                     Cargar archivos Excel ahora
-                    <span class="info">(Mueve los archivos cargados a la carpeta por defecto para su procesamiento)</span>
+                    <span class="info">(Mueve los archivos cargados a la carpeta por defecto para su
+                        procesamiento)</span>
                 </label>
             </div>
-            
+
             <div id="upload-area" style="display: none; margin-bottom: 20px;">
                 <label for="file-input">Seleccionar Archivos Excel (.xlsx/.xls):</label>
                 <input type="file" id="file-input" name="excelFiles" accept=".xlsx,.xls" multiple>
@@ -80,43 +196,51 @@
 
             <div id="status-message">
                 <span id="status-text">Esperando para iniciar el proceso...</span>
-                <span id="loading-dots" style="color: #1f202c; display: none; font-size: 25px;"></span> 
+                <span id="loading-dots" style="color: #1f202c; display: none; font-size: 25px;"></span>
             </div>
         </div>
 
-        <div id="panel-tope-jubilatorio" style="display:none; background: #fdfdfd; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 25px; border-left: 6px solid #4e73df;">
-            <h3 style="margin-top:0; color: #4e73df;"><i class="fas fa-calculator"></i> Configuración de Reporte Acumulado</h3>
-            <p style="color: #666; font-size: 14px;">Defina el tope para calcular el acumulado de aportes por agente (ordenado por DNI).</p>
-            
+        <div id="panel-tope-jubilatorio"
+            style="display:none; background: #fdfdfd; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 25px; border-left: 6px solid #4e73df;">
+            <h3 style="margin-top:0; color: #4e73df;"><i class="fas fa-calculator"></i> Configuración de Reporte
+                Acumulado</h3>
+            <p style="color: #666; font-size: 14px;">Defina el tope para calcular el acumulado de aportes por agente
+                (ordenado por DNI).</p>
+
             <div style="display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 200px;">
-                    <label style="display:block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">VALOR DEL TOPE JUBILATORIO ($)</label>
-                    <input type="number" id="input-tope-valor" value="0" step="0.01" style="width: 100%; padding: 12px; border: 2px solid #eaecf4; border-radius: 8px; font-size: 18px; outline: none; transition: border-color 0.2s;">
+                    <label style="display:block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">VALOR DEL TOPE
+                        JUBILATORIO ($)</label>
+                    <input type="number" id="input-tope-valor" value="0" step="0.01"
+                        style="width: 100%; padding: 12px; border: 2px solid #eaecf4; border-radius: 8px; font-size: 18px; outline: none; transition: border-color 0.2s;">
                 </div>
-                
-                <button id="btn-generar-acumulado" class="btn-convertir" style="margin-bottom: 0; height: 50px; padding: 0 30px; font-weight: bold;">
+
+                <button id="btn-generar-acumulado" class="btn-convertir"
+                    style="margin-bottom: 0; height: 50px; padding: 0 30px; font-weight: bold;">
                     <i class="fas fa-play-circle"></i> GENERAR LISTADO
                 </button>
             </div>
         </div>
 
         <div id="liquidacion-completa-view" class="container" style="display: none;">
-            <h1 id="table-title">Cargando...</h1> <div id="table-status">Esperando comandos...</div>
-            
+            <h1 id="table-title">Cargando...</h1>
+            <div id="table-status">Esperando comandos...</div>
+
             <div id="table-container">
                 <div id="table-wrapper">
-                    <table id="tabla-datos" class="display responsive nowrap" style="width:100%"></table> </div>
+                    <table id="tabla-datos" class="display responsive nowrap" style="width:100%"></table>
+                </div>
             </div>
         </div>
 
 
 
-        </div>
-        <!-- NUEVA SECCION-->>
-        <div id="prueba-csv-view" class="container" style="display: none;">
-            <h1>Prueba de PapaParse (Aislada)</h1>
-            <div id="prueba-csv-output"></div>
-        </div>
+    </div>
+    <!-- NUEVA SECCION-->>
+    <div id="prueba-csv-view" class="container" style="display: none;">
+        <h1>Prueba de PapaParse (Aislada)</h1>
+        <div id="prueba-csv-output"></div>
+    </div>
     </div>
 
     <script>
@@ -150,33 +274,33 @@
         // 1. Manejo del Menú Lateral
         const menuAcumulado = document.getElementById('menu-acumulado');
         if (menuAcumulado) {
-            menuAcumulado.addEventListener('click', function(e) {
+            menuAcumulado.addEventListener('click', function (e) {
                 e.preventDefault();
                 console.log("✅ Click en Menú: Cambiando a vista Acumulado");
-                
+
                 // Ocultar lo que no necesitamos
                 document.getElementById('conversion-form').style.display = 'none';
-                
+
                 // Mostrar el panel de configuración
                 const panel = document.getElementById('panel-tope-jubilatorio');
                 panel.style.display = 'block';
-                
+
                 // Ocultar tabla hasta que se genere
                 document.getElementById('table-container').style.display = 'none';
-                
+
                 closeNav(); // Cierra sidebar
             });
-        } 
+        }
 
         // 2. Manejo del Botón "GENERAR LISTADO"
         // index.html
 
-        document.getElementById('btn-generar-acumulado').addEventListener('click', function() {
+        document.getElementById('btn-generar-acumulado').addEventListener('click', function () {
             console.log("🚀 Paso 1: Generando archivo AcApJub.csv y visualizando...");
-            
+
             // Mostramos la tabla y el título
             document.getElementById('table-container').style.display = 'block';
-            
+
             // Llamamos al nuevo endpoint de preparación
             const url = '/api/preparar-acumulado';
             loadDataAndRenderTable(url, "Vista Previa: AcApJub.csv (Estructura Base)");
@@ -217,7 +341,7 @@
             pruebaCsvView.style.display = 'none'; // Asegurar que la nueva vista esté oculta
 
             const panel = document.getElementById('panel-tope-jubilatorio');
-                panel.style.display = 'none';
+            panel.style.display = 'none';
 
             if (sectionId === 'conversion-form') {
                 conversionForm.style.display = 'block';
@@ -227,13 +351,13 @@
                 pruebaCsvView.style.display = 'block';
             }
         }
-        
+
         // --- FUNCIONES DE ANIMACIÓN Y STATUS ---
         function startLoadingAnimation() {
             let step = 0;
             statusText.textContent = 'Procesando archivos y unificando: ';
             loadingDots.style.display = 'inline';
-            statusMessage.className = ''; 
+            statusMessage.className = '';
             loadingDots.textContent = PHASES[0];
 
             intervalId = setInterval(() => {
@@ -277,7 +401,7 @@
             try {
                 const response = await fetch('/api/process', { method: 'POST', body: formData });
                 const result = await response.json();
-                
+
                 stopLoadingAnimation();
 
                 if (result.success) {
@@ -291,7 +415,7 @@
             }
         }
 
-        
+
         // --- FUNCIÓN DE UTILIDAD: Esperar a que una variable exista ---
         function waitForPapaParse() {
             return new Promise((resolve, reject) => {
@@ -340,21 +464,25 @@
             }
         }
 
-            // --- LÓGICA DE LA TABLA (Liquidación Completa) ---
+        // --- LÓGICA DE LA TABLA (Liquidación Completa) ---
         let dataTableInitialized = false;
 
         function loadDataAndRenderTable(url, title) {
 
-            
-            
+
+
             console.log("📥 Iniciando carga desde:", url);
-            
+
             // 1. Mostrar la vista y el título
             showSection('liquidacion-completa-view');
             const titleElement = document.getElementById('table-title');
             if (titleElement) titleElement.innerText = title;
 
-            // 2. LIMPIEZA TOTAL: Evita el error de "Cannot reinitialise DataTable"
+            // 2. LIMPIEZA TOTAL: Verifica si ya existe una instancia de DataTable y la destruye
+            if ($.fn.DataTable.isDataTable('#tabla-datos')) {
+                $('#tabla-datos').DataTable().destroy();
+            }
+            // Limpia el contenedor HTML para asegurar una tabla limpia
             const wrapper = document.getElementById('table-wrapper');
             if (wrapper) {
                 wrapper.innerHTML = '<table id="tabla-datos" class="display responsive nowrap" style="width:100%"></table>';
@@ -386,7 +514,7 @@
                         dom: 'Bfrtip',
                         buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
                         language: {
-                            url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                            url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                         }
                     });
                 })
@@ -394,14 +522,14 @@
                     console.error("❌ Error Crítico:", error);
                     alert("Hubo un fallo al cargar la tabla: " + error.message);
                 });
-        }    
+        }
 
         // --- AJUSTAR LA FUNCIÓN ORIGINAL DE LIQUIDACIÓN COMPLETA PARA USAR LA NUEVA FUNCIÓN ---
         async function loadLiquidacionCompleta() {
             // Llama a la nueva función genérica con la URL y el título específicos
             loadDataAndRenderTable('/api/liquidacion-completa', 'Liquidación Completa Unificada');
         }
-        
+
         // --- INICIALIZACIÓN DE LA APLICACIÓN ---
         // --- Modificación en el DOMContentLoaded para asignar el evento ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -409,48 +537,49 @@
 
             // Asignar evento a Liquidación Completa (con la solución de inicialización segura)
             const menuLiquidacionCompleta = document.getElementById('menu-liquidacion-completa');
-                if (menuLiquidacionCompleta) {
-                    menuLiquidacionCompleta.addEventListener('click', function(e) {
-                        e.preventDefault(); 
-                        loadLiquidacionCompleta();
-                        closeNav(); 
-                    });
-                }
-                // Conexión del menú Residentes
+            if (menuLiquidacionCompleta) {
+                menuLiquidacionCompleta.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    loadLiquidacionCompleta();
+                    closeNav();
+                });
+            }
+            // Conexión del menú Residentes
             const menuResidentes = document.getElementById('menu-residentes');
-                if (menuResidentes) {
-                    menuResidentes.addEventListener('click', function(e) {
-                        e.preventDefault(); 
-                        // Llamamos a la función genérica de carga, pero le pasamos la URL del nuevo endpoint.
-                        loadDataAndRenderTable('/api/residentes', 'Residentes Filtrados');
-                        closeNav(); 
-                    });
-                } else {
-                    console.error("Elemento 'menu-residentes' no encontrado.");
-                }
-                // Conexión del menú Ley 100%
+            if (menuResidentes) {
+                menuResidentes.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    // Llamamos a la función genérica de carga, pero le pasamos la URL del nuevo endpoint.
+                    loadDataAndRenderTable('/api/residentes', 'Residentes Filtrados');
+                    closeNav();
+                });
+            } else {
+                console.error("Elemento 'menu-residentes' no encontrado.");
+            }
+            // Conexión del menú Ley 100%
             const menuLey100 = document.getElementById('menu-ley100');
-                if (menuLey100) {
-                    menuLey100.addEventListener('click', function(e) {
-                        e.preventDefault(); 
-                        // Llama a la función genérica de carga con el nuevo endpoint y título.
-                        loadDataAndRenderTable('/api/ley100', 'Liquidaciones Ley 100%');
-                        closeNav(); 
-                    });
-                } else {
-                    console.error("Elemento 'menu-ley100' no encontrado.");
-                }
-                // Asignar evento a la Prueba CSV Simple (NUEVO)
-                if (menuPruebaCsv) {
-                    menuPruebaCsv.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        loadPruebaCsv();
-                        closeNav();
-                    });
-                }
+            if (menuLey100) {
+                menuLey100.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    // Llama a la función genérica de carga con el nuevo endpoint y título.
+                    loadDataAndRenderTable('/api/ley100', 'Liquidaciones Ley 100%');
+                    closeNav();
+                });
+            } else {
+                console.error("Elemento 'menu-ley100' no encontrado.");
+            }
+            // Asignar evento a la Prueba CSV Simple (NUEVO)
+            if (menuPruebaCsv) {
+                menuPruebaCsv.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    loadPruebaCsv();
+                    closeNav();
+                });
+            }
         });
         // --- NUEVA FUNCIÓN DE PRUEBA ASÍNCRONA ---
-        
+
     </script>
 </body>
+
 </html>
