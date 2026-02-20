@@ -24,7 +24,7 @@ if (!fs.existsSync(EXCEL_DIR)) {
 }
 
 // Configuración de Multer: Al subir archivos, los guardamos temporalmente.
-const upload = multer({ dest: 'uploads/' }); 
+const upload = multer({ dest: 'uploads/' });
 
 // Middleware para servir archivos estáticos (la interfaz HTML)
 app.use(express.static('public'));
@@ -52,8 +52,8 @@ const CAMPOS_LIQUIDACION = [
     'SUELDO_MANO',
     'SUELDO',
     'MONTO_ANTIGUEDAD',
-    'DIAS_INASIST', 
-    'D_TRAB',       
+    'DIAS_INASIST',
+    'D_TRAB',
     'ApJubPer',
     'PLANTA',
     'ORGANISMO',
@@ -80,81 +80,81 @@ app.get('/api/liquidacion-completa', (req, res) => {
 
     // Leemos el archivo como un stream
     fs.createReadStream(csvPath)
-      .pipe(csv())
-      .on('data', (row) => {
-        // [MODIFICACIÓN DE OPTIMIZACIÓN PENDIENTE]
-        const periodoImputadoLimpio = row.PERIODO_IMPUTADO ? row.PERIODO_IMPUTADO.trim() : '';
-        const periodoLiquidadoLimpio = row.PERIODO_LIQUIDADO ? row.PERIODO_LIQUIDADO.trim() : '';
-        // 1. APLICAR FILTRO: PERIODO_IMPUTADO = PERIODO_LIQUIDADO
-        if (periodoImputadoLimpio === periodoLiquidadoLimpio) {
-            
-            // 2. PROYECCIÓN DE COLUMNAS: Crear un nuevo objeto solo con los campos deseados
-            const projectedRow = {};
-            CAMPOS_LIQUIDACION.forEach(field => {
-                // Usamos el operador nullish ?? para manejar casos donde el campo podría no existir.
-                projectedRow[field] = row[field] ?? ''; 
-            });
-            
-            results.push(projectedRow);
-            filteredCount++;
-        }
-      })
-      .on('end', () => {
-        console.log(`[SERVER] ✅ Lectura y Conversión completa. Registros totales en el CSV: ${results.length}.`);
-        console.log(`[SERVER] Registros filtrados y enviados: ${filteredCount}.`);
-        
-        // Enviamos el array JSON filtrado y proyectado
-        res.json(results);
-      })
-      .on('error', (error) => {
-        console.error('[SERVER] ❌ Error leyendo o parseando el CSV:', error.message);
-        res.status(500).json({ error: `Error interno al procesar el archivo CSV: ${error.message}` });
-      });
+        .pipe(csv())
+        .on('data', (row) => {
+            // [MODIFICACIÓN DE OPTIMIZACIÓN PENDIENTE]
+            const periodoImputadoLimpio = row.PERIODO_IMPUTADO ? row.PERIODO_IMPUTADO.trim() : '';
+            const periodoLiquidadoLimpio = row.PERIODO_LIQUIDADO ? row.PERIODO_LIQUIDADO.trim() : '';
+            // 1. APLICAR FILTRO: PERIODO_IMPUTADO = PERIODO_LIQUIDADO
+            if (periodoImputadoLimpio === periodoLiquidadoLimpio) {
+
+                // 2. PROYECCIÓN DE COLUMNAS: Crear un nuevo objeto solo con los campos deseados
+                const projectedRow = {};
+                CAMPOS_LIQUIDACION.forEach(field => {
+                    // Usamos el operador nullish ?? para manejar casos donde el campo podría no existir.
+                    projectedRow[field] = row[field] ?? '';
+                });
+
+                results.push(projectedRow);
+                filteredCount++;
+            }
+        })
+        .on('end', () => {
+            console.log(`[SERVER] ✅ Lectura y Conversión completa. Registros totales en el CSV: ${results.length}.`);
+            console.log(`[SERVER] Registros filtrados y enviados: ${filteredCount}.`);
+
+            // Enviamos el array JSON filtrado y proyectado
+            res.json(results);
+        })
+        .on('error', (error) => {
+            console.error('[SERVER] ❌ Error leyendo o parseando el CSV:', error.message);
+            res.status(500).json({ error: `Error interno al procesar el archivo CSV: ${error.message}` });
+        });
 });
 
 // NUEVO ENDPOINT: Obtener datos filtrados para Residentes
 app.get('/api/residentes', (req, res) => {
     const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
-            const results = [];
-            let filteredCount = 0;
+    const results = [];
+    let filteredCount = 0;
 
-            if (!fs.existsSync(csvPath)) {
-                console.error('[SERVER] ❌ Archivo CSV unificado no encontrado para Residentes. Enviando 404.');
-                return res.status(404).json({ error: 'Archivo CSV unificado no encontrado. Ejecute primero la Conversión.' });
+    if (!fs.existsSync(csvPath)) {
+        console.error('[SERVER] ❌ Archivo CSV unificado no encontrado para Residentes. Enviando 404.');
+        return res.status(404).json({ error: 'Archivo CSV unificado no encontrado. Ejecute primero la Conversión.' });
+    }
+
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            // 1. APLICAR FILTRO: PLANTA = 'Residentes' O PLANTA = 'Residente Nacionales'
+            const esResidente = row.PLANTA === 'Residentes' || row.PLANTA === 'Residentes Nacionales';
+
+            // 2. Opcional: Aplicar filtro de Liquidación Completa si también se requiere (Revisar si es necesario)
+            // const filtroLiquidacionCompleta = row.PERIODO_IMPUTADO === row.PERIODO_LIQUIDADO;
+
+            // Si el registro pasa el filtro de Residente
+            if (esResidente) { // && filtroLiquidacionCompleta, si el segundo filtro es necesario
+
+                // 3. PROYECCIÓN DE COLUMNAS: Solo los campos esenciales (reutilizando CAMPOS_LIQUIDACION)
+                const projectedRow = {};
+                CAMPOS_LIQUIDACION.forEach(field => {
+                    projectedRow[field] = row[field] ?? '';
+                });
+
+                results.push(projectedRow);
+                filteredCount++;
             }
+        })
+        .on('end', () => {
+            console.log(`[SERVER] ✅ Proceso de Residentes completo. Registros filtrados y enviados: ${filteredCount}.`);
+            res.json(results);
+        })
+        .on('error', (error) => {
+            console.error('[SERVER] ❌ Error en el proceso de Residentes:', error.message);
+            res.status(500).json({ error: `Error interno al procesar el archivo CSV para Residentes: ${error.message}` });
+        });
+});
 
-            fs.createReadStream(csvPath)
-            .pipe(csv())
-            .on('data', (row) => {
-                // 1. APLICAR FILTRO: PLANTA = 'Residentes' O PLANTA = 'Residente Nacionales'
-                const esResidente = row.PLANTA === 'Residentes' || row.PLANTA === 'Residentes Nacionales';
-                
-                // 2. Opcional: Aplicar filtro de Liquidación Completa si también se requiere (Revisar si es necesario)
-                // const filtroLiquidacionCompleta = row.PERIODO_IMPUTADO === row.PERIODO_LIQUIDADO;
-
-                // Si el registro pasa el filtro de Residente
-                if (esResidente) { // && filtroLiquidacionCompleta, si el segundo filtro es necesario
-                    
-                    // 3. PROYECCIÓN DE COLUMNAS: Solo los campos esenciales (reutilizando CAMPOS_LIQUIDACION)
-                    const projectedRow = {};
-                    CAMPOS_LIQUIDACION.forEach(field => {
-                        projectedRow[field] = row[field] ?? ''; 
-                    });
-                    
-                    results.push(projectedRow);
-                    filteredCount++;
-                }
-            })
-            .on('end', () => {
-                console.log(`[SERVER] ✅ Proceso de Residentes completo. Registros filtrados y enviados: ${filteredCount}.`);
-                res.json(results);
-            })
-            .on('error', (error) => {
-                console.error('[SERVER] ❌ Error en el proceso de Residentes:', error.message);
-                res.status(500).json({ error: `Error interno al procesar el archivo CSV para Residentes: ${error.message}` });
-            });
-        });            
-        
 // NUEVO ENDPOINT: Obtener datos filtrados para Ley 100%
 app.get('/api/ley100', (req, res) => {
     const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
@@ -167,36 +167,81 @@ app.get('/api/ley100', (req, res) => {
     }
 
     fs.createReadStream(csvPath)
-      .pipe(csv())
-      .on('data', (row) => {
-        
-        // 1. APLICAR FILTRO: AP100_090_54 > 0
-        // Convertimos el valor a número flotante para la comparación.
-        const valorCampo = parseFloat(row.AP100_090_54);
-        
-        // Verificamos si es un número válido y es mayor que cero.
-        if (!isNaN(valorCampo) && valorCampo > 0) { 
-            
-            // 2. PROYECCIÓN DE COLUMNAS: Solo los campos esenciales (reutilizando CAMPOS_LIQUIDACION)
-            const projectedRow = {};
-            CAMPOS_LIQUIDACION.forEach(field => {
-                projectedRow[field] = row[field] ?? ''; 
-            });
-            
-            results.push(projectedRow);
-            filteredCount++;
-        }
-      })
-      .on('end', () => {
-        console.log(`[SERVER] ✅ Proceso de Ley 100% completo. Registros filtrados y enviados: ${filteredCount}.`);
-        res.json(results);
-      })
-      .on('error', (error) => {
-        console.error('[SERVER] ❌ Error en el proceso de Ley 100%:', error.message);
-        res.status(500).json({ error: `Error interno al procesar el archivo CSV para Ley 100%: ${error.message}` });
-      });
-});        
-// ... (El resto de tu código server.js) ...
+        .pipe(csv())
+        .on('data', (row) => {
+
+            // 1. APLICAR FILTRO: AP100_090_54 > 0
+            // Convertimos el valor a número flotante para la comparación.
+            const valorCampo = parseFloat(row.AP100_090_54);
+
+            // Verificamos si es un número válido y es mayor que cero.
+            if (!isNaN(valorCampo) && valorCampo > 0) {
+
+                // 2. PROYECCIÓN DE COLUMNAS: Solo los campos esenciales (reutilizando CAMPOS_LIQUIDACION)
+                const projectedRow = {};
+                CAMPOS_LIQUIDACION.forEach(field => {
+                    projectedRow[field] = row[field] ?? '';
+                });
+
+                results.push(projectedRow);
+                filteredCount++;
+            }
+        })
+        .on('end', () => {
+            console.log(`[SERVER] ✅ Proceso de Ley 100% completo. Registros filtrados y enviados: ${filteredCount}.`);
+            res.json(results);
+        })
+        .on('error', (error) => {
+            console.error('[SERVER] ❌ Error en el proceso de Ley 100%:', error.message);
+            res.status(500).json({ error: `Error interno al procesar el archivo CSV para Ley 100%: ${error.message}` });
+        });
+});
+
+// NUEVO ENDPOINT: Liquidaciones a observar por importes
+app.get('/api/observar-importes', (req, res) => {
+    const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    const results = [];
+    let filteredCount = 0;
+
+    if (!fs.existsSync(csvPath)) {
+        console.error('[SERVER] ❌ Archivo CSV unificado no encontrado para Observar Importes. Enviando 404.');
+        return res.status(404).json({ error: 'Archivo CSV unificado no encontrado. Ejecute primero la Conversión.' });
+    }
+
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            const totHab = parseFloat(row.TOT_HAB);
+            const liquido = parseFloat(row.LIQUIDO);
+            const sueldoMano = parseFloat(row.SUELDO_MANO);
+
+            // FILTRO: TOT_HAB <=0 o LIQUIDO <= 0 o SUELDO_MANO <= 100000 o (SUELDO_MANO > 4000000.0 y PLANTA <> "Reemplazante no permanente-LD")
+            const cumpleCriterio =
+                (!isNaN(totHab) && totHab <= 0) ||
+                (!isNaN(liquido) && liquido <= 0) ||
+                (!isNaN(sueldoMano) && (
+                    (sueldoMano <= 100000.0 && row.PLANTA !== "Reemplazante no permanente-LD") ||
+                    (sueldoMano > 4000000.0 && row.PLANTA !== "Reemplazante no permanente-LD")
+                ));
+
+            if (cumpleCriterio) {
+                const projectedRow = {};
+                CAMPOS_LIQUIDACION.forEach(field => {
+                    projectedRow[field] = row[field] ?? '';
+                });
+                results.push(projectedRow);
+                filteredCount++;
+            }
+        })
+        .on('end', () => {
+            console.log(`[SERVER] ✅ Proceso de Observar Importes completo. Registros filtrados y enviados: ${filteredCount}.`);
+            res.json(results);
+        })
+        .on('error', (error) => {
+            console.error('[SERVER] ❌ Error en el proceso de Observar Importes:', error.message);
+            res.status(500).json({ error: `Error interno al procesar el archivo CSV para Observar Importes: ${error.message}` });
+        });
+});
 
 // server.js
 
@@ -236,7 +281,7 @@ app.get('/api/preparar-acumulado', (req, res) => {
         try {
             fs.writeFileSync(outputPath, contenidoCompleto, 'utf8');
             console.log("✅ Archivo AcApJub.csv creado exitosamente en carpeta csv-unidos");
-            
+
             // 4. Enviar los datos al frontend para visualización
             res.json(resultados);
         } catch (err) {
@@ -252,9 +297,9 @@ app.get('/api/preparar-acumulado', (req, res) => {
 
 // Endpoint para el procesamiento
 app.post('/api/process', upload.array('excelFiles'), async (req, res) => {
-    
+
     // El frontend nos dirá si debemos usar la carpeta por defecto o los archivos subidos
-    const processMode = req.body.processMode; 
+    const processMode = req.body.processMode;
     const files = req.files; // Archivos subidos por Multer
 
     let excelFilesToProcess = [];
@@ -265,29 +310,29 @@ app.post('/api/process', upload.array('excelFiles'), async (req, res) => {
             // Modo por defecto: Leer el contenido de la carpeta 'excel-a-convertir'
             excelFilesToProcess = fs.readdirSync(EXCEL_DIR)
                 .filter(file => file.match(/\.(xlsx|xls)$/i));
-            
+
             if (excelFilesToProcess.length === 0) {
-                 return res.status(400).json({ success: false, message: "No se encontraron archivos en la carpeta por defecto." });
+                return res.status(400).json({ success: false, message: "No se encontraron archivos en la carpeta por defecto." });
             }
         } else if (processMode === 'upload') {
             // Modo Carga: Usar los archivos subidos
             if (!files || files.length === 0) {
                 return res.status(400).json({ success: false, message: "No se cargó ningún archivo." });
             }
-            
+
             // Mover los archivos cargados (desde 'uploads/') a la carpeta de entrada 'excel-a-convertir'
             files.forEach(file => {
                 const tempPath = path.join(__dirname, file.path);
                 const targetPath = path.join(EXCEL_DIR, file.originalname);
-                
+
                 // Mover el archivo subido a la carpeta de entrada del conversor
-                fs.renameSync(tempPath, targetPath); 
-                
+                fs.renameSync(tempPath, targetPath);
+
                 excelFilesToProcess.push(file.originalname);
                 filesToCleanup.push(targetPath); // Lista de archivos a borrar después del proceso si es necesario
             });
         }
-        
+
         // Ejecutar la lógica ETL centralizada
         const result = await ejecutarProcesoETL(excelFilesToProcess);
 

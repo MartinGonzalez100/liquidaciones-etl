@@ -135,6 +135,54 @@
             overflow-x: auto;
             margin-top: 20px;
         }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin-left: 10px;
+            color: #5c67f2;
+            font-size: 0.8em;
+            vertical-align: middle;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1001;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            font-weight: normal;
+            line-height: 1.4;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -149,6 +197,8 @@
         <h2>Menú de Procesos</h2>
         <a href="#" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
         <a href="#" id="menu-liquidacion-completa">Liquidación Completa</a>
+        <a href="#" id="menu-observar-importes" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Observar
+            por Importes</a>
         <a href="#" id="menu-acumulado"><i class="fas fa-calculator"></i> Acumulado Aporte Jub.</a>
         <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
@@ -223,7 +273,15 @@
         </div>
 
         <div id="liquidacion-completa-view" class="container" style="display: none;">
-            <h1 id="table-title">Cargando...</h1>
+            <div style="display: flex; align-items: center;">
+                <h1 id="table-title">Cargando...</h1>
+                <div id="help-icon" class="tooltip" style="display: none;">
+                    <span
+                        style="border: 1px solid #5c67f2; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold;">?</span>
+                    <span class="tooltiptext">se esta utilizando valores negativos o valores fuera de rango para
+                        verificar</span>
+                </div>
+            </div>
             <div id="table-status">Esperando comandos...</div>
 
             <div id="table-container">
@@ -535,12 +593,31 @@
         document.addEventListener('DOMContentLoaded', () => {
             showSection('conversion-form');
 
-            // Asignar evento a Liquidación Completa (con la solución de inicialización segura)
+            // Función para resetear el icono de ayuda
+            const resetHelpIcon = () => {
+                const helpIcon = document.getElementById('help-icon');
+                if (helpIcon) helpIcon.style.display = 'none';
+            };
+
+            // Asignar evento a Liquidación Completa
             const menuLiquidacionCompleta = document.getElementById('menu-liquidacion-completa');
             if (menuLiquidacionCompleta) {
                 menuLiquidacionCompleta.addEventListener('click', function (e) {
                     e.preventDefault();
+                    resetHelpIcon();
                     loadLiquidacionCompleta();
+                    closeNav();
+                });
+            }
+
+            // Asignar evento a Observar por Importes
+            const menuObservarImportes = document.getElementById('menu-observar-importes');
+            if (menuObservarImportes) {
+                menuObservarImportes.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const helpIcon = document.getElementById('help-icon');
+                    if (helpIcon) helpIcon.style.display = 'inline-block';
+                    loadDataAndRenderTable('/api/observar-importes', 'Liquidaciones a observar por importes');
                     closeNav();
                 });
             }
@@ -549,6 +626,7 @@
             if (menuResidentes) {
                 menuResidentes.addEventListener('click', function (e) {
                     e.preventDefault();
+                    resetHelpIcon();
                     // Llamamos a la función genérica de carga, pero le pasamos la URL del nuevo endpoint.
                     loadDataAndRenderTable('/api/residentes', 'Residentes Filtrados');
                     closeNav();
@@ -561,6 +639,7 @@
             if (menuLey100) {
                 menuLey100.addEventListener('click', function (e) {
                     e.preventDefault();
+                    resetHelpIcon();
                     // Llama a la función genérica de carga con el nuevo endpoint y título.
                     loadDataAndRenderTable('/api/ley100', 'Liquidaciones Ley 100%');
                     closeNav();
