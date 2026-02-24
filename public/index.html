@@ -19,14 +19,13 @@
             height: 100%;
             width: 0;
             position: fixed;
-            z-index: 10;
+            z-index: 2000;
             top: 0;
             left: 0;
             background-color: #333;
             overflow-x: hidden;
             transition: 0.5s;
             padding-top: 60px;
-            white-space: nowrap;
         }
 
         .sidebar a {
@@ -183,6 +182,53 @@
             visibility: visible;
             opacity: 1;
         }
+
+        /* Floating Search Styling */
+        .floating-search-container {
+            position: sticky;
+            top: 20px;
+            z-index: 1000;
+            display: none;
+            /* Hidden by default, shown when data is loaded */
+            justify-content: center;
+            width: 100%;
+            pointer-events: none;
+            /* Let clicks through unless on the input */
+        }
+
+        .floating-search-input {
+            width: 300px;
+            padding: 12px 20px;
+            border: 2px solid #5c67f2;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            font-size: 16px;
+            outline: none;
+            background-color: white;
+            transition: width 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .floating-search-input:focus {
+            width: 400px;
+            border-color: #4a54e1;
+        }
+
+        /* Sticky Table Header Styling */
+        #tabla-datos thead th {
+            position: sticky;
+            top: 0;
+            background-color: #5c67f2 !important;
+            color: white !important;
+            z-index: 900;
+            /* Behind the floating search (1000) */
+            box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Adjust DataTables default search to hide it */
+        .dataTables_filter {
+            display: none;
+        }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -203,7 +249,7 @@
         <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
         <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')">Pago Familiar Discapacitado</a>
-        <a href="#" id="menu-prueba-csv" onclick="closeNav()">Prueba CSV Simple</a>
+
     </div>
     <div id="section-acumulado" style="display:none; margin-bottom: 20px;">
         <div
@@ -218,6 +264,11 @@
 
     <div id="main-content" class="main-content">
         <button class="menu-btn" onclick="openNav()">☰ Menú</button>
+
+        <!-- Floating Search Bar -->
+        <div id="floating-search-container" class="floating-search-container">
+            <input type="text" id="custom-filter" class="floating-search-input" placeholder="🔍 Buscar en la tabla...">
+        </div>
 
         <div id="conversion-form" class="container">
             <h1>Procesador de Lotes de Liquidaciones</h1>
@@ -294,17 +345,11 @@
 
 
     </div>
-    <!-- NUEVA SECCION-->>
-    <div id="prueba-csv-view" class="container" style="display: none;">
-        <h1>Prueba de PapaParse (Aislada)</h1>
-        <div id="prueba-csv-output"></div>
-    </div>
+
     </div>
 
     <script>
-        const pruebaCsvView = document.getElementById('prueba-csv-view');
-        const pruebaCsvOutput = document.getElementById('prueba-csv-output');
-        const menuPruebaCsv = document.getElementById('menu-prueba-csv');
+
         // --- CONSTANTES Y ELEMENTOS ---
         const statusMessage = document.getElementById('status-message');
         const statusText = document.getElementById('status-text');
@@ -313,7 +358,7 @@
         const loadingDots = document.getElementById('loading-dots');
         const sidebar = document.getElementById("mySidebar");
         const mainContent = document.getElementById("main-content");
-        const sidebarWidth = '250px';
+        const sidebarWidth = '300px';
 
         const conversionForm = document.getElementById('conversion-form');
         const liquidacionView = document.getElementById('liquidacion-completa-view');
@@ -396,7 +441,7 @@
         function showSection(sectionId) {
             conversionForm.style.display = 'none';
             liquidacionView.style.display = 'none';
-            pruebaCsvView.style.display = 'none'; // Asegurar que la nueva vista esté oculta
+
 
             const panel = document.getElementById('panel-tope-jubilatorio');
             panel.style.display = 'none';
@@ -405,8 +450,6 @@
                 conversionForm.style.display = 'block';
             } else if (sectionId === 'liquidacion-completa-view') {
                 liquidacionView.style.display = 'block';
-            } else if (sectionId === 'prueba-csv-view') { // NUEVA VISTA
-                pruebaCsvView.style.display = 'block';
             }
         }
 
@@ -474,53 +517,7 @@
         }
 
 
-        // --- FUNCIÓN DE UTILIDAD: Esperar a que una variable exista ---
-        function waitForPapaParse() {
-            return new Promise((resolve, reject) => {
-                // Chequea cada 100ms si PapaParse existe
-                const checkInterval = setInterval(() => {
-                    if (typeof PapaParse !== 'undefined') {
-                        clearInterval(checkInterval);
-                        resolve();
-                    }
-                }, 100);
 
-                // Seguridad: timeout de 5 segundos
-                setTimeout(() => {
-                    clearInterval(checkInterval);
-                    reject(new Error("Timeout: La librería PapaParse no se cargó después de 5 segundos."));
-                }, 5000);
-            });
-        }
-
-        // --- NUEVA FUNCIÓN DE PRUEBA (Usa la espera) ---
-        async function loadPruebaCsv() {
-            showSection('prueba-csv-view');
-            pruebaCsvOutput.innerHTML = '<h2>Ejecutando prueba (Esperando librería)...</h2>';
-
-            try {
-                await waitForPapaParse(); // 🚨 ESPERA ACTIVA AQUÍ
-
-                const csvData = "columna_a,columna_b\r\nvalor1,valorA\r\nvalor2,valorB";
-
-                const parsed = PapaParse.parse(csvData, {
-                    header: true,
-                    skipEmptyLines: true
-                });
-
-                pruebaCsvOutput.innerHTML = `
-                    <h2>Resultado de PapaParse (Éxito):</h2>
-                    <pre>${JSON.stringify(parsed.data, null, 2)}</pre>
-                    <p>✅ ¡Funcionalidad PapaParse verificada!</p>
-                `;
-
-            } catch (error) {
-                pruebaCsvOutput.innerHTML = `
-                    <h2>Resultado de PapaParse (Falla Crítica):</h2>
-                    <p style="color: red;">Error: ${error.message}</p>
-                `;
-            }
-        }
 
         // --- LÓGICA DE LA TABLA (Liquidación Completa) ---
         let dataTableInitialized = false;
@@ -573,6 +570,21 @@
                         buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
                         language: {
                             url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                        },
+                        initComplete: function () {
+                            // Link the custom search bar to DataTables
+                            const api = this.api();
+                            const searchContainer = document.getElementById('floating-search-container');
+                            const searchInput = document.getElementById('custom-filter');
+
+                            searchContainer.style.display = 'flex'; // Show search bar
+
+                            searchInput.onkeyup = function () {
+                                api.search(this.value).draw();
+                            };
+
+                            // Reset search input on new load
+                            searchInput.value = '';
                         }
                     });
                 })
@@ -597,6 +609,9 @@
             const resetHelpIcon = () => {
                 const helpIcon = document.getElementById('help-icon');
                 if (helpIcon) helpIcon.style.display = 'none';
+                // Hide search bar when not in a data view
+                const searchContainer = document.getElementById('floating-search-container');
+                if (searchContainer) searchContainer.style.display = 'none';
             };
 
             // Asignar evento a Liquidación Completa
@@ -647,14 +662,7 @@
             } else {
                 console.error("Elemento 'menu-ley100' no encontrado.");
             }
-            // Asignar evento a la Prueba CSV Simple (NUEVO)
-            if (menuPruebaCsv) {
-                menuPruebaCsv.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    loadPruebaCsv();
-                    closeNav();
-                });
-            }
+
         });
         // --- NUEVA FUNCIÓN DE PRUEBA ASÍNCRONA ---
 
