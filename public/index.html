@@ -229,12 +229,226 @@
         .dataTables_filter {
             display: none;
         }
+
+        /* Dashboard Styles */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border-left: 5px solid #5c67f2;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #333;
+        }
+
+        .card-subtitle {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* Gradient KPI Cards */
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .kpi-blue {
+            background: linear-gradient(135deg, #5c67f2 0%, #4a54e1 100%);
+        }
+
+        .kpi-green {
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+        }
+
+        .kpi-orange {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .kpi-card .card-title {
+            color: rgba(255, 255, 255, 0.8);
+            border: none;
+        }
+
+        .kpi-card .card-value {
+            color: white;
+        }
+
+        /* Breakdown sections */
+        .breakdown-section {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .breakdown-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-top: 4px solid #5c67f2;
+        }
+
+        .breakdown-flex {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 1000px) {
+            .breakdown-flex {
+                flex-direction: column;
+            }
+
+            .chart-container,
+            .list-container {
+                width: 100% !important;
+            }
+        }
+
+        .chart-container {
+            flex: 1.2;
+            min-width: 0;
+            height: 350px;
+        }
+
+        .list-container {
+            flex: 0.8;
+            min-width: 300px;
+        }
+
+        .breakdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .breakdown-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .breakdown-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f9f9f9;
+            transition: background 0.2s;
+        }
+
+        .breakdown-item:hover {
+            background: #f8f9ff;
+        }
+
+        .item-name {
+            font-weight: 500;
+            color: #444;
+            flex: 1;
+        }
+
+        .item-stats {
+            text-align: right;
+        }
+
+        .item-qty {
+            font-size: 12px;
+            color: #888;
+            display: block;
+        }
+
+        .item-amt {
+            font-weight: bold;
+            color: #5c67f2;
+        }
+
+        /* Dashboard Filters */
+        .dashboard-filters {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-btn {
+            background: #f0f0f0;
+            color: #666;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .filter-btn.active {
+            background: #5c67f2;
+            color: white;
+            box-shadow: 0 0 0 3px rgba(92, 103, 242, 0.4);
+            border: 2px solid white;
+            transform: scale(1.05);
+        }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" charset="utf8"
         src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
-
+    <!-- Bibliotecas para Gráficos y PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 
 <body>
@@ -243,14 +457,16 @@
         <h2>Menú de Procesos</h2>
         <a href="#" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
         <a href="#" id="menu-liquidacion-completa">Liquidación Completa</a>
+        <a href="#" id="menu-dashboard-informe" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Informe de
+            Liquidación</a>
         <a href="#" id="menu-observar-importes" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Observar
             por Importes</a>
         <a href="#" id="menu-acumulado"><i class="fas fa-calculator"></i> Acumulado Aporte Jub.</a>
         <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
         <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')">Pago Familiar Discapacitado</a>
-
     </div>
+
     <div id="section-acumulado" style="display:none; margin-bottom: 20px;">
         <div
             style="background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; position: sticky; top: 10px; z-index: 100;">
@@ -269,72 +485,48 @@
         <div id="floating-search-container" class="floating-search-container">
             <input type="text" id="custom-filter" class="floating-search-input" placeholder="🔍 Buscar en la tabla...">
         </div>
-
         <div id="conversion-form" class="container">
             <h1>Procesador de Lotes de Liquidaciones</h1>
-
             <div class="mode-selection">
-                <h2>Modo de Carga</h2>
-                <label>
-                    <input type="radio" name="processMode" value="default" checked onchange="toggleUpload(false)">
-                    Usar archivos de la carpeta: <code>excel-a-convertir/</code>
-                    <span class="info">(Procesa todos los archivos `.xlsx` que ya estén ahí)</span>
-                </label>
-                <label>
-                    <input type="radio" name="processMode" value="upload" onchange="toggleUpload(true)">
-                    Cargar archivos Excel ahora
-                    <span class="info">(Mueve los archivos cargados a la carpeta por defecto para su
-                        procesamiento)</span>
-                </label>
+                <h2>Modo de Carga</h2><label><input type="radio" name="processMode" value="default" checked
+                        onchange="toggleUpload(false)">Usar archivos de la carpeta:
+                    <code>excel-a-convertir/</code><span class="info">(Procesa todos los archivos `.xlsx` que ya
+                        estén ahí)</span></label><label><input type="radio" name="processMode" value="upload"
+                        onchange="toggleUpload(true)">Cargar archivos Excel ahora <span class="info">(Mueve los
+                        archivos cargados a la carpeta por defecto para su procesamiento)</span></label>
             </div>
-
-            <div id="upload-area" style="display: none; margin-bottom: 20px;">
-                <label for="file-input">Seleccionar Archivos Excel (.xlsx/.xls):</label>
-                <input type="file" id="file-input" name="excelFiles" accept=".xlsx,.xls" multiple>
-            </div>
-
-            <button onclick="iniciarProceso()">Iniciar Conversión y Unificación</button>
-
-            <div id="status-message">
-                <span id="status-text">Esperando para iniciar el proceso...</span>
-                <span id="loading-dots" style="color: #1f202c; display: none; font-size: 25px;"></span>
-            </div>
+            <div id="upload-area" style="display: none; margin-bottom: 20px;"><label for="file-input">Seleccionar
+                    Archivos Excel (.xlsx/.xls):</label><input type="file" id="file-input" name="excelFiles"
+                    accept=".xlsx,.xls" multiple></div><button onclick="iniciarProceso()">Iniciar Conversión y
+                Unificación</button>
+            <div id="status-message"><span id="status-text">Esperando para iniciar el proceso...</span><span
+                    id="loading-dots" style="color: #1f202c; display: none; font-size: 25px;"></span></div>
         </div>
-
         <div id="panel-tope-jubilatorio"
             style="display:none; background: #fdfdfd; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 25px; border-left: 6px solid #4e73df;">
-            <h3 style="margin-top:0; color: #4e73df;"><i class="fas fa-calculator"></i> Configuración de Reporte
+            <h3 style="margin-top:0; color: #4e73df;"><i class="fas fa-calculator"></i>Configuración de Reporte
                 Acumulado</h3>
             <p style="color: #666; font-size: 14px;">Defina el tope para calcular el acumulado de aportes por agente
                 (ordenado por DNI).</p>
-
             <div style="display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="display:block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">VALOR DEL TOPE
-                        JUBILATORIO ($)</label>
-                    <input type="number" id="input-tope-valor" value="0" step="0.01"
+                <div style="flex: 1; min-width: 200px;"><label
+                        style="display:block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">VALOR DEL
+                        TOPE JUBILATORIO ($)</label><input type="number" id="input-tope-valor" value="0" step="0.01"
                         style="width: 100%; padding: 12px; border: 2px solid #eaecf4; border-radius: 8px; font-size: 18px; outline: none; transition: border-color 0.2s;">
-                </div>
-
-                <button id="btn-generar-acumulado" class="btn-convertir"
-                    style="margin-bottom: 0; height: 50px; padding: 0 30px; font-weight: bold;">
-                    <i class="fas fa-play-circle"></i> GENERAR LISTADO
-                </button>
+                </div><button id="btn-generar-acumulado" class="btn-convertir"
+                    style="margin-bottom: 0; height: 50px; padding: 0 30px; font-weight: bold;"><i
+                        class="fas fa-play-circle"></i>GENERAR LISTADO </button>
             </div>
         </div>
-
         <div id="liquidacion-completa-view" class="container" style="display: none;">
             <div style="display: flex; align-items: center;">
                 <h1 id="table-title">Cargando...</h1>
-                <div id="help-icon" class="tooltip" style="display: none;">
-                    <span
-                        style="border: 1px solid #5c67f2; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold;">?</span>
-                    <span class="tooltiptext">se esta utilizando valores negativos o valores fuera de rango para
-                        verificar</span>
-                </div>
+                <div id="help-icon" class="tooltip" style="display: none;"><span
+                        style="border: 1px solid #5c67f2; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold;">?</span><span
+                        class="tooltiptext">se esta utilizando valores negativos o valores fuera de rango para
+                        verificar</span></div>
             </div>
             <div id="table-status">Esperando comandos...</div>
-
             <div id="table-container">
                 <div id="table-wrapper">
                     <table id="tabla-datos" class="display responsive nowrap" style="width:100%"></table>
@@ -342,15 +534,88 @@
             </div>
         </div>
 
+        <!-- VISTA DASHBOARD -->
+        <div id="dashboard-view" class="container"
+            style="display: none; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; border-radius: 12px; max-width: 1200px; margin: 20px auto;">
+            <div
+                style="display: flex; flex-direction: column; margin-bottom: 25px; border-bottom: 2px solid #5c67f2; padding-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <h1 style="border: none; margin: 0; color: #333;">Dashboard: Informe de Liquidación</h1>
+                    <button onclick="exportDashboardToPDF()" class="btn-convertir"
+                        style="margin: 0; background-color: #e74c3c; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-file-pdf"></i> Descargar PDF (Oficio)
+                    </button>
+                </div>
+                <h2 id="dashboard-subtitle"
+                    style="margin: 10px 0 0 0; color: #5c67f2; font-size: 20px; font-weight: 600;">Liquidación Completa
+                    (Todo)</h2>
+            </div>
 
+            <div class="dashboard-filters" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 30px;">
+                <span style="font-weight: bold; color: #555;">Filtrar por: </span>
+                <button class="filter-btn active" onclick="loadDashboard('todos', this)">Todos</button>
+                <button class="filter-btn" onclick="loadDashboard('mensual', this)">Mensuales</button>
+                <button class="filter-btn" onclick="loadDashboard('retroactivo', this)">Retroactivos</button>
+            </div>
 
+            <div class="kpi-container" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 40px;">
+                <div class="kpi-card kpi-blue">
+                    <div class="card-title">Agentes Liquidados</div>
+                    <div class="card-value" id="kpi-agentes">-</div>
+                    <div class="card-subtitle">Personal total procesado</div>
+                </div>
+                <div class="kpi-card kpi-green">
+                    <div class="card-title">Total Bruto (Haberes)</div>
+                    <div class="card-value" id="kpi-bruto">-</div>
+                    <div class="card-subtitle">Monto total sin descuentos</div>
+                </div>
+                <div class="kpi-card kpi-orange">
+                    <div class="card-title">Total Líquido</div>
+                    <div class="card-value" id="kpi-liquido">-</div>
+                    <div class="card-subtitle">Monto neto a pagar</div>
+                </div>
+            </div>
+
+            <div class="breakdown-section">
+                <!-- Planta -->
+                <div class="breakdown-card">
+                    <div class="breakdown-header">
+                        <h3>Distribución por Planta</h3>
+                        <span id="label-planta-count" style="font-size: 13px; color: #999;">-</span>
+                    </div>
+                    <div class="breakdown-flex">
+                        <div class="chart-container">
+                            <canvas id="chart-planta"></canvas>
+                        </div>
+                        <div class="list-container">
+                            <div class="breakdown-list" id="list-planta" style="max-height: 350px;">
+                                <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Organismo -->
+                <div class="breakdown-card">
+                    <div class="breakdown-header">
+                        <h3>Distribución por Organismo</h3>
+                        <span id="label-organismo-count" style="font-size: 13px; color: #999;">-</span>
+                    </div>
+                    <div class="breakdown-flex">
+                        <div class="chart-container">
+                            <canvas id="chart-organismo"></canvas>
+                        </div>
+                        <div class="list-container">
+                            <div class="breakdown-list" id="list-organismo" style="max-height: 350px;">
+                                <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
     </div>
-
-    <script>
-
-        // --- CONSTANTES Y ELEMENTOS ---
+    <script> // --- CONSTANTES Y ELEMENTOS ---
         const statusMessage = document.getElementById('status-message');
         const statusText = document.getElementById('status-text');
         const uploadArea = document.getElementById('upload-area');
@@ -369,13 +634,19 @@
 
 
         let intervalId;
-        const PHASES = ['', 'Ca', 'Carg', 'Carga', 'Cargand', 'Cargando'];
+        const PHASES = ['',
+            'Ca',
+            'Carg',
+            'Carga',
+            'Cargand',
+            'Cargando'];
 
 
         // --- LÓGICA VISTA ACUMULADO ---
 
         // 1. Manejo del Menú Lateral
         const menuAcumulado = document.getElementById('menu-acumulado');
+
         if (menuAcumulado) {
             menuAcumulado.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -434,8 +705,13 @@
         } */
 
         // --- FUNCIONES DE NAVEGACIÓN ---
-        function openNav() { sidebar.style.width = sidebarWidth; }
-        function closeNav() { sidebar.style.width = '0'; }
+        function openNav() {
+            sidebar.style.width = sidebarWidth;
+        }
+
+        function closeNav() {
+            sidebar.style.width = '0';
+        }
 
         // --- Funciones de navegación (modificar showSection) ---
         function showSection(sectionId) {
@@ -448,8 +724,14 @@
 
             if (sectionId === 'conversion-form') {
                 conversionForm.style.display = 'block';
-            } else if (sectionId === 'liquidacion-completa-view') {
+            }
+
+            else if (sectionId === 'liquidacion-completa-view') {
                 liquidacionView.style.display = 'block';
+            }
+
+            else if (sectionId === 'dashboard-view') {
+                document.getElementById('dashboard-view').style.display = 'block';
             }
         }
 
@@ -464,7 +746,9 @@
             intervalId = setInterval(() => {
                 step = (step + 1) % PHASES.length;
                 loadingDots.textContent = PHASES[step];
-            }, 200);
+            }
+
+                , 200);
         }
 
         function stopLoadingAnimation() {
@@ -494,23 +778,30 @@
                     mostrarStatus('Por favor, selecciona al menos un archivo Excel para cargar.', 'error');
                     return;
                 }
+
                 for (const file of fileInput.files) {
                     formData.append('excelFiles', file);
                 }
             }
 
             try {
-                const response = await fetch('/api/process', { method: 'POST', body: formData });
+                const response = await fetch('/api/process', {
+                    method: 'POST', body: formData
+                });
                 const result = await response.json();
 
                 stopLoadingAnimation();
 
                 if (result.success) {
                     mostrarStatus(result.message, 'success');
-                } else {
+                }
+
+                else {
                     mostrarStatus(result.message, 'error');
                 }
-            } catch (error) {
+            }
+
+            catch (error) {
                 stopLoadingAnimation();
                 mostrarStatus('Error de conexión con el servidor.', 'error');
             }
@@ -537,61 +828,67 @@
             if ($.fn.DataTable.isDataTable('#tabla-datos')) {
                 $('#tabla-datos').DataTable().destroy();
             }
+
             // Limpia el contenedor HTML para asegurar una tabla limpia
             const wrapper = document.getElementById('table-wrapper');
+
             if (wrapper) {
                 wrapper.innerHTML = '<table id="tabla-datos" class="display responsive nowrap" style="width:100%"></table>';
             }
 
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) throw new Error("Error en el servidor: " + response.statusText);
-                    return response.json();
-                })
-                .then(data => {
-                    if (!data || data.length === 0) {
-                        alert("No se encontraron registros para este reporte.");
-                        return;
+            fetch(url).then(response => {
+                if (!response.ok) throw new Error("Error en el servidor: " + response.statusText);
+                return response.json();
+
+            }).then(data => {
+                if (!data || data.length === 0) {
+                    alert("No se encontraron registros para este reporte.");
+                    return;
+                }
+
+                // 3. DETECCIÓN DINÁMICA DE COLUMNAS
+                const columns = Object.keys(data[0]).map(key => ({
+                    title: key.replace(/_/g, ' '),
+                    data: key
+                }));
+
+                // 4. INICIALIZACIÓN
+                $('#tabla-datos').DataTable({
+
+                    data: data,
+                    columns: columns,
+                    pageLength: 25,
+                    responsive: true,
+                    dom: 'Bfrtip',
+                    buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+                    language: {
+                        url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                     }
 
-                    // 3. DETECCIÓN DINÁMICA DE COLUMNAS
-                    const columns = Object.keys(data[0]).map(key => ({
-                        title: key.replace(/_/g, ' '),
-                        data: key
-                    }));
+                    ,
+                    initComplete: function () {
+                        // Link the custom search bar to DataTables
+                        const api = this.api();
+                        const searchContainer = document.getElementById('floating-search-container');
+                        const searchInput = document.getElementById('custom-filter');
 
-                    // 4. INICIALIZACIÓN
-                    $('#tabla-datos').DataTable({
-                        data: data,
-                        columns: columns,
-                        pageLength: 25,
-                        responsive: true,
-                        dom: 'Bfrtip',
-                        buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
-                        language: {
-                            url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
-                        },
-                        initComplete: function () {
-                            // Link the custom search bar to DataTables
-                            const api = this.api();
-                            const searchContainer = document.getElementById('floating-search-container');
-                            const searchInput = document.getElementById('custom-filter');
+                        searchContainer.style.display = 'flex'; // Show search bar
 
-                            searchContainer.style.display = 'flex'; // Show search bar
-
-                            searchInput.onkeyup = function () {
-                                api.search(this.value).draw();
-                            };
-
-                            // Reset search input on new load
-                            searchInput.value = '';
+                        searchInput.onkeyup = function () {
+                            api.search(this.value).draw();
                         }
-                    });
-                })
-                .catch(error => {
-                    console.error("❌ Error Crítico:", error);
-                    alert("Hubo un fallo al cargar la tabla: " + error.message);
+
+                            ;
+
+                        // Reset search input on new load
+                        searchInput.value = '';
+                    }
                 });
+
+            }).catch(error => {
+                console.error("❌ Error Crítico:", error);
+                alert("Hubo un fallo al cargar la tabla: " + error.message);
+            });
         }
 
         // --- AJUSTAR LA FUNCIÓN ORIGINAL DE LIQUIDACIÓN COMPLETA PARA USAR LA NUEVA FUNCIÓN ---
@@ -612,10 +909,13 @@
                 // Hide search bar when not in a data view
                 const searchContainer = document.getElementById('floating-search-container');
                 if (searchContainer) searchContainer.style.display = 'none';
-            };
+            }
+
+                ;
 
             // Asignar evento a Liquidación Completa
             const menuLiquidacionCompleta = document.getElementById('menu-liquidacion-completa');
+
             if (menuLiquidacionCompleta) {
                 menuLiquidacionCompleta.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -627,6 +927,7 @@
 
             // Asignar evento a Observar por Importes
             const menuObservarImportes = document.getElementById('menu-observar-importes');
+
             if (menuObservarImportes) {
                 menuObservarImportes.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -636,8 +937,10 @@
                     closeNav();
                 });
             }
+
             // Conexión del menú Residentes
             const menuResidentes = document.getElementById('menu-residentes');
+
             if (menuResidentes) {
                 menuResidentes.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -646,11 +949,15 @@
                     loadDataAndRenderTable('/api/residentes', 'Residentes Filtrados');
                     closeNav();
                 });
-            } else {
+            }
+
+            else {
                 console.error("Elemento 'menu-residentes' no encontrado.");
             }
+
             // Conexión del menú Ley 100%
             const menuLey100 = document.getElementById('menu-ley100');
+
             if (menuLey100) {
                 menuLey100.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -659,11 +966,252 @@
                     loadDataAndRenderTable('/api/ley100', 'Liquidaciones Ley 100%');
                     closeNav();
                 });
-            } else {
+            }
+
+            else {
                 console.error("Elemento 'menu-ley100' no encontrado.");
             }
 
+            // Conexión del menú Dashboard Informe
+            const menuDashboard = document.getElementById('menu-dashboard-informe');
+
+            if (menuDashboard) {
+                menuDashboard.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    loadDashboard('todos');
+                    closeNav();
+                });
+            }
+
         });
+
+        // --- LÓGICA DEL DASHBOARD ---
+        const formatCurrency = (val) => new Intl.NumberFormat('es-AR', {
+            style: 'currency', currency: 'ARS'
+        }).format(val);
+        let chartPlanta = null;
+        let chartOrganismo = null;
+
+        // Registrar plugin de labels para todos los gráficos
+        if (typeof ChartDataLabels !== 'undefined') {
+            Chart.register(ChartDataLabels);
+        }
+
+        async function loadDashboard(tipo = 'todos', element = null) {
+            console.log(`📊 Cargando Dashboard [${tipo}]...`);
+            showSection('dashboard-view');
+
+            // Actualizar subtítulo dinámico
+            const subtitulo = document.getElementById('dashboard-subtitle');
+            if (subtitulo) {
+                if (tipo === 'todos') subtitulo.innerText = "Liquidación Completa (Todo)";
+                else if (tipo === 'mensual') subtitulo.innerText = "Liquidación Mensual";
+                else if (tipo === 'retroactivo') subtitulo.innerText = "Liquidación Retroactiva";
+            }
+
+            // Actualizar estado botones filtro
+            if (element) {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                element.classList.add('active');
+            }
+
+            try {
+                const response = await fetch(`/api/dashboard-info?tipo=${tipo}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert("Error: " + data.error);
+                    return;
+                }
+
+                // Renderizar KPIs
+                document.getElementById('kpi-agentes').innerText = data.totales.agentes.toLocaleString();
+                document.getElementById('kpi-bruto').innerText = formatCurrency(data.totales.importeBruto);
+                document.getElementById('kpi-liquido').innerText = formatCurrency(data.totales.importeLiquido);
+
+                // Renderizar Planta
+                renderPlantaSection(data.porPlanta);
+
+                // Renderizar Organismo
+                renderOrganismoSection(data.porOrganismo);
+
+            } catch (err) {
+                console.error("❌ Error cargando dashboard:", err);
+                alert("No se pudo cargar la información del dashboard.");
+            }
+        }
+
+        function renderPlantaSection(items) {
+            const listPlanta = document.getElementById('list-planta');
+            document.getElementById('label-planta-count').innerText = `${items.length} tipos`;
+
+            listPlanta.innerHTML = items.map(p => `
+                <div class="breakdown-item">
+                    <div class="item-name">${p.nombre}</div>
+                    <div class="item-stats">
+                        <span class="item-amt">${formatCurrency(p.importe)}</span>
+                        <span class="item-qty">${p.cantidad} agentes</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Gráfico Planta (Donut)
+            const ctxPlanta = document.getElementById('chart-planta').getContext('2d');
+            if (chartPlanta) chartPlanta.destroy();
+
+            const topItems = items.slice(0, 5);
+            const others = items.slice(5).reduce((acc, curr) => acc + curr.importe, 0);
+            const labels = topItems.map(i => i.nombre);
+            const dataValues = topItems.map(i => i.importe);
+
+            if (others > 0) {
+                labels.push('Otros');
+                dataValues.push(others);
+            }
+
+            chartPlanta = new Chart(ctxPlanta, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: ['#5c67f2', '#00b09b', '#f5576c', '#f093fb', '#4e73df', '#999'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: 40 },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            color: '#444',
+                            font: { weight: 'bold', size: 12 },
+                            formatter: (value, ctx) => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value * 100) / total).toFixed(1) + '%';
+                                return percentage;
+                            },
+                            anchor: 'end',
+                            align: 'start',
+                            offset: 15,
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            borderRadius: 6,
+                            padding: 8,
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.15)'
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderOrganismoSection(items) {
+            const listOrg = document.getElementById('list-organismo');
+            document.getElementById('label-organismo-count').innerText = `${items.length} organismos`;
+
+            listOrg.innerHTML = items.map(o => `
+                <div class="breakdown-item">
+                    <div class="item-name">${o.nombre}</div>
+                    <div class="item-stats">
+                        <span class="item-amt">${formatCurrency(o.importe)}</span>
+                        <span class="item-qty">${o.cantidad} agentes</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Gráfico Organismo (Barras Horizontales)
+            const ctxOrg = document.getElementById('chart-organismo').getContext('2d');
+            if (chartOrganismo) chartOrganismo.destroy();
+
+            const topOrg = items.slice(0, 7);
+
+            chartOrganismo = new Chart(ctxOrg, {
+                type: 'bar',
+                data: {
+                    labels: topOrg.map(o => o.nombre.length > 20 ? o.nombre.substring(0, 20) + '...' : o.nombre),
+                    datasets: [{
+                        label: 'Importe Total',
+                        data: topOrg.map(o => o.importe),
+                        backgroundColor: '#5c67f2',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { right: 100, left: 10, top: 10, bottom: 10 } },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'right',
+                            formatter: (value) => formatCurrency(value).split(',')[0],
+                            font: { weight: 'bold', size: 11 },
+                            color: '#5c67f2',
+                            padding: 6
+                        }
+                    },
+                    scales: {
+                        x: { display: false, grid: { display: false } },
+                        y: { ticks: { font: { size: 11 } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        async function exportDashboardToPDF() {
+            const { jsPDF } = window.jspdf;
+            const element = document.getElementById('dashboard-view');
+
+            // Ocultar elementos que no queremos en el PDF
+            const filters = element.querySelector('.dashboard-filters');
+            const pdfBtn = element.querySelector('button');
+            const originalBoxShadow = element.style.boxShadow;
+
+            filters.style.display = 'none';
+            pdfBtn.style.display = 'none';
+            element.style.boxShadow = 'none';
+
+            try {
+                // Captura optimizada para el nuevo ancho y formato Legal
+                const canvas = await html2canvas(element, {
+                    scale: 3, // Alta calidad
+                    logging: false,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    windowWidth: 1200 // Ancho del contenedor para escritorio
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+
+                // Tamaño Legal (Oficio): 215.9mm x 355.6mm
+                const pdf = new jsPDF('p', 'mm', 'legal');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                // Márgenes estrechos (5mm)
+                const margin = 5;
+                const contentWidth = pdfWidth - (margin * 2);
+                const imgProps = pdf.getImageProperties(imgData);
+                const contentHeight = (imgProps.height * contentWidth) / imgProps.width;
+
+                pdf.addImage(imgData, 'PNG', margin, margin, contentWidth, contentHeight);
+                pdf.save(`Informe_Liquidacion_${new Date().toISOString().split('T')[0]}.pdf`);
+
+            } catch (err) {
+                console.error("Error al generar PDF:", err);
+                alert("No se pudo generar el PDF.");
+            } finally {
+                filters.style.display = 'flex';
+                pdfBtn.style.display = 'flex';
+                element.style.boxShadow = originalBoxShadow;
+            }
+        }
+
         // --- NUEVA FUNCIÓN DE PRUEBA ASÍNCRONA ---
 
     </script>

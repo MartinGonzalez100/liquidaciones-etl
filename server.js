@@ -197,6 +197,70 @@ app.get('/api/ley100', (req, res) => {
         });
 });
 
+// NUEVO ENDPOINT: Datos para el Dashboard (Informe de Liquidación)
+app.get('/api/dashboard-info', (req, res) => {
+    const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    const tipoFiltro = req.query.tipo || 'todos'; // 'todos', 'mensual', 'retroactivo'
+
+    const dashboardData = {
+        totales: { agentes: 0, importeBruto: 0, importeLiquido: 0 },
+        porPlanta: {},
+        porOrganismo: {}
+    };
+
+    if (!fs.existsSync(csvPath)) {
+        return res.status(404).json({ error: 'Archivo CSV unificado no encontrado.' });
+    }
+
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            const periodoImputado = row.PERIODO_IMPUTADO ? row.PERIODO_IMPUTADO.trim() : '';
+            const periodoLiquidado = row.PERIODO_LIQUIDADO ? row.PERIODO_LIQUIDADO.trim() : '';
+            const esMensual = (periodoImputado === periodoLiquidado);
+
+            // Aplicar filtro de tipo
+            if (tipoFiltro === 'mensual' && !esMensual) return;
+            if (tipoFiltro === 'retroactivo' && esMensual) return;
+
+            const importeBruto = parseFloat(row.TOT_HAB) || 0;
+            const importeLiquido = parseFloat(row.LIQUIDO) || 0;
+            const planta = row.PLANTA || 'SIN ESPECIFICAR';
+            const organismo = row.ORGANISMO || 'SIN ESPECIFICAR';
+
+            // Acumular totales generales
+            dashboardData.totales.agentes++;
+            dashboardData.totales.importeBruto += importeBruto;
+            dashboardData.totales.importeLiquido += importeLiquido;
+
+            // Acumular por Planta
+            if (!dashboardData.porPlanta[planta]) {
+                dashboardData.porPlanta[planta] = { nombre: planta, cantidad: 0, importe: 0 };
+            }
+            dashboardData.porPlanta[planta].cantidad++;
+            dashboardData.porPlanta[planta].importe += importeBruto;
+
+            // Acumular por Organismo
+            if (!dashboardData.porOrganismo[organismo]) {
+                dashboardData.porOrganismo[organismo] = { nombre: organismo, cantidad: 0, importe: 0 };
+            }
+            dashboardData.porOrganismo[organismo].cantidad++;
+            dashboardData.porOrganismo[organismo].importe += importeBruto;
+        })
+        .on('end', () => {
+            // Convertir objetos a arrays para facilitar el manejo en el frontend
+            const response = {
+                totales: dashboardData.totales,
+                porPlanta: Object.values(dashboardData.porPlanta).sort((a, b) => b.importe - a.importe),
+                porOrganismo: Object.values(dashboardData.porOrganismo).sort((a, b) => b.importe - a.importe)
+            };
+            res.json(response);
+        })
+        .on('error', (error) => {
+            res.status(500).json({ error: error.message });
+        });
+});
+
 // NUEVO ENDPOINT: Liquidaciones a observar por importes
 app.get('/api/observar-importes', (req, res) => {
     const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
