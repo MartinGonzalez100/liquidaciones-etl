@@ -1110,6 +1110,7 @@
 
         function renderOrganismoSection(items) {
             const listOrg = document.getElementById('list-organismo');
+            const chartWrapper = document.getElementById('chart-organismo').parentElement;
             document.getElementById('label-organismo-count').innerText = `${items.length} organismos`;
 
             listOrg.innerHTML = items.map(o => `
@@ -1122,19 +1123,21 @@
                 </div>
             `).join('');
 
-            // Gráfico Organismo (Barras Horizontales)
+            // Gráfico Organismo (Barras Horizontales) - Ajuste de altura dinámico
             const ctxOrg = document.getElementById('chart-organismo').getContext('2d');
             if (chartOrganismo) chartOrganismo.destroy();
 
-            const topOrg = items.slice(0, 7);
+            // Ajustar altura del canvas basado en la cantidad de items (mínimo 350px)
+            const dynamicHeight = Math.max(350, items.length * 40);
+            chartWrapper.style.height = `${dynamicHeight}px`;
 
             chartOrganismo = new Chart(ctxOrg, {
                 type: 'bar',
                 data: {
-                    labels: topOrg.map(o => o.nombre.length > 20 ? o.nombre.substring(0, 20) + '...' : o.nombre),
+                    labels: items.map(o => o.nombre),
                     datasets: [{
                         label: 'Importe Total',
-                        data: topOrg.map(o => o.importe),
+                        data: items.map(o => o.importe),
                         backgroundColor: '#5c67f2',
                         borderRadius: 6
                     }]
@@ -1143,21 +1146,21 @@
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { right: 100, left: 10, top: 10, bottom: 10 } },
+                    layout: { padding: { right: 120, left: 10, top: 10, bottom: 10 } },
                     plugins: {
                         legend: { display: false },
                         datalabels: {
                             anchor: 'end',
                             align: 'right',
                             formatter: (value) => formatCurrency(value).split(',')[0],
-                            font: { weight: 'bold', size: 11 },
+                            font: { weight: 'bold', size: 10 },
                             color: '#5c67f2',
                             padding: 6
                         }
                     },
                     scales: {
                         x: { display: false, grid: { display: false } },
-                        y: { ticks: { font: { size: 11 } }, grid: { display: false } }
+                        y: { ticks: { font: { size: 10 } }, grid: { display: false } }
                     }
                 }
             });
@@ -1166,49 +1169,111 @@
         async function exportDashboardToPDF() {
             const { jsPDF } = window.jspdf;
             const element = document.getElementById('dashboard-view');
-
-            // Ocultar elementos que no queremos en el PDF
+            const lists = element.querySelectorAll('.breakdown-list');
             const filters = element.querySelector('.dashboard-filters');
             const pdfBtn = element.querySelector('button');
-            const originalBoxShadow = element.style.boxShadow;
 
+            // 1. Preparar el DOM para la captura completa
+            const originalShadow = element.style.boxShadow;
+            const originalMaxHeights = Array.from(lists).map(l => l.style.maxHeight);
+
+            element.style.boxShadow = 'none';
             filters.style.display = 'none';
             pdfBtn.style.display = 'none';
-            element.style.boxShadow = 'none';
+            lists.forEach(l => {
+                l.style.maxHeight = 'none';
+                l.style.overflow = 'visible';
+            });
 
             try {
-                // Captura optimizada para el nuevo ancho y formato Legal
-                const canvas = await html2canvas(element, {
-                    scale: 3, // Alta calidad
-                    logging: false,
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                    windowWidth: 1200 // Ancho del contenedor para escritorio
+                // 2. Cargar logos y capturar el lienzo completo
+                const loadImg = (src) => new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = reject;
+                    img.src = src;
                 });
 
-                const imgData = canvas.toDataURL('image/png');
+                let logoPersonal, logoTucuman;
+                try {
+                    [logoPersonal, logoTucuman] = await Promise.all([
+                        loadImg('/img/logo_personal.png'),
+                        loadImg('/img/logo_tucuman.png')
+                    ]);
+                } catch (e) {
+                    console.warn("No se pudieron cargar los logos de la cabecera.", e);
+                }
+
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    windowWidth: 1200
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.8);
 
                 // Tamaño Legal (Oficio): 215.9mm x 355.6mm
                 const pdf = new jsPDF('p', 'mm', 'legal');
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = pdf.internal.pageSize.getHeight();
 
-                // Márgenes estrechos (5mm)
-                const margin = 5;
-                const contentWidth = pdfWidth - (margin * 2);
-                const imgProps = pdf.getImageProperties(imgData);
-                const contentHeight = (imgProps.height * contentWidth) / imgProps.width;
+                const marginSide = 10;
+                const marginTop = 45; // Espacio para cabecera
+                const marginBottom = 15;
+                const imgWidth = pdfWidth - (marginSide * 2);
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                pdf.addImage(imgData, 'PNG', margin, margin, contentWidth, contentHeight);
+                let heightLeft = imgHeight;
+                let position = marginTop;
+                let pageNumber = 1;
+
+                function addHeaderToPage(doc) {
+                    if (logoPersonal) {
+                        doc.addImage(logoPersonal, 'PNG', marginSide + 5, 8, 50, 20);
+                    }
+                    if (logoTucuman) {
+                        doc.addImage(logoTucuman, 'PNG', pdfWidth - marginSide - 75, 8, 70, 20);
+                    }
+
+
+
+                    doc.setDrawColor(92, 103, 242);
+                    doc.setLineWidth(0.8);
+                    doc.line(marginSide, 32, pdfWidth - marginSide, 32);
+
+
+                    doc.text(`Página ${pageNumber++}`, pdfWidth - marginSide, pdfHeight - 5, { align: "right" });
+                }
+
+                // Primera página
+                addHeaderToPage(pdf);
+                pdf.addImage(imgData, 'JPEG', marginSide, position, imgWidth, imgHeight);
+                heightLeft -= (pdfHeight - marginTop - marginBottom);
+
+                while (heightLeft > 0) {
+                    pdf.addPage();
+                    addHeaderToPage(pdf);
+                    position = (heightLeft - imgHeight) + marginTop;
+                    pdf.addImage(imgData, 'JPEG', marginSide, position, imgWidth, imgHeight);
+                    heightLeft -= (pdfHeight - marginTop - marginBottom);
+                }
+
                 pdf.save(`Informe_Liquidacion_${new Date().toISOString().split('T')[0]}.pdf`);
 
             } catch (err) {
                 console.error("Error al generar PDF:", err);
-                alert("No se pudo generar el PDF.");
+                alert("No se pudo generar el PDF correctamente.");
             } finally {
+                // 4. Restaurar el estado original
+                element.style.boxShadow = originalShadow;
                 filters.style.display = 'flex';
                 pdfBtn.style.display = 'flex';
-                element.style.boxShadow = originalBoxShadow;
+                lists.forEach((l, i) => {
+                    l.style.maxHeight = originalMaxHeights[i];
+                    l.style.overflow = 'auto';
+                });
             }
         }
 
