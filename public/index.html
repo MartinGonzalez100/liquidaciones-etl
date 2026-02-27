@@ -587,6 +587,46 @@
             color: #999;
             font-size: 12px;
         }
+
+        /* Toolbar de Formato */
+        .rich-text-toolbar {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c3e50;
+            padding: 8px 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 3000;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .rich-text-toolbar button {
+            background: #34495e;
+            color: white;
+            padding: 5px 10px;
+            font-size: 14px;
+            border-radius: 4px;
+            min-width: 35px;
+            text-align: center;
+        }
+
+        .rich-text-toolbar button:hover {
+            background: #5c67f2;
+        }
+
+        .rich-text-toolbar select,
+        .rich-text-toolbar input[type="color"] {
+            background: #34495e;
+            color: white;
+            border: none;
+            padding: 5px;
+            border-radius: 4px;
+            outline: none;
+        }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -600,6 +640,22 @@
 </head>
 
 <body>
+    <div id="formatToolbar" class="rich-text-toolbar">
+        <button onclick="applyFormat('bold')" title="Negrita"><b>B</b></button>
+        <button onclick="applyFormat('italic')" title="Cursiva"><i>I</i></button>
+        <button onclick="applyFormat('underline')" title="Subrayado"><u>U</u></button>
+        <select onchange="applyFormat('fontSize', this.value)">
+            <option value="3">Normal</option>
+            <option value="1">Pequeño</option>
+            <option value="5">Grande</option>
+            <option value="7">Muy Grande</option>
+        </select>
+        <input type="color" onchange="applyFormat('foreColor', this.value)" title="Color de Texto">
+        <button onclick="applyFormat('justifyLeft')"><i class="fas fa-align-left"></i></button>
+        <button onclick="applyFormat('justifyCenter')"><i class="fas fa-align-center"></i></button>
+        <button onclick="closeToolbar()" style="background:#e74c3c">×</button>
+    </div>
+
     <div id="mySidebar" class="sidebar">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
         <h2>Menú de Procesos</h2>
@@ -921,17 +977,48 @@
                 card.classList.add('resizable', 'draggable');
                 card.draggable = true;
                 addDragListeners(card);
+                resizeObserver.observe(card);
             });
         }
 
         function disableEditorMode() {
-            // Desactivar redimensionamiento y arrastre (opcional, para ver versión limpia)
             const cards = document.querySelectorAll('.dashboard-card, .kpi-card, .breakdown-card, .custom-element');
             cards.forEach(card => {
-                // No quitamos las clases para permitir seguir editando, 
-                // pero podríamos quitarlas si queremos un modo "vista previa"
+                resizeObserver.unobserve(card);
             });
+            closeToolbar();
         }
+
+        // --- MANEJO DE REDIMENSIONAMIENTO PROPORCIONAL ---
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                const target = entry.target;
+                const { height } = entry.contentRect;
+
+                // Si es un breakdown-card, ajustar la lista interna
+                if (target.classList.contains('breakdown-card')) {
+                    const list = target.querySelector('.breakdown-list');
+                    if (list) {
+                        // El alto de la lista es el alto del card menos el header y padding (aprox 100px)
+                        list.style.maxHeight = (height - 100) + 'px';
+                    }
+
+                    // Forzar redimensionamiento de charts si existen
+                    const canvas = target.querySelector('canvas');
+                    if (canvas) {
+                        const chartInstance = Chart.getChart(canvas);
+                        if (chartInstance) {
+                            chartInstance.resize();
+                        }
+                    }
+                }
+
+                // Si es un kpi-card o dashboard-card, asegurar que los valores se centren o escalen
+                if (target.classList.contains('kpi-card') || target.classList.contains('dashboard-card')) {
+                    // Lógica adicional si es necesaria
+                }
+            }
+        });
 
         // --- ARRASTRAR Y SOLTAR (Drag & Drop) ---
         let draggedItem = null;
@@ -1003,7 +1090,33 @@
             textBlock.className = 'custom-text-block';
             textBlock.contentEditable = true;
             textBlock.innerText = 'Escribe aquí tu texto...';
+
+            // Eventos para el toolbar
+            textBlock.addEventListener('focus', () => showToolbar(textBlock));
+
             createCustomElement(textBlock, 'text-type');
+            textBlock.focus();
+        }
+
+        // --- FUNCIONES DE FORMATO DE TEXTO ---
+        let activeTextBlock = null;
+
+        function showToolbar(el) {
+            activeTextBlock = el;
+            const toolbar = document.getElementById('formatToolbar');
+            toolbar.style.display = 'flex';
+        }
+
+        function closeToolbar() {
+            document.getElementById('formatToolbar').style.display = 'none';
+            activeTextBlock = null;
+        }
+
+        function applyFormat(command, value = null) {
+            if (activeTextBlock) {
+                document.execCommand(command, false, value);
+                activeTextBlock.focus();
+            }
         }
 
         function addCustomImage() {
