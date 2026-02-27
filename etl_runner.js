@@ -5,10 +5,10 @@ const path = require('path');
 const { convertirExcelACsv } = require('./services/conversor');
 const { limpiarColumnasCsv } = require('./services/limpiador');
 const { unirCsv } = require('./services/unificador');
-const { cargarCsvAPostgres } = require('./services/cargador'); 
+const { cargarCsvAPostgres } = require('./services/cargador');
 
 // --- CONFIGURACIÓN PRINCIPAL ---
-const CARGA_ACTIVADA = false; 
+const CARGA_ACTIVADA = false;
 
 // Columnas de TEXTO con espacios (base 1) que necesitan limpieza
 /*const COLUMNAS_A_LIMPIAR = [
@@ -19,12 +19,12 @@ const CARGA_ACTIVADA = false;
 const NOMBRES_COLUMNAS_A_LIMPIAR = [
     // Campos de texto que pueden tener espacios (Ej: Planilla y Descripciones)
     'NIVEL', 'DESCAGENTE', 'PLANTA', 'ORGANISMO', 'FUNCION', 'AGRUPAMIENTO', 'OB_ALTA', 'OB_BAJA', 'AREA'
-, 'SEXO', 'TIT_EDUCATIVO', 'AREA_TEMATICA', 'DURACION', 'ESTADO_LIQUIDACION'
+    , 'SEXO', 'TIT_EDUCATIVO', 'AREA_TEMATICA', 'DURACION', 'ESTADO_LIQUIDACION', 'Area2'
 
 
 
 
- 
+
 
 
     /*
@@ -55,7 +55,7 @@ async function ejecutarProcesoETL(excelFilesToProcess) {
         // 1. CONVERSIÓN Y LIMPIEZA INDIVIDUAL (por cada archivo)
         for (const excelFile of excelFilesToProcess) {
             console.log(`\n[PROCESANDO] Archivo: ${excelFile}`);
-            
+
             // a. Conversión (asume que el conversor encuentra el archivo en excel-a-convertir/)
             const rawCsvFile = convertirExcelACsv(excelFile);
 
@@ -67,7 +67,7 @@ async function ejecutarProcesoETL(excelFilesToProcess) {
         const finalCsvFile = unirCsv();
 
         if (!finalCsvFile) {
-             return { success: false, message: "El proceso se detuvo porque no se pudo unificar ningún CSV." };
+            return { success: false, message: "El proceso se detuvo porque no se pudo unificar ningún CSV." };
         }
 
         // 3. CARGA (Condicional de seguridad)
@@ -77,8 +77,8 @@ async function ejecutarProcesoETL(excelFilesToProcess) {
             return { success: true, message: `Proceso completado. Datos cargados en PostgreSQL.` };
         } else {
             console.log(`\n[CARGA] 🛑 La carga a PostgreSQL está DESACTIVADA (Modo Auditoría).`);
-            return { 
-                success: true, 
+            return {
+                success: true,
                 message: `Proceso completado en Modo Auditoría. Revisa el archivo '${finalCsvFile}' en la carpeta 'csv-unidos'.`,
                 file: finalCsvFile
             };

@@ -64,7 +64,8 @@ const CAMPOS_LIQUIDACION = [
     'NUMERO_CARGO',
     'NRO_REC',
     'FECHA_NACIMIENTO',
-    'ESTADO_LIQUIDACION'
+    'ESTADO_LIQUIDACION',
+    'Area2'
 ];
 
 // NUEVO ENDPOINT: Con Filtros y Proyección de Columnas
