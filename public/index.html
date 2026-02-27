@@ -28,6 +28,58 @@
             padding-top: 60px;
         }
 
+        /* Sidebar Derecha (Edición) */
+        .sidebar-right {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 2000;
+            top: 0;
+            right: 0;
+            background-color: #2c3e50;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            color: white;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-right h3 {
+            padding: 0 20px;
+            font-size: 18px;
+            border-bottom: 1px solid #34495e;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-right .edit-controls {
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sidebar-right button {
+            width: 100%;
+            text-align: left;
+            background-color: #34495e;
+            transition: 0.2s;
+        }
+
+        .sidebar-right button:hover {
+            background-color: #5c67f2;
+        }
+
+        .edit-toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            background-color: #e67e22;
+            display: none;
+            /* Solo se muestra en el dashboard */
+        }
+
         .sidebar a {
             padding: 8px 8px 8px 32px;
             text-decoration: none;
@@ -439,6 +491,102 @@
             border: 2px solid white;
             transform: scale(1.05);
         }
+
+        /* Interactividad del Dashboard */
+        .resizable {
+            resize: both;
+            overflow: auto;
+            min-height: 100px;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .resizable::after {
+            content: "";
+            width: 15px;
+            height: 15px;
+            cursor: nwse-resize;
+            background: linear-gradient(135deg, transparent 50%, #5c67f2 50%);
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            border-bottom-right-radius: 8px;
+        }
+
+        .draggable {
+            cursor: grab;
+        }
+
+        .draggable:active {
+            cursor: grabbing;
+        }
+
+        .dragging {
+            opacity: 0.5;
+            border: 2px dashed #5c67f2 !important;
+        }
+
+        .drag-over {
+            border: 2px solid #5c67f2 !important;
+        }
+
+        /* Elementos dinámicos */
+        .custom-element {
+            position: relative;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #e74c3c;
+        }
+
+        .custom-element .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .custom-element:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .custom-text-block {
+            min-height: 40px;
+            outline: none;
+            font-size: 16px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .custom-image-block img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .spacer-block {
+            height: 50px;
+            border: 1px dashed #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 12px;
+        }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -465,6 +613,22 @@
         <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
         <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')">Pago Familiar Discapacitado</a>
+    </div>
+
+    <div id="editSidebar" class="sidebar-right">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeEditNav()"
+            style="position: absolute; top: 0; right: 25px; font-size: 36px; color: white; text-decoration: none;">×</a>
+        <h3>Panel de Edición</h3>
+        <div class="edit-controls">
+            <button onclick="addCustomText()"><i class="fas fa-font"></i> Agregar Texto</button>
+            <button onclick="addCustomImage()"><i class="fas fa-image"></i> Agregar Imagen</button>
+            <button onclick="addCustomSpacer()"><i class="fas fa-arrows-alt-v"></i> Agregar Espacio</button>
+            <hr style="border: 0; border-top: 1px solid #34495e; width: 100%;">
+            <p style="font-size: 12px; color: #95a5a6; padding: 0 5px;">
+                * Arrastra los elementos para reordenarlos.<br>
+                * Usa la esquina inferior derecha para cambiar el tamaño.
+            </p>
+        </div>
     </div>
 
     <div id="section-acumulado" style="display:none; margin-bottom: 20px;">
@@ -549,6 +713,9 @@
                 <h2 id="dashboard-subtitle"
                     style="margin: 10px 0 0 0; color: #5c67f2; font-size: 20px; font-weight: 600;">Liquidación Completa
                     (Todo)</h2>
+                <button class="edit-toggle-btn" id="btn-toggle-edit" onclick="openEditNav()">
+                    <i class="fas fa-edit"></i> Editar Informe
+                </button>
             </div>
 
             <div class="dashboard-filters" style="box-shadow: none; border: 1px solid #eee; margin-bottom: 30px;">
@@ -732,7 +899,130 @@
 
             else if (sectionId === 'dashboard-view') {
                 document.getElementById('dashboard-view').style.display = 'block';
+                document.getElementById('btn-toggle-edit').style.display = 'block';
             }
+        }
+
+        // --- LÓGICA DE EDICIÓN (SIDEBAR DERECHA) ---
+        function openEditNav() {
+            document.getElementById("editSidebar").style.width = "300px";
+            enableEditorMode();
+        }
+
+        function closeEditNav() {
+            document.getElementById("editSidebar").style.width = "0";
+            disableEditorMode();
+        }
+
+        function enableEditorMode() {
+            // Activar redimensionamiento y arrastre
+            const cards = document.querySelectorAll('.dashboard-card, .kpi-card, .breakdown-card, .custom-element');
+            cards.forEach(card => {
+                card.classList.add('resizable', 'draggable');
+                card.draggable = true;
+                addDragListeners(card);
+            });
+        }
+
+        function disableEditorMode() {
+            // Desactivar redimensionamiento y arrastre (opcional, para ver versión limpia)
+            const cards = document.querySelectorAll('.dashboard-card, .kpi-card, .breakdown-card, .custom-element');
+            cards.forEach(card => {
+                // No quitamos las clases para permitir seguir editando, 
+                // pero podríamos quitarlas si queremos un modo "vista previa"
+            });
+        }
+
+        // --- ARRASTRAR Y SOLTAR (Drag & Drop) ---
+        let draggedItem = null;
+
+        function addDragListeners(item) {
+            item.addEventListener('dragstart', function (e) {
+                draggedItem = this;
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            item.addEventListener('dragend', function () {
+                this.classList.remove('dragging');
+                draggedItem = null;
+                document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            });
+
+            item.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (this !== draggedItem) {
+                    this.classList.add('drag-over');
+                }
+            });
+
+            item.addEventListener('dragleave', function () {
+                this.classList.remove('drag-over');
+            });
+
+            item.addEventListener('drop', function (e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                if (this !== draggedItem) {
+                    // Determinar si insertar antes o después
+                    const rect = this.getBoundingClientRect();
+                    const midpoint = rect.top + rect.height / 2;
+                    if (e.clientY < midpoint) {
+                        this.parentNode.insertBefore(draggedItem, this);
+                    } else {
+                        this.parentNode.insertBefore(draggedItem, this.nextSibling);
+                    }
+                }
+            });
+        }
+
+        // --- AGREGAR ELEMENTOS DINÁMICOS ---
+        function createCustomElement(content, typeClass) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `custom-element resizable draggable ${typeClass}`;
+            wrapper.draggable = true;
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.onclick = function () { wrapper.remove(); };
+
+            wrapper.appendChild(deleteBtn);
+            wrapper.appendChild(content);
+
+            // Insertar en la sección de breakdown por defecto, o al final del dashboard
+            const targetContainer = document.querySelector('.breakdown-section');
+            targetContainer.appendChild(wrapper);
+
+            addDragListeners(wrapper);
+        }
+
+        function addCustomText() {
+            const textBlock = document.createElement('div');
+            textBlock.className = 'custom-text-block';
+            textBlock.contentEditable = true;
+            textBlock.innerText = 'Escribe aquí tu texto...';
+            createCustomElement(textBlock, 'text-type');
+        }
+
+        function addCustomImage() {
+            const url = prompt("Ingrese la URL de la imagen:", "/img/logo_personal.png");
+            if (url) {
+                const img = document.createElement('img');
+                img.src = url;
+                const container = document.createElement('div');
+                container.className = 'custom-image-block';
+                container.appendChild(img);
+                createCustomElement(container, 'image-type');
+            }
+        }
+
+        function addCustomSpacer() {
+            const spacer = document.createElement('div');
+            spacer.className = 'spacer-block';
+            spacer.innerText = 'Espacio en blanco';
+            createCustomElement(spacer, 'spacer-type');
         }
 
         // --- FUNCIONES DE ANIMACIÓN Y STATUS ---
@@ -1001,6 +1291,7 @@
         async function loadDashboard(tipo = 'todos', element = null) {
             console.log(`📊 Cargando Dashboard [${tipo}]...`);
             showSection('dashboard-view');
+            closeEditNav(); // Cerrar si estaba abierto
 
             // Actualizar subtítulo dinámico
             const subtitulo = document.getElementById('dashboard-subtitle');
@@ -1171,15 +1462,26 @@
             const element = document.getElementById('dashboard-view');
             const lists = element.querySelectorAll('.breakdown-list');
             const filters = element.querySelector('.dashboard-filters');
-            const pdfBtn = element.querySelector('button');
+            const pdfBtn = element.querySelector('.btn-convertir');
+            const editToggle = document.getElementById('btn-toggle-edit');
+            const deleteButtons = element.querySelectorAll('.delete-btn');
 
             // 1. Preparar el DOM para la captura completa
             const originalShadow = element.style.boxShadow;
             const originalMaxHeights = Array.from(lists).map(l => l.style.maxHeight);
+            const originalOverlays = Array.from(document.querySelectorAll('.resizable')).map(el => el.style.resize);
 
             element.style.boxShadow = 'none';
             filters.style.display = 'none';
             pdfBtn.style.display = 'none';
+            if (editToggle) editToggle.style.display = 'none';
+            deleteButtons.forEach(btn => btn.style.display = 'none');
+
+            // Quitar indicadores de edición visualmente
+            document.querySelectorAll('.resizable').forEach(el => el.style.resize = 'none');
+            document.querySelectorAll('.custom-element').forEach(el => el.style.borderLeft = 'none');
+            document.querySelectorAll('.spacer-block').forEach(el => el.style.border = 'none');
+
             lists.forEach(l => {
                 l.style.maxHeight = 'none';
                 l.style.overflow = 'visible';
@@ -1209,7 +1511,7 @@
                     useCORS: true,
                     logging: false,
                     backgroundColor: '#ffffff',
-                    windowWidth: 1200
+                    windowWidth: element.scrollWidth + 100 // Capturar ancho real
                 });
 
                 const imgData = canvas.toDataURL('image/jpeg', 0.8);
@@ -1237,13 +1539,11 @@
                         doc.addImage(logoTucuman, 'PNG', pdfWidth - marginSide - 75, 8, 70, 20);
                     }
 
-
-
                     doc.setDrawColor(92, 103, 242);
                     doc.setLineWidth(0.8);
                     doc.line(marginSide, 32, pdfWidth - marginSide, 32);
 
-
+                    doc.setFontSize(10);
                     doc.text(`Página ${pageNumber++}`, pdfWidth - marginSide, pdfHeight - 5, { align: "right" });
                 }
 
@@ -1260,7 +1560,7 @@
                     heightLeft -= (pdfHeight - marginTop - marginBottom);
                 }
 
-                pdf.save(`Informe_Liquidacion_${new Date().toISOString().split('T')[0]}.pdf`);
+                pdf.save(`Informe_Liquidacion_Editado_${new Date().toISOString().split('T')[0]}.pdf`);
 
             } catch (err) {
                 console.error("Error al generar PDF:", err);
@@ -1270,6 +1570,13 @@
                 element.style.boxShadow = originalShadow;
                 filters.style.display = 'flex';
                 pdfBtn.style.display = 'flex';
+                if (editToggle) editToggle.style.display = 'block';
+                deleteButtons.forEach(btn => btn.style.display = 'flex');
+
+                document.querySelectorAll('.resizable').forEach((el, i) => el.style.resize = originalOverlays[i]);
+                document.querySelectorAll('.custom-element').forEach(el => el.style.borderLeft = '5px solid #e74c3c');
+                document.querySelectorAll('.spacer-block').forEach(el => el.style.border = '1px dashed #ddd');
+
                 lists.forEach((l, i) => {
                     l.style.maxHeight = originalMaxHeights[i];
                     l.style.overflow = 'auto';
