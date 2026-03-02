@@ -395,6 +395,70 @@ app.get('/api/observar-importes', (req, res) => {
         });
 });
 
+// 6. Reporte Reemplazos
+app.get('/api/reemplazos', (req, res) => {
+    const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    const results = [];
+
+    if (!fs.existsSync(csvPath)) return res.status(404).json({ error: 'Archivo no encontrado' });
+
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            if (row.PLANTA && row.PLANTA === "Reemplazante no permanente") {
+                const projectedRow = {};
+                CAMPOS_LIQUIDACION.forEach(field => {
+                    projectedRow[field] = row[field] ?? '';
+                });
+                results.push(projectedRow);
+            }
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 7. Reporte LD Liquidacion (Filtrado por columnas configuradas en LD_config.csv)
+app.get('/api/ld-liquidacion', (req, res) => {
+    const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    if (!fs.existsSync(csvPath)) return res.status(404).json({ error: 'Archivo unificado no encontrado' });
+
+    // 1. Cargar configuración de LD
+    const configColumns = [];
+    if (fs.existsSync(LD_CONFIG_FILE)) {
+        const content = fs.readFileSync(LD_CONFIG_FILE, 'utf8').split('\n');
+        content.shift(); // Quitar encabezado "columna"
+        content.forEach(line => { if (line.trim()) configColumns.push(line.trim()); });
+    }
+
+    if (configColumns.length === 0) return res.json([]);
+
+    const results = [];
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            // Verificar si alguna de las columnas configuradas tiene valor != 0
+            const hasValue = configColumns.some(col => {
+                const val = parseFloat(row[col]);
+                return !isNaN(val) && val !== 0;
+            });
+
+            if (hasValue) {
+                const projectedRow = {};
+                // Copiar campos estándar
+                CAMPOS_LIQUIDACION.forEach(field => {
+                    projectedRow[field] = row[field] ?? '';
+                });
+                // Inyectar columnas de configuración al final (después de Area2)
+                configColumns.forEach(col => {
+                    projectedRow[col] = row[col] ?? '0';
+                });
+                results.push(projectedRow);
+            }
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
 // server.js
 
 app.get('/api/preparar-acumulado', (req, res) => {

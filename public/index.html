@@ -677,6 +677,9 @@
             Liquidación</a>
         <a href="#" id="menu-observar-importes" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Observar
             por Importes</a>
+        <a href="#" id="menu-reemplazos" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Reemplazos</a>
+        <a href="#" id="menu-ld-liquidacion" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ LD
+            Liquidación</a>
         <a href="#" id="menu-acumulado"><i class="fas fa-calculator"></i> Acumulado Aporte Jub.</a>
         <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
@@ -1418,6 +1421,28 @@
                     const helpIcon = document.getElementById('help-icon');
                     if (helpIcon) helpIcon.style.display = 'inline-block';
                     loadDataAndRenderTable('/api/observar-importes', 'Liquidaciones a observar por importes');
+                    closeNav();
+                });
+            }
+
+            // --- REEMPLAZOS ---
+            const menuReemplazos = document.getElementById('menu-reemplazos');
+            if (menuReemplazos) {
+                menuReemplazos.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    loadDataAndRenderTable('/api/reemplazos', 'Liquidación: Reemplazos');
+                    closeNav();
+                });
+            }
+
+            // --- LD LIQUIDACION ---
+            const menuLDLiq = document.getElementById('menu-ld-liquidacion');
+            if (menuLDLiq) {
+                menuLDLiq.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    loadDataAndRenderTable('/api/ld-liquidacion', 'Liquidación: Libres Disponibilidad (Configuradas)');
                     closeNav();
                 });
             }
