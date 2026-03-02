@@ -898,6 +898,26 @@
                     <span id="save-status-ld" style="margin-left: 15px; font-size: 14px;"></span>
                 </div>
             </div>
+
+            <div id="seccion-gc" style="margin-top: 40px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h2 style="color: #e67e22; border-bottom: 2px solid #e67e22; padding-bottom: 10px;">Configuración de
+                    Guardias Críticas</h2>
+                <p style="color: #666; margin-bottom: 20px;">Seleccione las columnas que corresponden a Guardias
+                    Críticas (excluye las ya seleccionadas en Libres Disponibilidad):</p>
+
+                <div id="gc-columns-list"
+                    style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #eee; background: #fdfdfd; border-radius: 4px;">
+                    <!-- Se llenará dinámicamente -->
+                    <p style="color: #999;">Cargando columnas...</p>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button id="btn-save-gc" style="background-color: #e67e22;">
+                        <i class="fas fa-save"></i> Guardar Configuración GC
+                    </button>
+                    <span id="save-status-gc" style="margin-left: 15px; font-size: 14px;"></span>
+                </div>
+            </div>
         </div>
     </div>
     </div>
@@ -1714,38 +1734,68 @@
         // --- LÓGICA DE CONFIGURACIÓN ---
         async function loadConfigSection() {
             showSection('configuracion-view');
-            const listContainer = document.getElementById('ld-columns-list');
-            listContainer.innerHTML = '<p style="color: #999;">Cargando columnas disponibles...</p>';
+            const ldContainer = document.getElementById('ld-columns-list');
+            const gcContainer = document.getElementById('gc-columns-list');
+
+            ldContainer.innerHTML = '<p style="color: #999;">Cargando...</p>';
+            gcContainer.innerHTML = '<p style="color: #999;">Cargando...</p>';
 
             try {
                 // 1. Obtener todas las columnas LIB_0 y CG_0
                 const availableRes = await fetch('/api/config/available-columns');
                 const allColumns = await availableRes.json();
 
-                // 2. Obtener las columnas ya guardadas
-                const savedRes = await fetch('/api/config/load-ld');
-                const savedData = await savedRes.json();
-                const selectedColumns = savedData.columns || [];
+                // 2. Obtener las configuraciones guardadas
+                const [ldRes, gcRes] = await Promise.all([
+                    fetch('/api/config/load-ld'),
+                    fetch('/api/config/load-gc')
+                ]);
+
+                const ldData = await ldRes.json();
+                const gcData = await gcRes.json();
+
+                const selectedLD = ldData.columns || [];
+                const selectedGC = gcData.columns || [];
 
                 if (allColumns.length === 0) {
-                    listContainer.innerHTML = '<p style="color: #e74c3c;">No se encontraron columnas que inicien con LIB_0 o CG_0 en el archivo unificado.</p>';
+                    const msg = '<p style="color: #e74c3c;">No se encontraron columnas de configuración en el archivo unificado.</p>';
+                    ldContainer.innerHTML = msg;
+                    gcContainer.innerHTML = msg;
                     return;
                 }
 
-                // 3. Renderizar la lista
-                listContainer.innerHTML = allColumns.map(col => `
+                // 3. Renderizar Libres Disponibilidad (Solo LIB_0 y GC_0)
+                const ldAvailable = allColumns.filter(col => col.startsWith('LIB_0') || col.startsWith('GC_0'));
+                ldContainer.innerHTML = ldAvailable.map(col => `
                     <label style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
-                        <input type="checkbox" name="ld-col" value="${col}" ${selectedColumns.includes(col) ? 'checked' : ''}>
+                        <input type="checkbox" name="ld-col" value="${col}" ${selectedLD.includes(col) ? 'checked' : ''}>
                         <span style="font-family: monospace;">${col}</span>
                     </label>
                 `).join('');
 
-                // 4. Configurar botón de guardado
+                // 4. Renderizar Guardias Críticas (Todas las disponibles en allColumns menos las guardadas en LD)
+                const gcAvailable = allColumns.filter(col => !selectedLD.includes(col));
+
+                if (gcAvailable.length === 0) {
+                    gcContainer.innerHTML = '<p style="color: #999;">No hay columnas disponibles para Guardias Críticas.</p>';
+                } else {
+                    gcContainer.innerHTML = gcAvailable.map(col => `
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+                            <input type="checkbox" name="gc-col" value="${col}" ${selectedGC.includes(col) ? 'checked' : ''}>
+                            <span style="font-family: monospace;">${col}</span>
+                        </label>
+                    `).join('');
+                }
+
+                // 5. Configurar botones
                 document.getElementById('btn-save-ld').onclick = saveLDConfig;
+                document.getElementById('btn-save-gc').onclick = saveGCConfig;
 
             } catch (err) {
                 console.error("Error cargando configuración:", err);
-                listContainer.innerHTML = `<p style="color: #e74c3c;">Error: ${err.message}</p>`;
+                const errorMsg = `<p style="color: #e74c3c;">Error: ${err.message}</p>`;
+                ldContainer.innerHTML = errorMsg;
+                gcContainer.innerHTML = errorMsg;
             }
         }
 
@@ -1768,6 +1818,38 @@
                 if (result.success) {
                     statusLabel.innerText = "✅ " + result.message;
                     statusLabel.style.color = "#27ae60";
+                    setTimeout(() => {
+                        statusLabel.innerText = "";
+                        loadConfigSection(); // Recargar para actualizar exclusiones en GC
+                    }, 2000);
+                } else {
+                    throw new Error(result.error || "Fallo desconocido");
+                }
+            } catch (err) {
+                statusLabel.innerText = "❌ Error: " + err.message;
+                statusLabel.style.color = "#e74c3c";
+            }
+        }
+
+        async function saveGCConfig() {
+            const checkboxes = document.querySelectorAll('input[name="gc-col"]:checked');
+            const selectedColumns = Array.from(checkboxes).map(cb => cb.value);
+            const statusLabel = document.getElementById('save-status-gc');
+
+            statusLabel.innerText = "Guardando...";
+            statusLabel.style.color = "#666";
+
+            try {
+                const response = await fetch('/api/config/save-gc', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ columns: selectedColumns })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    statusLabel.innerText = "✅ " + result.message;
+                    statusLabel.style.color = "#e67e22";
                     setTimeout(() => { statusLabel.innerText = ""; }, 3000);
                 } else {
                     throw new Error(result.error || "Fallo desconocido");

@@ -18,6 +18,7 @@ const FINAL_CSV_NAME = 'liquidaciones_unificadas.csv';
 
 const CONFIG_DIR = path.join(__dirname, 'configuracion_parametros');
 const LD_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config.csv');
+const GC_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config.csv');
 
 //-----------
 
@@ -288,7 +289,8 @@ app.get('/api/config/available-columns', (req, res) => {
     fs.createReadStream(csvPath)
         .pipe(csv())
         .on('headers', (headers) => {
-            const filtered = headers.filter(h => h.startsWith('LIB_0') || h.startsWith('CG_0'));
+            const prefixes = ['LIB_0', 'GC_0', 'LIB_D', 'LIB_N', 'LIB_SC', 'LIB_COB'];
+            const filtered = headers.filter(h => prefixes.some(p => h.startsWith(p)));
             res.json(filtered);
             // Destruir el stream ya que solo necesitamos los headers
         })
@@ -315,6 +317,32 @@ app.get('/api/config/load-ld', (req, res) => {
 
     const results = [];
     fs.createReadStream(LD_CONFIG_FILE)
+        .pipe(csv())
+        .on('data', (data) => results.push(data.columna))
+        .on('end', () => res.json({ columns: results }))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 4. Guardar configuración de Guardias Críticas
+app.post('/api/config/save-gc', (req, res) => {
+    const { columns } = req.body;
+    if (!Array.isArray(columns)) return res.status(400).json({ error: 'Formato inválido' });
+
+    try {
+        const content = "columna\n" + columns.join('\n');
+        fs.writeFileSync(GC_CONFIG_FILE, content, 'utf8');
+        res.json({ success: true, message: 'Configuración de Guardias Críticas guardada' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 5. Cargar configuración de Guardias Críticas
+app.get('/api/config/load-gc', (req, res) => {
+    if (!fs.existsSync(GC_CONFIG_FILE)) return res.json({ columns: [] });
+
+    const results = [];
+    fs.createReadStream(GC_CONFIG_FILE)
         .pipe(csv())
         .on('data', (data) => results.push(data.columna))
         .on('end', () => res.json({ columns: results }))
