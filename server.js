@@ -16,18 +16,21 @@ const EXCEL_DIR = path.join(__dirname, 'excel-a-convertir');
 const CSV_UNIDOS_DIR = path.join(__dirname, 'csv-unidos'); // Directorio del CSV final
 const FINAL_CSV_NAME = 'liquidaciones_unificadas.csv';
 
+const CONFIG_DIR = path.join(__dirname, 'configuracion_parametros');
+const LD_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config.csv');
+
 //-----------
 
-// Crear la carpeta 'excel-a-convertir' si no existe
-if (!fs.existsSync(EXCEL_DIR)) {
-    fs.mkdirSync(EXCEL_DIR);
-}
+// Crear carpetas necesarias
+if (!fs.existsSync(EXCEL_DIR)) fs.mkdirSync(EXCEL_DIR);
+if (!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR);
 
 // Configuración de Multer: Al subir archivos, los guardamos temporalmente.
 const upload = multer({ dest: 'uploads/' });
 
 // Middleware para servir archivos estáticos (la interfaz HTML)
 app.use(express.static('public'));
+app.use(express.json());
 
 //----------------
 
@@ -204,9 +207,10 @@ app.get('/api/dashboard-info', (req, res) => {
     const tipoFiltro = req.query.tipo || 'todos'; // 'todos', 'mensual', 'retroactivo'
 
     const dashboardData = {
-        totales: { agentes: 0, importeBruto: 0, importeLiquido: 0 },
+        totales: { agentes: 0, importeBruto: 0, importeLiquido: 0, costoLaboral: 0 },
         porPlanta: {},
-        porOrganismo: {}
+        porOrganismo: {},
+        porArea: {}
     };
 
     if (!fs.existsSync(csvPath)) {
@@ -226,13 +230,16 @@ app.get('/api/dashboard-info', (req, res) => {
 
             const importeBruto = parseFloat(row.TOT_HAB) || 0;
             const importeLiquido = parseFloat(row.LIQUIDO) || 0;
+            const costoLaboral = parseFloat(row.COSTO_LABORAL_02) || 0;
             const planta = row.PLANTA || 'SIN ESPECIFICAR';
             const organismo = row.ORGANISMO || 'SIN ESPECIFICAR';
+            const area = row.Area2 || 'SIN ESPECIFICAR';
 
             // Acumular totales generales
             dashboardData.totales.agentes++;
             dashboardData.totales.importeBruto += importeBruto;
             dashboardData.totales.importeLiquido += importeLiquido;
+            dashboardData.totales.costoLaboral += costoLaboral;
 
             // Acumular por Planta
             if (!dashboardData.porPlanta[planta]) {
@@ -247,19 +254,71 @@ app.get('/api/dashboard-info', (req, res) => {
             }
             dashboardData.porOrganismo[organismo].cantidad++;
             dashboardData.porOrganismo[organismo].importe += importeBruto;
+
+            // Acumular por Area2
+            if (!dashboardData.porArea[area]) {
+                dashboardData.porArea[area] = { nombre: area, cantidad: 0, importe: 0 };
+            }
+            dashboardData.porArea[area].cantidad++;
+            dashboardData.porArea[area].importe += costoLaboral;
         })
         .on('end', () => {
             // Convertir objetos a arrays para facilitar el manejo en el frontend
             const response = {
                 totales: dashboardData.totales,
                 porPlanta: Object.values(dashboardData.porPlanta).sort((a, b) => b.importe - a.importe),
-                porOrganismo: Object.values(dashboardData.porOrganismo).sort((a, b) => b.importe - a.importe)
+                porOrganismo: Object.values(dashboardData.porOrganismo).sort((a, b) => b.importe - a.importe),
+                porArea: Object.values(dashboardData.porArea).sort((a, b) => b.importe - a.importe)
             };
             res.json(response);
         })
         .on('error', (error) => {
             res.status(500).json({ error: error.message });
         });
+});
+
+// --- ENDPOINTS DE CONFIGURACIÓN ---
+
+// 1. Obtener columnas disponibles (LIB_0 o CG_0)
+app.get('/api/config/available-columns', (req, res) => {
+    const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    if (!fs.existsSync(csvPath)) return res.json([]);
+
+    const results = [];
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('headers', (headers) => {
+            const filtered = headers.filter(h => h.startsWith('LIB_0') || h.startsWith('CG_0'));
+            res.json(filtered);
+            // Destruir el stream ya que solo necesitamos los headers
+        })
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 2. Guardar configuración de Libres Disponibilidad
+app.post('/api/config/save-ld', (req, res) => {
+    const { columns } = req.body;
+    if (!Array.isArray(columns)) return res.status(400).json({ error: 'Formato inválido' });
+
+    try {
+        const content = "columna\n" + columns.join('\n');
+        fs.writeFileSync(LD_CONFIG_FILE, content, 'utf8');
+        res.json({ success: true, message: 'Configuración guardada correctamente' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 3. Cargar configuración de Libres Disponibilidad
+app.get('/api/config/load-ld', (req, res) => {
+    if (!fs.existsSync(LD_CONFIG_FILE)) return res.json({ columns: [] });
+
+    const results = [];
+    fs.createReadStream(LD_CONFIG_FILE)
+        .pipe(csv())
+        .on('data', (data) => results.push(data.columna))
+        .on('end', () => res.json({ columns: results }))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
 });
 
 // NUEVO ENDPOINT: Liquidaciones a observar por importes

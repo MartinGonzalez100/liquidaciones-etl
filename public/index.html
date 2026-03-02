@@ -357,6 +357,10 @@
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
+        .kpi-purple {
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+        }
+
         .kpi-card .card-title {
             color: rgba(255, 255, 255, 0.8);
             border: none;
@@ -677,6 +681,10 @@
         <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
         <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')">Pago Familiar Discapacitado</a>
+        <a href="#" id="menu-configuracion"
+            style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px; color: #5c67f2;">
+            <i class="fas fa-cog"></i> Configuración de Parámetros
+        </a>
     </div>
 
     <div id="editSidebar" class="sidebar-right">
@@ -805,6 +813,11 @@
                     <div class="card-value" id="kpi-liquido">-</div>
                     <div class="card-subtitle">Monto neto a pagar</div>
                 </div>
+                <div class="kpi-card kpi-purple">
+                    <div class="card-title">Costo Laboral</div>
+                    <div class="card-value" id="kpi-costo">-</div>
+                    <div class="card-subtitle">Costo Laboral 02 Total</div>
+                </div>
             </div>
 
             <div class="breakdown-section">
@@ -819,7 +832,24 @@
                             <canvas id="chart-planta"></canvas>
                         </div>
                         <div class="list-container">
-                            <div class="breakdown-list" id="list-planta" style="max-height: 350px;">
+                            <div class="breakdown-list" id="list-planta" style="max-height: 250px;">
+                                <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Area2 -->
+                <div class="breakdown-card">
+                    <div class="breakdown-header">
+                        <h3>Distribución de Áreas de Liquidación</h3>
+                        <span id="label-area-count" style="font-size: 13px; color: #999;">-</span>
+                    </div>
+                    <div class="breakdown-flex">
+                        <div class="chart-container">
+                            <canvas id="chart-area"></canvas>
+                        </div>
+                        <div class="list-container">
+                            <div class="breakdown-list" id="list-area" style="max-height: 250px;">
                                 <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
                             </div>
                         </div>
@@ -832,15 +862,40 @@
                         <span id="label-organismo-count" style="font-size: 13px; color: #999;">-</span>
                     </div>
                     <div class="breakdown-flex">
-                        <div class="chart-container">
+                        <div class="chart-container" style="height: 350px;">
                             <canvas id="chart-organismo"></canvas>
                         </div>
                         <div class="list-container">
-                            <div class="breakdown-list" id="list-organismo" style="max-height: 350px;">
+                            <div class="breakdown-list" id="list-organismo" style="max-height: 250px;">
                                 <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA CONFIGURACIÓN -->
+        <div id="configuracion-view" class="container" style="display: none;">
+            <h1>Configuración de Parámetros</h1>
+
+            <div id="seccion-ld" style="margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h2 style="color: #5c67f2; border-bottom: 2px solid #5c67f2; padding-bottom: 10px;">Configuración de
+                    Libres Disponibilidad</h2>
+                <p style="color: #666; margin-bottom: 20px;">Seleccione las columnas que corresponden a Libres
+                    Disponibilidad (inician con LIB_0 o CG_0):</p>
+
+                <div id="ld-columns-list"
+                    style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #eee; background: #fdfdfd; border-radius: 4px;">
+                    <!-- Se llenará dinámicamente -->
+                    <p style="color: #999;">Cargando columnas...</p>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button id="btn-save-ld" style="background-color: #27ae60;">
+                        <i class="fas fa-save"></i> Guardar Configuración
+                    </button>
+                    <span id="save-status-ld" style="margin-left: 15px; font-size: 14px;"></span>
                 </div>
             </div>
         </div>
@@ -883,17 +938,9 @@
                 e.preventDefault();
                 console.log("✅ Click en Menú: Cambiando a vista Acumulado");
 
-                // Ocultar lo que no necesitamos
-                document.getElementById('conversion-form').style.display = 'none';
-
-                // Mostrar el panel de configuración
-                const panel = document.getElementById('panel-tope-jubilatorio');
-                panel.style.display = 'block';
-
-                // Ocultar tabla hasta que se genere
-                document.getElementById('table-container').style.display = 'none';
-
-                closeNav(); // Cierra sidebar
+                showSection('none'); // Ocultar todo lo demás
+                document.getElementById('panel-tope-jubilatorio').style.display = 'block';
+                closeNav();
             });
         }
 
@@ -946,24 +993,29 @@
 
         // --- Funciones de navegación (modificar showSection) ---
         function showSection(sectionId) {
+            // Ocultar todos los contenedores principales
             conversionForm.style.display = 'none';
             liquidacionView.style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('btn-toggle-edit').style.display = 'none';
+            document.getElementById('section-acumulado').style.display = 'none';
+            document.getElementById('panel-tope-jubilatorio').style.display = 'none';
+            document.getElementById('floating-search-container').style.display = 'none';
+            document.getElementById('configuracion-view').style.display = 'none';
 
-
-            const panel = document.getElementById('panel-tope-jubilatorio');
-            panel.style.display = 'none';
-
+            // Mostrar solo el solicitado
             if (sectionId === 'conversion-form') {
                 conversionForm.style.display = 'block';
             }
-
             else if (sectionId === 'liquidacion-completa-view') {
                 liquidacionView.style.display = 'block';
             }
-
             else if (sectionId === 'dashboard-view') {
                 document.getElementById('dashboard-view').style.display = 'block';
                 document.getElementById('btn-toggle-edit').style.display = 'block';
+            }
+            else if (sectionId === 'configuracion-view') {
+                document.getElementById('configuracion-view').style.display = 'block';
             }
         }
 
@@ -1331,6 +1383,7 @@
                 menuLiquidacionCompleta.addEventListener('click', function (e) {
                     e.preventDefault();
                     resetHelpIcon();
+                    showSection('liquidacion-completa-view');
                     loadLiquidacionCompleta();
                     closeNav();
                 });
@@ -1395,6 +1448,17 @@
                 });
             }
 
+            // Conexión del menú Configuración
+            const menuConfig = document.getElementById('menu-configuracion');
+            if (menuConfig) {
+                menuConfig.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    loadConfigSection();
+                    closeNav();
+                });
+            }
+
         });
 
         // --- LÓGICA DEL DASHBOARD ---
@@ -1441,9 +1505,13 @@
                 document.getElementById('kpi-agentes').innerText = data.totales.agentes.toLocaleString();
                 document.getElementById('kpi-bruto').innerText = formatCurrency(data.totales.importeBruto);
                 document.getElementById('kpi-liquido').innerText = formatCurrency(data.totales.importeLiquido);
+                document.getElementById('kpi-costo').innerText = formatCurrency(data.totales.costoLaboral);
 
                 // Renderizar Planta
                 renderPlantaSection(data.porPlanta);
+
+                // Renderizar Area2
+                renderAreaSection(data.porArea);
 
                 // Renderizar Organismo
                 renderOrganismoSection(data.porOrganismo);
@@ -1520,6 +1588,71 @@
             });
         }
 
+        let chartArea = null;
+        function renderAreaSection(items) {
+            const listArea = document.getElementById('list-area');
+            document.getElementById('label-area-count').innerText = `${items.length} áreas`;
+
+            listArea.innerHTML = items.map(a => `
+                <div class="breakdown-item">
+                    <div class="item-name">${a.nombre}</div>
+                    <div class="item-stats">
+                        <span class="item-amt">${formatCurrency(a.importe)}</span>
+                        <span class="item-qty">${a.cantidad} agentes</span>
+                    </div>
+                </div>
+            `).join('');
+
+            const ctxArea = document.getElementById('chart-area').getContext('2d');
+            if (chartArea) chartArea.destroy();
+
+            const topItems = items.slice(0, 5);
+            const others = items.slice(5).reduce((acc, curr) => acc + curr.importe, 0);
+            const labels = topItems.map(i => i.nombre);
+            const dataValues = topItems.map(i => i.importe);
+
+            if (others > 0) {
+                labels.push('Otros');
+                dataValues.push(others);
+            }
+
+            chartArea = new Chart(ctxArea, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: ['#8e44ad', '#3498db', '#e67e22', '#1abc9c', '#f1c40f', '#95a5a6'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: 40 },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            color: '#444',
+                            font: { weight: 'bold', size: 12 },
+                            formatter: (value, ctx) => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value * 100) / total).toFixed(1) + '%';
+                                return percentage;
+                            },
+                            anchor: 'end',
+                            align: 'start',
+                            offset: 15,
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            borderRadius: 6,
+                            padding: 8
+                        }
+                    }
+                }
+            });
+        }
+
         function renderOrganismoSection(items) {
             const listOrg = document.getElementById('list-organismo');
             const chartWrapper = document.getElementById('chart-organismo').parentElement;
@@ -1576,6 +1709,73 @@
                     }
                 }
             });
+        }
+
+        // --- LÓGICA DE CONFIGURACIÓN ---
+        async function loadConfigSection() {
+            showSection('configuracion-view');
+            const listContainer = document.getElementById('ld-columns-list');
+            listContainer.innerHTML = '<p style="color: #999;">Cargando columnas disponibles...</p>';
+
+            try {
+                // 1. Obtener todas las columnas LIB_0 y CG_0
+                const availableRes = await fetch('/api/config/available-columns');
+                const allColumns = await availableRes.json();
+
+                // 2. Obtener las columnas ya guardadas
+                const savedRes = await fetch('/api/config/load-ld');
+                const savedData = await savedRes.json();
+                const selectedColumns = savedData.columns || [];
+
+                if (allColumns.length === 0) {
+                    listContainer.innerHTML = '<p style="color: #e74c3c;">No se encontraron columnas que inicien con LIB_0 o CG_0 en el archivo unificado.</p>';
+                    return;
+                }
+
+                // 3. Renderizar la lista
+                listContainer.innerHTML = allColumns.map(col => `
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+                        <input type="checkbox" name="ld-col" value="${col}" ${selectedColumns.includes(col) ? 'checked' : ''}>
+                        <span style="font-family: monospace;">${col}</span>
+                    </label>
+                `).join('');
+
+                // 4. Configurar botón de guardado
+                document.getElementById('btn-save-ld').onclick = saveLDConfig;
+
+            } catch (err) {
+                console.error("Error cargando configuración:", err);
+                listContainer.innerHTML = `<p style="color: #e74c3c;">Error: ${err.message}</p>`;
+            }
+        }
+
+        async function saveLDConfig() {
+            const checkboxes = document.querySelectorAll('input[name="ld-col"]:checked');
+            const selectedColumns = Array.from(checkboxes).map(cb => cb.value);
+            const statusLabel = document.getElementById('save-status-ld');
+
+            statusLabel.innerText = "Guardando...";
+            statusLabel.style.color = "#666";
+
+            try {
+                const response = await fetch('/api/config/save-ld', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ columns: selectedColumns })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    statusLabel.innerText = "✅ " + result.message;
+                    statusLabel.style.color = "#27ae60";
+                    setTimeout(() => { statusLabel.innerText = ""; }, 3000);
+                } else {
+                    throw new Error(result.error || "Fallo desconocido");
+                }
+            } catch (err) {
+                statusLabel.innerText = "❌ Error: " + err.message;
+                statusLabel.style.color = "#e74c3c";
+            }
         }
 
         async function exportDashboardToPDF() {
