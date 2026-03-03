@@ -207,11 +207,36 @@ app.get('/api/dashboard-info', (req, res) => {
     const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
     const tipoFiltro = req.query.tipo || 'todos'; // 'todos', 'mensual', 'retroactivo'
 
+    // 1. Cargar configuraciones de LD y GC para aggregaciones dinámicas
+    const ldCols = [];
+    if (fs.existsSync(LD_CONFIG_FILE)) {
+        const content = fs.readFileSync(LD_CONFIG_FILE, 'utf8').split('\n');
+        content.shift();
+        content.forEach(line => { if (line.trim()) ldCols.push(line.trim()); });
+    }
+
+    const gcCols = [];
+    if (fs.existsSync(GC_CONFIG_FILE)) {
+        const content = fs.readFileSync(GC_CONFIG_FILE, 'utf8').split('\n');
+        content.shift();
+        content.forEach(line => { if (line.trim()) gcCols.push(line.trim()); });
+    }
+
     const dashboardData = {
         totales: { agentes: 0, importeBruto: 0, importeLiquido: 0, costoLaboral: 0 },
         porPlanta: {},
         porOrganismo: {},
-        porArea: {}
+        porArea: {},
+        porReemplazoNivel: {},
+        porReemplazoOrganismo: {},
+        porLibresDisponibilidades: {},
+        porGuardiasCriticas: {},
+        porArea1: {},
+        porArea3: {
+            "LD Liquidacion": { nombre: "LD Liquidacion", cantidad: 0, importe: 0 },
+            "GC Liquidacion": { nombre: "GC Liquidacion", cantidad: 0, importe: 0 },
+            "Reemplazos": { nombre: "Reemplazos", cantidad: 0, importe: 0 }
+        }
     };
 
     if (!fs.existsSync(csvPath)) {
@@ -262,6 +287,77 @@ app.get('/api/dashboard-info', (req, res) => {
             }
             dashboardData.porArea[area].cantidad++;
             dashboardData.porArea[area].importe += costoLaboral;
+
+            // Acumular por Area1 (si Area2 == 'A1', agrupado por PLANTA)
+            if (area === 'A1') {
+                if (!dashboardData.porArea1[planta]) {
+                    dashboardData.porArea1[planta] = { nombre: planta, cantidad: 0, importe: 0 };
+                }
+                dashboardData.porArea1[planta].cantidad++;
+                dashboardData.porArea1[planta].importe += costoLaboral;
+            }
+
+            // --- AGREGACIONES DINÁMICAS (LD y GC) ---
+            let hasLD = false;
+            ldCols.forEach(col => {
+                const val = parseFloat(row[col]) || 0;
+                if (val !== 0) {
+                    hasLD = true;
+                    if (!dashboardData.porLibresDisponibilidades[col]) {
+                        dashboardData.porLibresDisponibilidades[col] = { nombre: col, cantidad: 0, importe: 0 };
+                    }
+                    dashboardData.porLibresDisponibilidades[col].cantidad++;
+                    dashboardData.porLibresDisponibilidades[col].importe += val;
+                }
+            });
+
+            let hasGC = false;
+            gcCols.forEach(col => {
+                const val = parseFloat(row[col]) || 0;
+                if (val !== 0) {
+                    hasGC = true;
+                    if (!dashboardData.porGuardiasCriticas[col]) {
+                        dashboardData.porGuardiasCriticas[col] = { nombre: col, cantidad: 0, importe: 0 };
+                    }
+                    dashboardData.porGuardiasCriticas[col].cantidad++;
+                    dashboardData.porGuardiasCriticas[col].importe += val;
+                }
+            });
+
+            // --- AREA 3 (LD, GC, Reemplazos) ---
+            if (hasLD) {
+                dashboardData.porArea3["LD Liquidacion"].cantidad++;
+                dashboardData.porArea3["LD Liquidacion"].importe += costoLaboral;
+            }
+            if (hasGC) {
+                dashboardData.porArea3["GC Liquidacion"].cantidad++;
+                dashboardData.porArea3["GC Liquidacion"].importe += costoLaboral;
+            }
+            if (planta === "Reemplazante no permanente") {
+                dashboardData.porArea3["Reemplazos"].cantidad++;
+                dashboardData.porArea3["Reemplazos"].importe += costoLaboral;
+            }
+
+            // --- LÓGICA ESPECÍFICA DE REEMPLAZOS ---
+            if (planta === "Reemplazante no permanente") {
+                const nivel = row.NIVEL || 'SIN ESPECIFICAR';
+                const dias = parseFloat(row.D_TRAB) || 0;
+
+                // 1. Por Nivel
+                if (!dashboardData.porReemplazoNivel[nivel]) {
+                    dashboardData.porReemplazoNivel[nivel] = { nombre: nivel, cantidad: 0, importe: 0, dias: 0 };
+                }
+                dashboardData.porReemplazoNivel[nivel].cantidad++;
+                dashboardData.porReemplazoNivel[nivel].importe += costoLaboral;
+                dashboardData.porReemplazoNivel[nivel].dias += dias;
+
+                // 2. Por Organismo
+                if (!dashboardData.porReemplazoOrganismo[organismo]) {
+                    dashboardData.porReemplazoOrganismo[organismo] = { nombre: organismo, importe: 0, dias: 0 };
+                }
+                dashboardData.porReemplazoOrganismo[organismo].importe += costoLaboral;
+                dashboardData.porReemplazoOrganismo[organismo].dias += dias;
+            }
         })
         .on('end', () => {
             // Convertir objetos a arrays para facilitar el manejo en el frontend
@@ -269,7 +365,13 @@ app.get('/api/dashboard-info', (req, res) => {
                 totales: dashboardData.totales,
                 porPlanta: Object.values(dashboardData.porPlanta).sort((a, b) => b.importe - a.importe),
                 porOrganismo: Object.values(dashboardData.porOrganismo).sort((a, b) => b.importe - a.importe),
-                porArea: Object.values(dashboardData.porArea).sort((a, b) => b.importe - a.importe)
+                porArea: Object.values(dashboardData.porArea).sort((a, b) => b.importe - a.importe),
+                porReemplazoNivel: Object.values(dashboardData.porReemplazoNivel).sort((a, b) => b.importe - a.importe),
+                porReemplazoOrganismo: Object.values(dashboardData.porReemplazoOrganismo).sort((a, b) => b.importe - a.importe),
+                porLibresDisponibilidades: Object.values(dashboardData.porLibresDisponibilidades).sort((a, b) => b.importe - a.importe),
+                porGuardiasCriticas: Object.values(dashboardData.porGuardiasCriticas).sort((a, b) => b.importe - a.importe),
+                porArea1: Object.values(dashboardData.porArea1).sort((a, b) => b.importe - a.importe),
+                porArea3: Object.values(dashboardData.porArea3)
             };
             res.json(response);
         })
@@ -426,6 +528,48 @@ app.get('/api/ld-liquidacion', (req, res) => {
     const configColumns = [];
     if (fs.existsSync(LD_CONFIG_FILE)) {
         const content = fs.readFileSync(LD_CONFIG_FILE, 'utf8').split('\n');
+        content.shift(); // Quitar encabezado "columna"
+        content.forEach(line => { if (line.trim()) configColumns.push(line.trim()); });
+    }
+
+    if (configColumns.length === 0) return res.json([]);
+
+    const results = [];
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            // Verificar si alguna de las columnas configuradas tiene valor != 0
+            const hasValue = configColumns.some(col => {
+                const val = parseFloat(row[col]);
+                return !isNaN(val) && val !== 0;
+            });
+
+            if (hasValue) {
+                const projectedRow = {};
+                // Copiar campos estándar
+                CAMPOS_LIQUIDACION.forEach(field => {
+                    projectedRow[field] = row[field] ?? '';
+                });
+                // Inyectar columnas de configuración al final (después de Area2)
+                configColumns.forEach(col => {
+                    projectedRow[col] = row[col] ?? '0';
+                });
+                results.push(projectedRow);
+            }
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 8. Reporte GC Liquidacion (Filtrado por columnas configuradas en GC_config.csv)
+app.get('/api/gc-liquidacion', (req, res) => {
+    const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    if (!fs.existsSync(csvPath)) return res.status(404).json({ error: 'Archivo unificado no encontrado' });
+
+    // 1. Cargar configuración de GC
+    const configColumns = [];
+    if (fs.existsSync(GC_CONFIG_FILE)) {
+        const content = fs.readFileSync(GC_CONFIG_FILE, 'utf8').split('\n');
         content.shift(); // Quitar encabezado "columna"
         content.forEach(line => { if (line.trim()) configColumns.push(line.trim()); });
     }

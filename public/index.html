@@ -680,6 +680,8 @@
         <a href="#" id="menu-reemplazos" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Reemplazos</a>
         <a href="#" id="menu-ld-liquidacion" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ LD
             Liquidación</a>
+        <a href="#" id="menu-gc-liquidacion" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ GC
+            Liquidación</a>
         <a href="#" id="menu-acumulado"><i class="fas fa-calculator"></i> Acumulado Aporte Jub.</a>
         <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
@@ -865,11 +867,122 @@
                         <span id="label-organismo-count" style="font-size: 13px; color: #999;">-</span>
                     </div>
                     <div class="breakdown-flex">
-                        <div class="chart-container" style="height: 350px;">
-                            <canvas id="chart-organismo"></canvas>
+                        <div class="chart-container" style="overflow-y: auto; overflow-x: hidden;">
+                            <div id="wrap-organismo">
+                                <canvas id="chart-organismo"></canvas>
+                            </div>
                         </div>
                         <div class="list-container">
                             <div class="breakdown-list" id="list-organismo" style="max-height: 250px;">
+                                <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Area 1 (Sin gráfico) -->
+                <div class="breakdown-card">
+                    <div class="breakdown-header">
+                        <h3>Distribución de Area 1</h3>
+                        <span id="label-area1-count" style="font-size: 13px; color: #999;">-</span>
+                    </div>
+                    <div class="breakdown-flex">
+                        <div class="list-container" style="flex: 1; min-width: 100%;">
+                            <div class="breakdown-list" id="list-area1" style="max-height: 350px; overflow-y: auto;">
+                                <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Area 3 (LD, GC, Reemplazos) -->
+                <div class="breakdown-card">
+                    <div class="breakdown-header">
+                        <h3>Distribución de Area 3 (LD, GC, Reemplazos)</h3>
+                        <span id="label-area3-count" style="font-size: 13px; color: #999;">-</span>
+                    </div>
+                    <div class="breakdown-flex">
+                        <div class="chart-container" style="overflow-y: auto; overflow-x: hidden;">
+                            <div id="wrap-area3">
+                                <canvas id="chart-area3"></canvas>
+                            </div>
+                        </div>
+                        <div class="list-container">
+                            <div class="breakdown-list" id="list-area3" style="max-height: 250px;">
+                                <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Libres Disponibilidades -->
+                <div class="breakdown-card">
+                    <div class="breakdown-header">
+                        <h3>Distribución de Libres Disponibilidades</h3>
+                        <span id="label-ld-count" style="font-size: 13px; color: #999;">-</span>
+                    </div>
+                    <div class="breakdown-flex">
+                        <div class="chart-container" style="overflow-y: auto; overflow-x: hidden;">
+                            <div id="wrap-ld">
+                                <canvas id="chart-ld"></canvas>
+                            </div>
+                        </div>
+                        <div class="list-container">
+                            <div class="breakdown-list" id="list-ld" style="max-height: 250px;">
+                                <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Guardias Críticas -->
+                <div class="breakdown-card">
+                    <div class="breakdown-header">
+                        <h3>Distribución de Guardias Críticas</h3>
+                        <span id="label-gc-count" style="font-size: 13px; color: #999;">-</span>
+                    </div>
+                    <div class="breakdown-flex">
+                        <div class="chart-container" style="overflow-y: auto; overflow-x: hidden;">
+                            <div id="wrap-gc">
+                                <canvas id="chart-gc"></canvas>
+                            </div>
+                        </div>
+                        <div class="list-container">
+                            <div class="breakdown-list" id="list-gc" style="max-height: 250px;">
+                                <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NUEVAS SECCIONES DE REEMPLAZOS -->
+            <div class="breakdown-section" style="margin-top: 40px; border-top: 2px solid #5c67f2; padding-top: 30px;">
+                <!-- Reemplazos por Nivel -->
+                <div class="breakdown-card">
+                    <div class="breakdown-header">
+                        <h3 style="color: #5c67f2;">Distribución de Reemplazos no Permanentes</h3>
+                        <span id="label-reemplazos-nivel-count" style="font-size: 13px; color: #999;">-</span>
+                    </div>
+                    <div class="breakdown-flex">
+                        <div class="chart-container">
+                            <canvas id="chart-reemplazos-nivel"></canvas>
+                        </div>
+                        <div class="list-container">
+                            <div class="breakdown-list" id="list-reemplazos-nivel" style="max-height: 250px;">
+                                <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Reemplazos por Organismo -->
+                <div class="breakdown-card">
+                    <div class="breakdown-header">
+                        <h3 style="color: #5c67f2;">Distribución de Reemplazos no Permanentes por Organismo</h3>
+                        <span id="label-reemplazos-org-count" style="font-size: 13px; color: #999;">-</span>
+                    </div>
+                    <div class="breakdown-flex">
+                        <div class="chart-container">
+                            <canvas id="chart-reemplazos-org"></canvas>
+                        </div>
+                        <div class="list-container">
+                            <div class="breakdown-list" id="list-reemplazos-org" style="max-height: 250px;">
                                 <div style="text-align: center; color: #999; padding: 20px;">Cargando datos...</div>
                             </div>
                         </div>
@@ -1447,6 +1560,17 @@
                 });
             }
 
+            // --- GC LIQUIDACION ---
+            const menuGCLiq = document.getElementById('menu-gc-liquidacion');
+            if (menuGCLiq) {
+                menuGCLiq.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    loadDataAndRenderTable('/api/gc-liquidacion', 'Liquidación: Guardias Críticas (Configuradas)');
+                    closeNav();
+                });
+            }
+
             // Conexión del menú Residentes
             const menuResidentes = document.getElementById('menu-residentes');
 
@@ -1512,6 +1636,12 @@
         }).format(val);
         let chartPlanta = null;
         let chartOrganismo = null;
+        let chartArea = null;
+        let chartArea3 = null;
+        let chartLD = null;
+        let chartGC = null;
+        let chartReemplazoNivel = null;
+        let chartReemplazoOrg = null;
 
         // Registrar plugin de labels para todos los gráficos
         if (typeof ChartDataLabels !== 'undefined') {
@@ -1560,6 +1690,20 @@
 
                 // Renderizar Organismo
                 renderOrganismoSection(data.porOrganismo);
+
+                // Renderizar Area 1 (solo lista)
+                renderArea1Section(data.porArea1);
+
+                // Renderizar Area 3
+                renderArea3Section(data.porArea3);
+
+                // Renderizar LD y GC
+                renderLDSection(data.porLibresDisponibilidades);
+                renderGCSection(data.porGuardiasCriticas);
+
+                // Renderizar Reemplazos (Nuevas secciones)
+                renderReemplazoNivelSection(data.porReemplazoNivel);
+                renderReemplazoOrganismoSection(data.porReemplazoOrganismo);
 
             } catch (err) {
                 console.error("❌ Error cargando dashboard:", err);
@@ -1633,7 +1777,7 @@
             });
         }
 
-        let chartArea = null;
+        // renderAreaSection
         function renderAreaSection(items) {
             const listArea = document.getElementById('list-area');
             document.getElementById('label-area-count').innerText = `${items.length} áreas`;
@@ -1700,7 +1844,6 @@
 
         function renderOrganismoSection(items) {
             const listOrg = document.getElementById('list-organismo');
-            const chartWrapper = document.getElementById('chart-organismo').parentElement;
             document.getElementById('label-organismo-count').innerText = `${items.length} organismos`;
 
             listOrg.innerHTML = items.map(o => `
@@ -1713,13 +1856,15 @@
                 </div>
             `).join('');
 
-            // Gráfico Organismo (Barras Horizontales) - Ajuste de altura dinámico
             const ctxOrg = document.getElementById('chart-organismo').getContext('2d');
             if (chartOrganismo) chartOrganismo.destroy();
 
-            // Ajustar altura del canvas basado en la cantidad de items (mínimo 350px)
-            const dynamicHeight = Math.max(350, items.length * 40);
-            chartWrapper.style.height = `${dynamicHeight}px`;
+            // Usamos una altura base (350px) y crecemos solo el wrapper interno si hay muchos items
+            const wrapper = document.getElementById('wrap-organismo');
+            if (wrapper) {
+                const dynamicHeight = Math.max(350, items.length * 30);
+                wrapper.style.height = `${dynamicHeight}px`;
+            }
 
             chartOrganismo = new Chart(ctxOrg, {
                 type: 'bar',
@@ -1736,7 +1881,7 @@
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { right: 120, left: 10, top: 10, bottom: 10 } },
+                    layout: { padding: { right: 80, left: 10, top: 10, bottom: 10 } },
                     plugins: {
                         legend: { display: false },
                         datalabels: {
@@ -1744,14 +1889,183 @@
                             align: 'right',
                             formatter: (value) => formatCurrency(value).split(',')[0],
                             font: { weight: 'bold', size: 10 },
-                            color: '#5c67f2',
-                            padding: 6
+                            color: '#5c67f2'
                         }
                     },
                     scales: {
-                        x: { display: false, grid: { display: false } },
-                        y: { ticks: { font: { size: 10 } }, grid: { display: false } }
+                        x: { display: false },
+                        y: { ticks: { font: { size: 9 } } }
                     }
+                }
+            });
+        }
+
+        // --- FUNCION GENERICA PARA RENDERIZAR SECCIONES TIPO BARRA ---
+        function renderGenericBarSection(canvasId, listId, labelId, items, chartVarName, color = '#5c67f2', labelSuffix = 'items') {
+            const list = document.getElementById(listId);
+            const label = document.getElementById(labelId);
+            if (!list || !label) return;
+
+            label.innerText = `${items.length} ${labelSuffix}`;
+            list.innerHTML = items.map(i => `
+                <div class="breakdown-item">
+                    <div class="item-name">${i.nombre}</div>
+                    <div class="item-stats">
+                        <span class="item-amt">${formatCurrency(i.importe)}</span>
+                        <span class="item-qty">${i.cantidad} registros</span>
+                    </div>
+                </div>
+            `).join('');
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+
+            // Destrucción dinámica de instancia previa
+            if (window[chartVarName]) window[chartVarName].destroy();
+
+            const wrapperId = canvasId.replace('chart-', 'wrap-');
+            const wrapper = document.getElementById(wrapperId);
+            if (wrapper) {
+                const dynamicHeight = Math.max(300, items.length * 40);
+                wrapper.style.height = `${dynamicHeight}px`;
+            }
+
+            window[chartVarName] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: items.map(i => i.nombre),
+                    datasets: [{
+                        data: items.map(i => i.importe),
+                        backgroundColor: color,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'right',
+                            formatter: (value) => formatCurrency(value).split(',')[0],
+                            font: { weight: 'bold', size: 10 },
+                            color: color
+                        }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function renderArea3Section(items) {
+            renderGenericBarSection('chart-area3', 'list-area3', 'label-area3-count', items, 'chartArea3', '#e67e22', 'categorías');
+        }
+
+        function renderLDSection(items) {
+            renderGenericBarSection('chart-ld', 'list-ld', 'label-ld-count', items, 'chartLD', '#3498db', 'códigos');
+        }
+
+        function renderGCSection(items) {
+            renderGenericBarSection('chart-gc', 'list-gc', 'label-gc-count', items, 'chartGC', '#e74c3c', 'códigos');
+        }
+
+        // --- FUNCION PARA AREA 1 (SIN GRAFICO) ---
+        function renderArea1Section(items) {
+            const listArea1 = document.getElementById('list-area1');
+            const labelCount = document.getElementById('label-area1-count');
+            if (!listArea1 || !labelCount) return;
+
+            labelCount.innerText = `${items.length} plantas (Area 1)`;
+
+            listArea1.innerHTML = items.map(a => `
+                <div class="breakdown-item">
+                    <div class="item-name">${a.nombre}</div>
+                    <div class="item-stats">
+                        <span class="item-amt">${formatCurrency(a.importe)}</span>
+                        <span class="item-qty">${a.cantidad} registros</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- FUNCIONES PARA REEMPLAZOS ---
+        function renderReemplazoNivelSection(items) {
+            const list = document.getElementById('list-reemplazos-nivel');
+            const label = document.getElementById('label-reemplazos-nivel-count');
+            if (!list || !label) return;
+
+            label.innerText = `${items.length} niveles`;
+            list.innerHTML = items.map(i => `
+                <div class="breakdown-item">
+                    <div class="item-name">${i.nombre}</div>
+                    <div class="item-stats">
+                        <span class="item-amt">${formatCurrency(i.importe)}</span>
+                        <span class="item-qty">${i.cantidad} agentes | ${i.dias} días</span>
+                    </div>
+                </div>
+            `).join('');
+
+            const ctx = document.getElementById('chart-reemplazos-nivel').getContext('2d');
+            if (chartReemplazoNivel) chartReemplazoNivel.destroy();
+
+            const topItems = items.slice(0, 5);
+            chartReemplazoNivel = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topItems.map(i => i.nombre),
+                    datasets: [{
+                        label: 'Costo Laboral',
+                        data: topItems.map(i => i.importe),
+                        backgroundColor: '#5c67f2'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderReemplazoOrganismoSection(items) {
+            const list = document.getElementById('list-reemplazos-org');
+            const label = document.getElementById('label-reemplazos-org-count');
+            if (!list || !label) return;
+
+            label.innerText = `${items.length} organismos`;
+            list.innerHTML = items.map(i => `
+                <div class="breakdown-item">
+                    <div class="item-name">${i.nombre}</div>
+                    <div class="item-stats">
+                        <span class="item-amt">${formatCurrency(i.importe)}</span>
+                        <span class="item-qty">${i.dias} días</span>
+                    </div>
+                </div>
+            `).join('');
+
+            const ctx = document.getElementById('chart-reemplazos-org').getContext('2d');
+            if (chartReemplazoOrg) chartReemplazoOrg.destroy();
+
+            const topItems = items.slice(0, 5);
+            chartReemplazoOrg = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topItems.map(i => i.nombre),
+                    datasets: [{
+                        label: 'Días Trabajados',
+                        data: topItems.map(i => i.dias),
+                        backgroundColor: '#00b09b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } }
                 }
             });
         }
