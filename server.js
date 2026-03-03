@@ -710,6 +710,7 @@ app.post('/api/process', upload.array('excelFiles'), async (req, res) => {
 });
 
 
-app.listen(PORT, () => {
-    console.log(`Servidor de la Interfaz Simple ejecutándose en http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor de la Interfaz Simple ejecutándose en el puerto ${PORT}`);
+    console.log(`Para acceder desde otro dispositivo en la red, utiliza la IP de esta PC.`);
 });
