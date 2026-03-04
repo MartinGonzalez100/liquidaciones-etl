@@ -686,6 +686,19 @@
         <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
         <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')">Pago Familiar Discapacitado</a>
+
+        <a href="#" id="menu-novedades-mensuales"
+            style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px; color: #f1c40f;">
+            <i class="fas fa-calendar-alt"></i> Novedades Mensuales
+        </a>
+        <a href="#" id="menu-novedades-gc" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Novedades GC</a>
+        <a href="#" id="menu-novedades-residentes" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─
+            Novedades Residentes</a>
+        <a href="#" id="menu-novedades-criticidad" style="padding-left: 70px; font-size: 14px; color: #999;">└─
+            Criticidad</a>
+        <a href="#" id="menu-novedades-fortalecimiento" style="padding-left: 70px; font-size: 14px; color: #999;">└─
+            Fortalecimiento</a>
+
         <a href="#" id="menu-configuracion"
             style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px; color: #5c67f2;">
             <i class="fas fa-cog"></i> Configuración de Parámetros
@@ -743,6 +756,28 @@
             <div id="status-message"><span id="status-text">Esperando para iniciar el proceso...</span><span
                     id="loading-dots" style="color: #1f202c; display: none; font-size: 25px;"></span></div>
         </div>
+
+        <div id="conversion-novedades-form" class="container" style="margin-top: 20px;">
+            <h1>Procesador de Lotes de Novedades</h1>
+            <div class="mode-selection">
+                <h2>Modo de Carga</h2><label><input type="radio" name="processModeNovedades" value="default" checked
+                        onchange="toggleUploadNovedades(false)">Usar archivos de la carpeta:
+                    <code>excel-a-convertir-novedades/</code><span class="info">(Procesa todos los archivos válidos
+                        `.xlsx` o `.xls` que ya
+                        estén ahí)</span></label><label><input type="radio" name="processModeNovedades" value="upload"
+                        onchange="toggleUploadNovedades(true)">Cargar archivos Excel ahora <span class="info">(Mueve los
+                        archivos cargados a la carpeta por defecto para su procesamiento)</span></label>
+            </div>
+            <div id="upload-area-novedades" style="display: none; margin-bottom: 20px;"><label
+                    for="file-input-novedades">Seleccionar
+                    Archivos Excel (.xlsx/.xls):</label><input type="file" id="file-input-novedades"
+                    name="excelFilesNovedades" accept=".xlsx,.xls" multiple></div><button
+                onclick="iniciarProcesoNovedades()">Iniciar Conversión y
+                Limpieza de Novedades</button>
+            <div id="status-message-novedades" style="margin-top: 20px; padding: 15px; border-radius: 4px;"><span
+                    id="status-text-novedades">Esperando para iniciar el proceso de novedades...</span><span
+                    id="loading-dots-novedades" style="color: #1f202c; display: none; font-size: 25px;"></span></div>
+        </div>
         <div id="panel-tope-jubilatorio"
             style="display:none; background: #fdfdfd; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 25px; border-left: 6px solid #4e73df;">
             <h3 style="margin-top:0; color: #4e73df;"><i class="fas fa-calculator"></i>Configuración de Reporte
@@ -772,6 +807,17 @@
                 <div id="table-wrapper">
                     <table id="tabla-datos" class="display responsive nowrap" style="width:100%"></table>
                 </div>
+            </div>
+        </div>
+
+        <div id="novedades-resumen-view" class="container"
+            style="display: none; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; border-radius: 12px; margin: 20px auto;">
+            <h1 style="color: #333; border-bottom: 2px solid #5c67f2; padding-bottom: 10px;">Resumen Mensual de
+                Novedades</h1>
+            <p style="color: #666; font-size: 15px;">Listado de archivos generados desde los Excel subidos en Novedades.
+            </p>
+            <div id="novedades-resumen-container" style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+                <p style="color: #999;">Cargando resumen de archivos...</p>
             </div>
         </div>
 
@@ -1094,6 +1140,60 @@
             loadDataAndRenderTable(url, "Vista Previa: AcApJub.csv (Estructura Base)");
         });
 
+        // --- LÓGICA VISTA NOVEDADES ---
+
+        const menuNovedadesMensuales = document.getElementById('menu-novedades-mensuales');
+        if (menuNovedadesMensuales) {
+            menuNovedadesMensuales.addEventListener('click', function (e) {
+                e.preventDefault();
+                showSection('novedades-resumen-view');
+                closeNav();
+                loadNovedadesResumen();
+            });
+        }
+
+        function setupNovedadesMenu(menuId, title, endpoint) {
+            const menu = document.getElementById(menuId);
+            if (menu) {
+                menu.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    closeNav();
+                    loadDataAndRenderTable('/api/novedades/' + endpoint, title);
+                });
+            }
+        }
+
+        setupNovedadesMenu('menu-novedades-gc', 'Novedades GC', 'gc');
+        setupNovedadesMenu('menu-novedades-residentes', 'Novedades Residentes', 'residentes');
+        setupNovedadesMenu('menu-novedades-criticidad', 'Residentes - Criticidad', 'criticidad');
+        setupNovedadesMenu('menu-novedades-fortalecimiento', 'Residentes - Fortalecimiento', 'fortalecimiento');
+
+        async function loadNovedadesResumen() {
+            const container = document.getElementById('novedades-resumen-container');
+            container.innerHTML = '<p style="color: #999;">Cargando resumen de archivos...</p>';
+            try {
+                const response = await fetch('/api/novedades/resumen');
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error || 'Error al cargar resumen');
+                if (result.length === 0) {
+                    container.innerHTML = '<p style="color: #e74c3c;">No se encontraron archivos en la carpeta de novedades unidos.</p>';
+                    return;
+                }
+
+                container.innerHTML = result.map(file => `
+                    <div style="background: #f8f9ff; border: 1px solid #e1e4f3; border-radius: 8px; padding: 20px; width: 250px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <i class="fas fa-file-csv" style="font-size: 30px; color: #5c67f2; margin-bottom: 10px;"></i>
+                        <h3 style="margin: 0; color: #333; font-size: 18px;">${file.nombre}</h3>
+                        <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;"><strong>${file.registros}</strong> registros</p>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                container.innerHTML = `<p style="color: #e74c3c;">Error: ${err.message}</p>`;
+            }
+        }
+
         /* if (btnGenerar) {
             console.log("🚀 Listener del botón vinculado correctamente"); // Esto debería salir al cargar la página
 
@@ -1131,6 +1231,7 @@
         function showSection(sectionId) {
             // Ocultar todos los contenedores principales
             conversionForm.style.display = 'none';
+            document.getElementById('conversion-novedades-form').style.display = 'none';
             liquidacionView.style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'none';
             document.getElementById('btn-toggle-edit').style.display = 'none';
@@ -1138,10 +1239,13 @@
             document.getElementById('panel-tope-jubilatorio').style.display = 'none';
             document.getElementById('floating-search-container').style.display = 'none';
             document.getElementById('configuracion-view').style.display = 'none';
+            const novedadesView = document.getElementById('novedades-resumen-view');
+            if (novedadesView) novedadesView.style.display = 'none';
 
             // Mostrar solo el solicitado
             if (sectionId === 'conversion-form') {
                 conversionForm.style.display = 'block';
+                document.getElementById('conversion-novedades-form').style.display = 'block';
             }
             else if (sectionId === 'liquidacion-completa-view') {
                 liquidacionView.style.display = 'block';
@@ -1152,6 +1256,9 @@
             }
             else if (sectionId === 'configuracion-view') {
                 document.getElementById('configuracion-view').style.display = 'block';
+            }
+            else if (sectionId === 'novedades-resumen-view') {
+                if (novedadesView) novedadesView.style.display = 'block';
             }
         }
 
@@ -1406,10 +1513,82 @@
             }
         }
 
+        // --- LÓGICA ETL NOVEDADES ---
+        function toggleUploadNovedades(isUpload) {
+            const uploadAreaNovedades = document.getElementById('upload-area-novedades');
+            uploadAreaNovedades.style.display = isUpload ? 'block' : 'none';
+        }
 
+        async function iniciarProcesoNovedades() {
+            const statusMessageNovedades = document.getElementById('status-message-novedades');
+            const statusTextNovedades = document.getElementById('status-text-novedades');
+            const loadingDotsNovedades = document.getElementById('loading-dots-novedades');
+            const fileInputNovedades = document.getElementById('file-input-novedades');
 
+            let intervalIdNov;
+            let stepNov = 0;
 
-        // --- LÓGICA DE LA TABLA (Liquidación Completa) ---
+            // local animation function
+            function startLoadingNov() {
+                statusTextNovedades.textContent = 'Procesando archivos de novedades: ';
+                loadingDotsNovedades.style.display = 'inline';
+                statusMessageNovedades.className = '';
+                loadingDotsNovedades.textContent = PHASES[0];
+
+                intervalIdNov = setInterval(() => {
+                    stepNov = (stepNov + 1) % PHASES.length;
+                    loadingDotsNovedades.textContent = PHASES[stepNov];
+                }, 200);
+            }
+
+            function stopLoadingNov() {
+                clearInterval(intervalIdNov);
+                loadingDotsNovedades.style.display = 'none';
+            }
+
+            function showStatusNov(message, type) {
+                statusTextNovedades.textContent = message;
+                statusMessageNovedades.className = type === 'success' ? 'status-success' : 'status-error';
+            }
+
+            startLoadingNov();
+            const selectedMode = document.querySelector('input[name="processModeNovedades"]:checked').value;
+            const formData = new FormData();
+            formData.append('processMode', selectedMode);
+
+            if (selectedMode === 'upload') {
+                if (fileInputNovedades.files.length === 0) {
+                    stopLoadingNov();
+                    showStatusNov('Por favor, selecciona al menos un archivo Excel para cargar de novedades.', 'error');
+                    return;
+                }
+
+                for (const file of fileInputNovedades.files) {
+                    formData.append('excelFilesNovedades', file);
+                }
+            }
+
+            try {
+                const response = await fetch('/api/process-novedades', {
+                    method: 'POST', body: formData
+                });
+                const result = await response.json();
+
+                stopLoadingNov();
+
+                if (result.success) {
+                    showStatusNov(result.message + (result.unprocessedFiles ? " (Nota: hubieron archivos ignorados por no pertenecer al formato)" : ""), 'success');
+                    if (result.unprocessedFiles && result.unprocessedFiles.length > 0) {
+                        alert("⚠️ Los siguientes archivos no fueron procesados porque no empiezan con prefijos válidos:\n" + result.unprocessedFiles.join("\n"));
+                    }
+                } else {
+                    showStatusNov(result.message, 'error');
+                }
+            } catch (error) {
+                stopLoadingNov();
+                showStatusNov('Error de conexión con el servidor (novedades).', 'error');
+            }
+        }
         let dataTableInitialized = false;
 
         function loadDataAndRenderTable(url, title) {

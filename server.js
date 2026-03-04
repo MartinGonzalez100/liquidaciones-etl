@@ -8,13 +8,16 @@ const fs = require('fs');
 const csv = require('csv-parser');
 // ...
 const { ejecutarProcesoETL } = require('./etl_runner'); // El runner que creamos
-
+const { ejecutarProcesoNovedades } = require('./etl_novedades_runner');
 //-------------
 const app = express();
 const PORT = 3000;
 const EXCEL_DIR = path.join(__dirname, 'excel-a-convertir');
 const CSV_UNIDOS_DIR = path.join(__dirname, 'csv-unidos'); // Directorio del CSV final
 const FINAL_CSV_NAME = 'liquidaciones_unificadas.csv';
+
+const EXCEL_NOVEDADES_DIR = path.join(__dirname, 'excel-a-convertir-novedades');
+const CSV_UNIDOS_NOVEDADES_DIR = path.join(__dirname, 'csv-unidos-novedades');
 
 const CONFIG_DIR = path.join(__dirname, 'configuracion_parametros');
 const LD_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config.csv');
@@ -24,7 +27,11 @@ const GC_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config.csv');
 
 // Crear carpetas necesarias
 if (!fs.existsSync(EXCEL_DIR)) fs.mkdirSync(EXCEL_DIR);
+if (!fs.existsSync(CSV_UNIDOS_DIR)) fs.mkdirSync(CSV_UNIDOS_DIR);
 if (!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR);
+
+if (!fs.existsSync(EXCEL_NOVEDADES_DIR)) fs.mkdirSync(EXCEL_NOVEDADES_DIR);
+if (!fs.existsSync(CSV_UNIDOS_NOVEDADES_DIR)) fs.mkdirSync(CSV_UNIDOS_NOVEDADES_DIR);
 
 // Configuración de Multer: Al subir archivos, los guardamos temporalmente.
 const upload = multer({ dest: 'uploads/' });
@@ -707,6 +714,85 @@ app.post('/api/process', upload.array('excelFiles'), async (req, res) => {
         console.error('Error en el endpoint /api/process:', error);
         res.status(500).json({ success: false, message: 'Error interno del servidor: ' + error.message });
     }
+});
+
+// Endpoint para procesamiento de Novedades
+app.post('/api/process-novedades', upload.array('excelFilesNovedades'), async (req, res) => {
+    const processMode = req.body.processMode;
+    const files = req.files;
+
+    let excelFilesToProcess = [];
+
+    try {
+        if (processMode === 'default') {
+            excelFilesToProcess = fs.readdirSync(EXCEL_NOVEDADES_DIR)
+                .filter(file => file.match(/\.(xlsx|xls)$/i));
+
+            if (excelFilesToProcess.length === 0) {
+                return res.status(400).json({ success: false, message: "No se encontraron archivos en la carpeta excel-a-convertir-novedades." });
+            }
+        } else if (processMode === 'upload') {
+            if (!files || files.length === 0) {
+                return res.status(400).json({ success: false, message: "No se cargó ningún archivo." });
+            }
+
+            files.forEach(file => {
+                const tempPath = path.join(__dirname, file.path);
+                const targetPath = path.join(EXCEL_NOVEDADES_DIR, file.originalname);
+                fs.renameSync(tempPath, targetPath);
+                excelFilesToProcess.push(file.originalname);
+            });
+        }
+
+        const result = await ejecutarProcesoNovedades(excelFilesToProcess);
+        res.json(result);
+
+    } catch (error) {
+        console.error('Error en el endpoint /api/process-novedades:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor: ' + error.message });
+    }
+});
+
+// ENDPOINTS PARA NOVEDADES REPORTERIA
+app.get('/api/novedades/resumen', (req, res) => {
+    try {
+        if (!fs.existsSync(CSV_UNIDOS_NOVEDADES_DIR)) return res.json([]);
+        const files = fs.readdirSync(CSV_UNIDOS_NOVEDADES_DIR).filter(f => f.endsWith('.csv'));
+        const resumeDetails = [];
+
+        for (const file of files) {
+            const filePath = path.join(CSV_UNIDOS_NOVEDADES_DIR, file);
+            const fileContent = fs.readFileSync(filePath, 'utf8');
+            const nonBlankLines = fileContent.split('\n').filter(l => l.trim().length > 0);
+
+            let count = 0;
+            if (nonBlankLines.length > 0) count = nonBlankLines.length - 1; // restamos header
+
+            resumeDetails.push({ nombre: file, registros: count });
+        }
+        res.json(resumeDetails);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get('/api/novedades/:tipo', (req, res) => {
+    const { tipo } = req.params;
+    const csvPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, `${tipo}.csv`);
+
+    if (!fs.existsSync(csvPath)) {
+        // En lugar de enviar un JSON con error que revienta Datatable, enviamos data vacía
+        return res.json([]);
+    }
+
+    const results = [];
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            results.push(row);
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
 });
 
 
