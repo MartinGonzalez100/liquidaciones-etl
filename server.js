@@ -885,8 +885,20 @@ app.get('/api/novedades/:tipo', (req, res) => {
         .on('error', (err) => res.status(500).json({ error: err.message }));
 });
 
+// ==========================================
+// CONFIGURACIÓN DE RED DEL SERVIDOR
+// ==========================================
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor de la Interfaz Simple ejecutándose en el puerto ${PORT}`);
-    console.log(`Para acceder desde otro dispositivo en la red, utiliza la IP de esta PC.`);
+// OPCIÓN 1: Ejecutar solo localmente (Más seguro, nadie en tu red puede entrar)
+// Descomenta las siguientes 4 líneas para usar esta opción, y comenta la Opción 2.
+app.listen(PORT, '127.0.0.1', () => {
+    console.log(`Servidor de la Interfaz Simple ejecutándose en modo LOCAL (Solo esta PC) en el puerto ${PORT}`);
+    console.log(`Accede desde tu navegador en: http://localhost:${PORT}`);
 });
+
+// OPCIÓN 2: Ejecutar en la red local (Para ver muestras desde otros dispositivos)
+// Descomenta las siguientes 4 líneas para usar esta opción, y comenta la Opción 1.
+//app.listen(PORT, '0.0.0.0', () => {
+//    console.log(`Servidor de la Interfaz Simple ejecutándose en modo RED (Accesible por otros) en el puerto ${PORT}`);
+//    console.log(`Para acceder desde otro dispositivo, ingresa la IP de esta PC seguida de :${PORT}`);
+//});
