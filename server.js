@@ -234,6 +234,7 @@ app.get('/api/dashboard-info', (req, res) => {
         porPlanta: {},
         porOrganismo: {},
         porArea: {},
+        porAreaPlanta: {},
         porReemplazoNivel: {},
         porReemplazoOrganismo: {},
         porLibresDisponibilidades: {},
@@ -294,6 +295,16 @@ app.get('/api/dashboard-info', (req, res) => {
             }
             dashboardData.porArea[area].cantidad++;
             dashboardData.porArea[area].importe += costoLaboral;
+
+            // Acumular por Area x Planta
+            if (!dashboardData.porAreaPlanta[area]) {
+                dashboardData.porAreaPlanta[area] = {};
+            }
+            if (!dashboardData.porAreaPlanta[area][planta]) {
+                dashboardData.porAreaPlanta[area][planta] = { nombre: planta, cantidad: 0, importe: 0 };
+            }
+            dashboardData.porAreaPlanta[area][planta].cantidad++;
+            dashboardData.porAreaPlanta[area][planta].importe += costoLaboral;
 
             // Acumular por Area1 (si Area2 == 'A1', agrupado por PLANTA)
             if (area === 'A1') {
@@ -367,12 +378,22 @@ app.get('/api/dashboard-info', (req, res) => {
             }
         })
         .on('end', () => {
+            // Aplanar y ordenar porAreaPlanta
+            let porAreaPlantaFlat = [];
+            for (let a in dashboardData.porAreaPlanta) {
+                for (let p in dashboardData.porAreaPlanta[a]) {
+                    porAreaPlantaFlat.push({ area: a, planta: p, ...dashboardData.porAreaPlanta[a][p] });
+                }
+            }
+            porAreaPlantaFlat.sort((a, b) => b.importe - a.importe);
+
             // Convertir objetos a arrays para facilitar el manejo en el frontend
             const response = {
                 totales: dashboardData.totales,
                 porPlanta: Object.values(dashboardData.porPlanta).sort((a, b) => b.importe - a.importe),
                 porOrganismo: Object.values(dashboardData.porOrganismo).sort((a, b) => b.importe - a.importe),
                 porArea: Object.values(dashboardData.porArea).sort((a, b) => b.importe - a.importe),
+                porAreaPlanta: porAreaPlantaFlat,
                 porReemplazoNivel: Object.values(dashboardData.porReemplazoNivel).sort((a, b) => b.importe - a.importe),
                 porReemplazoOrganismo: Object.values(dashboardData.porReemplazoOrganismo).sort((a, b) => b.importe - a.importe),
                 porLibresDisponibilidades: Object.values(dashboardData.porLibresDisponibilidades).sort((a, b) => b.importe - a.importe),
@@ -475,21 +496,35 @@ app.get('/api/observar-importes', (req, res) => {
             const totHab = parseFloat(row.TOT_HAB);
             const liquido = parseFloat(row.LIQUIDO);
             const sueldoMano = parseFloat(row.SUELDO_MANO);
+            const liquidoLey7991 = parseFloat(row.LIQUIDO_LEY7991);
+            const apJubPer = parseFloat(row.ApJubPer);
+            const obSocPer = parseFloat(row.ObSocPer);
 
-            // FILTRO: TOT_HAB <=0 o LIQUIDO <= 0 o SUELDO_MANO <= 100000 o (SUELDO_MANO > 4000000.0 y PLANTA <> "Reemplazante no permanente-LD")
+            // CONDICIONES DE ANOMALIAS PARA OBSERVAR (SÓLO IMPORTES)
+            const dTrab = parseFloat(row.D_TRAB);
+            const condicionSueldoMano = !isNaN(sueldoMano) && !isNaN(dTrab) && dTrab > 15 && (sueldoMano < 50000.00 || sueldoMano > 5000000.00);
+            const condicionLey7991 = !isNaN(liquidoLey7991) && liquidoLey7991 < 0;
+            const condicionApJubObSoc = (!isNaN(apJubPer) && apJubPer < 0) || (!isNaN(obSocPer) && obSocPer < 0);
+
             const cumpleCriterio =
                 (!isNaN(totHab) && totHab <= 0) ||
                 (!isNaN(liquido) && liquido <= 0) ||
-                (!isNaN(sueldoMano) && (
-                    (sueldoMano <= 100000.0 && row.PLANTA !== "Reemplazante no permanente-LD") ||
-                    (sueldoMano > 4000000.0 && row.PLANTA !== "Reemplazante no permanente-LD")
-                ));
+                condicionSueldoMano ||
+                condicionLey7991 ||
+                condicionApJubObSoc;
 
             if (cumpleCriterio) {
                 const projectedRow = {};
+                // Agregamos primero los campos normales menos ApJubPer
                 CAMPOS_LIQUIDACION.forEach(field => {
-                    projectedRow[field] = row[field] ?? '';
+                    if (field !== 'ApJubPer') {
+                        projectedRow[field] = row[field] ?? '';
+                    }
                 });
+                // Inyectamos las columnas al final, luego de Area2
+                projectedRow['ApJubPer'] = row['ApJubPer'] ?? '';
+                projectedRow['ObSocPer'] = row['ObSocPer'] ?? '';
+
                 results.push(projectedRow);
                 filteredCount++;
             }
@@ -501,6 +536,61 @@ app.get('/api/observar-importes', (req, res) => {
         .on('error', (error) => {
             console.error('[SERVER] ❌ Error en el proceso de Observar Importes:', error.message);
             res.status(500).json({ error: `Error interno al procesar el archivo CSV para Observar Importes: ${error.message}` });
+        });
+});
+
+// NUEVO ENDPOINT: Liquidaciones a observar por Planta
+app.get('/api/observar-planta', (req, res) => {
+    const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    const results = [];
+    let filteredCount = 0;
+
+    if (!fs.existsSync(csvPath)) {
+        console.error('[SERVER] ❌ Archivo CSV unificado no encontrado para Observar Planta. Enviando 404.');
+        return res.status(404).json({ error: 'Archivo CSV unificado no encontrado. Ejecute primero la Conversión.' });
+    }
+
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            const area2 = row.Area2 ? row.Area2.trim() : '';
+            const planta = row.PLANTA ? row.PLANTA.trim() : '';
+
+            // CONDICIONES DE ANOMALIAS PARA OBSERVAR (SÓLO PLANTA)
+            const condicionAreaA1_Reemp = area2 === 'A1' && planta === 'Reemplazante no permanente';
+            const condicionAreaA1_ReempLD = area2 === 'A1' && planta === 'Reemplazante no permanente-LD';
+            const plantasA3 = [
+                'Transitorios',
+                'Permanente Interino',
+                'Permanente Titular',
+                'Residentes',
+                'Residentes Nacionales'
+            ];
+            const condicionAreaA3 = area2 === 'A3' && plantasA3.includes(planta);
+
+            const cumpleCriterio = condicionAreaA1_Reemp || condicionAreaA1_ReempLD || condicionAreaA3;
+
+            if (cumpleCriterio) {
+                const projectedRow = {};
+                CAMPOS_LIQUIDACION.forEach(field => {
+                    if (field !== 'ApJubPer') {
+                        projectedRow[field] = row[field] ?? '';
+                    }
+                });
+                projectedRow['ApJubPer'] = row['ApJubPer'] ?? '';
+                projectedRow['ObSocPer'] = row['ObSocPer'] ?? '';
+
+                results.push(projectedRow);
+                filteredCount++;
+            }
+        })
+        .on('end', () => {
+            console.log(`[SERVER] ✅ Proceso de Observar Planta completo. Registros filtrados y enviados: ${filteredCount}.`);
+            res.json(results);
+        })
+        .on('error', (error) => {
+            console.error('[SERVER] ❌ Error en el proceso de Observar Planta:', error.message);
+            res.status(500).json({ error: `Error interno al procesar el archivo CSV para Observar Planta: ${error.message}` });
         });
 });
 
