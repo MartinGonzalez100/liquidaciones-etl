@@ -205,7 +205,109 @@ app.get('/api/ley100', (req, res) => {
         })
         .on('error', (error) => {
             console.error('[SERVER] ❌ Error en el proceso de Ley 100%:', error.message);
-            res.status(500).json({ error: `Error interno al procesar el archivo CSV para Ley 100%: ${error.message}` });
+        });
+});
+
+// NUEVO ENDPOINT: Calculo de ley 100%
+app.get('/api/calculo-ley100', (req, res) => {
+    const { antiguedad, edad_f, edad_m, fecha_calculo } = req.query;
+    const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    const results = [];
+    const groupedByDni = new Map();
+
+    if (!fs.existsSync(csvPath)) {
+        console.error('[SERVER] ❌ Archivo CSV unificado no encontrado. Enviando 404.');
+        return res.status(404).json({ error: 'Archivo CSV unificado no encontrado. Ejecute primero la Conversión.' });
+    }
+
+    if (!antiguedad || !edad_f || !edad_m || !fecha_calculo) {
+        return res.status(400).json({ error: 'Faltan parámetros requeridos.' });
+    }
+
+    const [fcYear, fcMonth, fcDay] = fecha_calculo.includes('-')
+        ? fecha_calculo.split('-')
+        : fecha_calculo.split('/').reverse();
+    const targetDate = new Date(fcYear, fcMonth - 1, fcDay);
+
+    function calculateAge(birthDateStr, targetDateObj) {
+        if (!birthDateStr) return -1;
+        let parts = birthDateStr.split('/');
+        if (parts.length !== 3) {
+            if (birthDateStr.includes('-')) {
+                parts = birthDateStr.split('-');
+                const bDate = new Date(parts[0], parts[1] - 1, parts[2]);
+                let age = targetDateObj.getFullYear() - bDate.getFullYear();
+                let m = targetDateObj.getMonth() - bDate.getMonth();
+                if (m < 0 || (m === 0 && targetDateObj.getDate() < bDate.getDate())) age--;
+                return age;
+            }
+            return -1;
+        }
+        let bDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        let age = targetDateObj.getFullYear() - bDate.getFullYear();
+        let m = targetDateObj.getMonth() - bDate.getMonth();
+        if (m < 0 || (m === 0 && targetDateObj.getDate() < bDate.getDate())) age--;
+        return age;
+    }
+
+    const minAntiguedad = parseInt(antiguedad, 10);
+    const minEdadF = parseInt(edad_f, 10);
+    const minEdadM = parseInt(edad_m, 10);
+
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            const area2 = row.Area2 ? row.Area2.trim() : '';
+            if (area2 !== 'A1' && area2 !== 'A26' && area2 !== 'A27') {
+                return;
+            }
+
+            const pImputado = row.PERIODO_IMPUTADO ? row.PERIODO_IMPUTADO.trim() : '';
+            const pLiquidado = row.PERIODO_LIQUIDADO ? row.PERIODO_LIQUIDADO.trim() : '';
+            if (pImputado !== pLiquidado) return;
+
+            const planta = row.PLANTA ? row.PLANTA.trim() : '';
+            if (planta === 'Reemplazante no permanente-LD' || planta === 'Reemplazante no permanente') return;
+
+            const ap100 = parseFloat(row.AP100_090_54);
+            if (isNaN(ap100) || ap100 > 0) return;
+
+            const antiguedadRow = parseInt(row.ANTIGUEDAD, 10) || 0;
+            if (antiguedadRow < minAntiguedad) return;
+
+            const sexo = row.SEXO ? row.SEXO.trim().toUpperCase() : '';
+            const edad = calculateAge(row.FECHA_NACIMIENTO, targetDate);
+            if (edad === -1) return;
+
+            if (sexo === 'F' && edad < minEdadF) return;
+            if (sexo === 'M' && edad < minEdadM) return;
+            if (sexo !== 'F' && sexo !== 'M') return;
+
+            const projectedRow = {};
+            CAMPOS_LIQUIDACION.forEach(field => {
+                projectedRow[field] = row[field] ?? '';
+            });
+
+            const dni = row.NRO_DOCUMENTO;
+            const cargo = parseInt(row.NUMERO_CARGO, 10) || 0;
+
+            if (!groupedByDni.has(dni)) {
+                groupedByDni.set(dni, { cargo, record: projectedRow });
+            } else {
+                const existing = groupedByDni.get(dni);
+                if (cargo > existing.cargo) {
+                    groupedByDni.set(dni, { cargo, record: projectedRow });
+                }
+            }
+        })
+        .on('end', () => {
+            for (const item of groupedByDni.values()) {
+                results.push(item.record);
+            }
+            res.json(results);
+        })
+        .on('error', (error) => {
+            res.status(500).json({ error: error.message });
         });
 });
 
