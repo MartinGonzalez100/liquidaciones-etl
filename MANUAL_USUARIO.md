@@ -1,21 +1,19 @@
 # Manual de Usuario - Sistema de Liquidaciones ETL
 
-Este documento describe la funcionalidad completa del sistema de gestión, procesamiento y visualización de Liquidaciones y Novedades.
+Este documento describe la funcionalidad completa del sistema de gestión, procesamiento y visualización de Liquidaciones y Novedades. Se detallan exhaustivamente las reglas y condiciones lógicas (filtros) aplicadas en cada una de las pantallas.
 
 ## 1. Módulo de Inicio (Conversión ETL)
-Esta es la pantalla inicial del sistema, encargada procesar archivos Excel en bruto y unificarlos en formato CSV para su consumo rápido por parte del sistema.
+Esta es la pantalla inicial del sistema, encargada de procesar archivos Excel en bruto y unificarlos en formato CSV para su consumo rápido por parte del sistema.
 
 ### 1.1 Conversión de Liquidaciones
 - **Función:** Permite procesar los archivos de Liquidación.
 - **Acciones:**
   - **Usar carpeta local:** Procesa todos los archivos `.xlsx` y `.xls` ubicados en la carpeta `excel-a-convertir/`.
-  - **Subir archivos manualmente:** Abre un diálogo para seleccionar archivos Excel desde la computadora.
-- **Proceso (ETL):** Los archivos leídos son transformados a CSV. Luego, todos los CSV generados son leídos, limpiados de espacios en blanco irrelevantes y **unificados en un único gran archivo** llamado `liquidaciones_unificadas.csv`.
+  - **Subir archivos manualmente:** Abre un diálogo para seleccionar archivos Excel.
+- **Proceso (ETL):** Los archivos leídos son transformados a CSV. Luego son unificados en un único gran archivo llamado `liquidaciones_unificadas.csv`.
 
 ### 1.2 Conversión de Novedades
-- **Función:** Permite procesar los archivos específicos de Novedades.
-- **Validación:** El sistema verifica que el nombre del archivo comience con ciertos prefijos válidos (`ld`, `reem`, `gc`, `residentes`, `criticidad`, `fortalecimiento`). Si el archivo no tiene este prefijo, es ignorado.
-- **Proceso:** Convierte los Excel válidos y guarda los resultados en archivos CSV independientes con el nombre del prefijo dentro de la carpeta `csv-unidos-novedades/` (ej: `ld.csv`). Limpia los espacios al final de las celdas de texto.
+- **Validación:** El sistema verifica que el nombre del archivo comience con ciertos prefijos válidos (`ld`, `reem`, `gc`, `residentes`, `criticidad`, `fortalecimiento`).
 
 ---
 
@@ -24,46 +22,56 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
 
 ### 2.1 Liquidación Completa
 - Muestra una tabla masiva utilizando *DataTables* con todos los registros encontrados en `liquidaciones_unificadas.csv`.
-- **Filtros UI:** Posee un buscador flotante universal que permite filtrar cualquier palabra clave (nombre, DNI, área, planta) en tiempo real, además de botones para exportar los datos visibles a Excel, CSV o PDF al instante.
+- **Filtros UI (Buscador universal):** Permite filtrar cualquier palabra clave (nombre, DNI, área, planta) en tiempo real.
+- **Filtros de Período (Botones Superiores):**
+  - **Todos:** Muestra el universo de datos completo, sin aplicar ninguna exclusión.
+  - **Mensual:** Filtra la tabla mostrando **únicamente** los registros en los que el campo `PERIODO_IMPUTADO` coincide de forma exacta con el `PERIODO_LIQUIDADO` (ej. Imputado '202603' y Liquidado '202603'). Se excluyen las diferencias.
+  - **Retroactivo:** Filtra la tabla mostrando **únicamente** los registros en los que el campo `PERIODO_IMPUTADO` es **diferente** al `PERIODO_LIQUIDADO` (ej. liquidando meses pasados en el mes actual).
 
 ### 2.2 Informe de Liquidación (Dashboard)
 - Es el cuadro de mando principal basado en gráficos y tablas agregadas por diferentes categorías: Planta, Área, Organismo, Reemplazos y configuraciones combinadas (LD, GC).
-- **Filtros Superiores (Botones):**
-  - **Todos:** Muestra el universo de datos completo.
-  - **Mensuales:** Filtra y suma únicamente los registros donde el `PERIODO_IMPUTADO` es **igual** al `PERIODO_LIQUIDADO`. Excluye retroactivos.
-  - **Retroactivos:** Filtra y suma únicamente los registros donde el `PERIODO_IMPUTADO` es **diferente** al `PERIODO_LIQUIDADO`.
-- **Modo Editor:** Haciendo clic en "Editar Informe" se habilita un panel lateral derecho.
-  - Permite arrastrar, soltar e intercambiar la posición de los gráficos (Drag & Drop).
-  - Permite redimensionar dinámicamente el alto de los contenedores (los gráficos se auto-ajustan).
-  - Permite inyectar texto personalizado enriquecido (Negritas, colores, alineación, saltos de página) que será visible en la impresión.
-- **Exportación:** Permite generar un reporte en PDF optimizado estructuralmente para papel Oficio apaisado.
+- **Filtros de Período (Botones Superiores - Aplica a todos los gráficos):**
+  - **Todos:** Los gráficos y sumas procesan el 100% de la base.
+  - **Mensuales:** Filtra y suma únicamente los registros donde `PERIODO_IMPUTADO` **es igual** a `PERIODO_LIQUIDADO`.
+  - **Retroactivos:** Filtra y suma únicamente los registros donde `PERIODO_IMPUTADO` **es diferente** a `PERIODO_LIQUIDADO`.
+- **Modo Editor:** Haciendo clic en "Editar Informe" se habilita un panel lateral derecho para arrastrar, redimensionar e inyectar texto a la impresión en PDF.
+- **Reporte Especial Interno (Distribución de Area 1):** Un listado particular que extrae exclusivamente a los empleados donde `Area2 = 'A1'`, agrupando el costo laboral total y el conteo por componente de `PLANTA`.
 
 ### 2.3 Informe de Gestión (Actualmente oculto)
-- Muestra un reporte tabulado estricto diseñado para igualar visualmente el PDF modelo "Informe de Gestión Interna".
-- Genera 6 hojas distintas e independientes (Área 1, Área 26, Área 27, Área 3, Retroactivos, Resumen mensual en % y agentes).
-- **Exportación:** Crea un PDF estandarizado tamaño A4 con orientación vertical, forzando saltos de página perfectos.
+- Muestra un reporte tabulado diseñado para emular el PDF modelo "Informe de Gestión Interna".
+- **Filtros Fijos:**
+  - Hoja Área 1: Filtra registros con `Area2 = 'A1'`.
+  - Hoja Área 26: Filtra registros con `Area2 = 'A26'`.
+  - Hoja Área 27: Filtra registros con `Area2 = 'A27'`.
+  - Hoja Área 3: Filtra registros con `Area2 = 'A3'`.
+  - Hoja Retroactivos: Filtra registros donde `PERIODO_IMPUTADO != PERIODO_LIQUIDADO`.
 
 ### 2.4 Control de Auditoría: Observar por Importes
-- Filtra directamente de la base de datos casos que requieren auditoría humana por incoherencias financieras.
-- **Condiciones / Filtros Internos (Backend):**
-  - Casos donde el `SUELDO_MANO` (o líquido) es negativo/irrisorio (`< 50000`) o astronómico (`> 5000000`).
-  - Casos donde el saldo `LIQUIDO_LEY7991` tiene importes negativos (`< 0`).
-  - Casos donde hay errores en Aportes Jubilatorios o de Obra Social (`ApjLabelPer < 0` y `ObSocPer < 0`).
-- Mapea las columnas contables específicas de aportes (ApJubPer, ApjLabelPer, etc.) para su visualización.
+- Filtra directamente de la base de datos casos que requieren auditoría humana por posibles anomalías e incoherencias financieras.
+- **Filtros Lógicos de Consulta (Un agente aparece si cumple AL MENOS UNA de estas alertas):**
+  1. Sueldo Neto Anómalo: `SUELDO_MANO` (o líquido) es negativo/muy bajo (`< 50000.00`) **O BIEN** desproporcionado (`> 5000000.00`).
+  2. Ley 7991 en negativo: El saldo del campo `LIQUIDO_LEY7991` tiene un importe negativo (`< 0.00`).
+  3. Aportes Jubilatorios en negativo: El importe base (`ApjLabelPer`) es negativo (`< 0.00`).
+  4. Obra Social en negativo: El importe base (`ObSocPer`) resulta negativo (`< 0.00`).
 
 ### 2.5 Control de Auditoría: Observar por Planta
-- Detecta incoherencias entre el cruce del Área donde trabaja un empleado y la designación formal de su Planta.
-- **Condiciones / Filtros Internos (Backend):**
-  - Busca empleados en el **Área 1 (A1)** que erróneamente estén designados como `Reemplazante no permanente` o `Reemplazante no permanente-LD`.
-  - Busca empleados en el **Área 3 (A3)** que erróneamente estén en plantas estables u hospitalarias (`Permanente Titular`, `Interino`, `Transitorios`, o `Residentes`).
+- Detecta incoherencias entre la designación en el nomenclador de origen (`PLANTA`) y el área final del empleado (`Area2`).
+- **Filtros Lógicos de Consulta (Un agente aparece si cumple alguna inconsistencia):**
+  1. **Inconsistencia de Reemplazos en A1:** Se lista al empleado si su columna `Area2` indica **A1**, pero su tipo de `PLANTA` indica que es un reemplazo precario: `Reemplazante no permanente` o `Reemplazante no permanente-LD`.
+  2. **Inconsistencia de Personal Estable/Hospitalario en A3:** Se lista al empleado si su columna `Area2` indica **A3**, pero su designación (`PLANTA`) es netamente de carrera u hospitalaria: `Transitorios`, `Permanente Interino`, `Permanente Titular`, `Residentes`, o `Residentes Nacionales`.
 
-### 2.6 Reportes Auxiliares (Reemplazos, LD Liquidación, GC Liquidación, Residentes)
-- Son enlaces directos a listados pre-filtrados dependiendo de la configuración almacenada o de mapeos de bases de datos.
-- **LD / GC:** Utilizan las combinaciones y los mapeos cargados previamente en la vista de *Configuración* (ej: Mapear la columna `H00902` a la guardia crítica). 
+### 2.6 Reportes Auxiliares (Reemplazos, Residentes, GC, Ley 100%)
+- **Reemplazos:** Utiliza el filtro que extrae aquellos empleados cuya `PLANTA` corresponda a reemplazos (ej: `Reemplazante no permanente` o `Reemplazante no permanente-LD`), agrupándolos por Nivel Educativo y Organismo/Efector.
+- **Residentes:** Utiliza un filtro exacto donde la columna `PLANTA` debe ser `Residentes` o `Residente Nacionales`.
+- **GC Liquidación / LD:** Utilizan combinaciones configurables. El sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Guardias Críticas" o "Libre Disponibilidad" durante la pestaña de Configuración (ej: mapear `H00902` e integrarla al cálculo final).
+- **Ley 100%:** Aplica los siguientes filtros concurrentes (lógica `AND`) en la simulación predictiva de jubilaciones:
+  1. El empleado corresponde a las zonas contables `A1`, `A26` o `A27` (`Area2`).
+  2. Si su sexo contable extraído del CUIL denota ser mujer, debe tener una edad superior al parámetro `Edad F` provisto en el calendario del frontend (típicamente 60).
+  3. Si denota ser hombre, debe superar el parámetro `Edad M` (típicamente 65).
+  4. Su antigüedad calculada (generalmente leída desde columnas nativas como `ANTIGUEDAD_MINISTERIO`) debe superar el parámetro numérico base (ej. 30 años).
 
 ---
 
 ## 3. Configuración del Sistema
-- **Función:** Vista dedicada a mapear columnas crudas del sistema de origen a descripciones legibles (Ej: "Concepto 4440" => "Libre Disponibilidad B").
-- Permite subir, visualizar y editar el mapeo para Guardias Críticas (GC) y Libres Disponibilidades (LD).
-- Esta configuración modifica dinámicamente en tiempo real los gráficos del Dashboard y la forma en que los cálculos suman los importes.
+- **Función:** Vista dedicada a mapear columnas crudas a descripciones legibles (Ej: "Concepto 4440" => "Libre Disponibilidad B").
+- Esta configuración determina las reglas de inyección de los filtros. Si un concepto se mapea como Libre Disponibilidad (LD), los gráficos del Dashboard agruparán automáticamente todos los importes de esa columna en los reportes correspondientes.

@@ -633,6 +633,34 @@
             border-radius: 4px;
             outline: none;
         }
+
+        /* Group for Periodo Imputado vs Liquidado filters */
+        .btn-filter-group {
+            display: inline-flex;
+            gap: 10px;
+            margin: 0 20px;
+        }
+
+        .btn-filter {
+            background-color: #f8f9fc;
+            color: #4e73df;
+            border: 2px solid #4e73df;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-filter:hover {
+            background-color: #eaecf4;
+        }
+
+        .btn-filter.active {
+            background-color: #4e73df;
+            color: white;
+            box-shadow: 0 4px 10px rgba(78, 115, 223, 0.4);
+        }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -643,6 +671,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
     <!-- DataTables Buttons Extension -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
@@ -673,6 +702,7 @@
         <h2>Menú de Procesos</h2>
         <a href="#" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
         <a href="#" id="menu-liquidacion-completa">Liquidación Completa</a>
+        <a href="#" id="menu-detalle-vs-detalle" style="padding-left: 50px; font-size: 16px; color: #a29bfe;">└─ Detalle vs Detalle</a>
         <a href="#" id="menu-dashboard-informe" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Informe de
             Liquidación</a>
         <a href="#" id="menu-informe-modelo"
@@ -1097,6 +1127,88 @@
             </div>
         </div>
 
+        <!-- VISTA DETALLE VS DETALLE -->
+        <div id="detalle-vs-detalle-view" class="container" style="display: none; margin-top: 20px;">
+            <h1 style="color: #5c67f2; border-bottom: 2px solid #5c67f2; padding-bottom: 10px;">Comparación Detalle vs Detalle (OCR)</h1>
+            <p style="color: #666; margin-bottom: 20px;">Pegue las imágenes de liquidación (Ctrl+V) sobre las cajas para comparar las tablas.</p>
+            <div style="display: flex; gap: 20px;">
+                <div id="img-anterior-container" tabindex="0" style="flex:1; border: 2px dashed #999; padding: 40px; text-align: center; cursor: pointer; border-radius: 8px; background: #f9f9f9; outline: none; position: relative; min-height: 200px; display: flex; flex-direction: column; justify-content: center;">
+                    <i class="fas fa-paste" style="font-size: 40px; color: #ccc; margin-bottom: 15px;"></i>
+                    <p style="margin: 0; color: #555; font-weight: bold;">MES ANTERIOR</p>
+                    <p style="margin: 5px 0 0 0; color: #999; font-size: 14px;">Haga clic aquí y presione Ctrl+V</p>
+                    <img id="preview-anterior" style="display: none; max-width: 100%; max-height: 400px; margin-top: 15px; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+                </div>
+                <div id="img-actual-container" tabindex="0" style="flex:1; border: 2px dashed #999; padding: 40px; text-align: center; cursor: pointer; border-radius: 8px; background: #f9f9f9; outline: none; position: relative; min-height: 200px; display: flex; flex-direction: column; justify-content: center;">
+                    <i class="fas fa-paste" style="font-size: 40px; color: #ccc; margin-bottom: 15px;"></i>
+                    <p style="margin: 0; color: #555; font-weight: bold;">MES ACTUAL</p>
+                    <p style="margin: 5px 0 0 0; color: #999; font-size: 14px;">Haga clic aquí y presione Ctrl+V</p>
+                    <img id="preview-actual" style="display: none; max-width: 100%; max-height: 400px; margin-top: 15px; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; display: flex; align-items: center; justify-content: space-between; background: #f0f0f0; padding: 15px 25px; border-radius: 8px;">
+                <label style="font-weight: bold; color: #333; display: flex; align-items: center; gap: 10px;">
+                    Diferencia Porcentual (%) a observar: 
+                    <input type="number" id="input-umbral-porcentaje" value="8.43" step="0.01" style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; width: 100px;">
+                </label>
+                <button id="btn-procesar-ocr" style="padding: 10px 20px; font-weight: bold; border-radius: 20px; box-shadow: 0 4px 10px rgba(92, 103, 242, 0.3);">
+                    <i class="fas fa-cogs"></i> Procesar Imágenes
+                </button>
+            </div>
+            <div id="ocr-status" style="margin-top: 15px; color: #666; font-weight: bold; text-align: center; min-height: 20px;"></div>
+
+            <!-- RESULTADOS OCR -->
+            <div id="ocr-results-container" style="display: none; margin-top: 30px;">
+                <!-- Section 1 -->
+                <h2 style="color: #333; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">1. Comparación General</h2>
+                <div style="overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px;">
+                    <table class="display" style="width:100%; min-width: 800px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #5c67f2; color: white; text-align: left;">
+                                <th style="padding: 12px;">Código</th>
+                                <th style="padding: 12px; text-align: right;">Monto (Ant)</th>
+                                <th style="padding: 12px; text-align: right;">Monto (Act)</th>
+                                <th style="padding: 12px; text-align: right;">Dif. Monto</th>
+                                <th style="padding: 12px; text-align: right;">Dif. %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ocr-table-sec1"></tbody>
+                    </table>
+                </div>
+
+                <!-- Section 2 -->
+                <h2 style="color: #e67e22; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">2. Diferencias Atípicas (Fuera de Rango ±0.2)</h2>
+                <div style="overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px;">
+                    <table class="display" style="width:100%; min-width: 800px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #e67e22; color: white; text-align: left;">
+                                <th style="padding: 12px;">Código</th>
+                                <th style="padding: 12px; text-align: right;">Monto (Ant)</th>
+                                <th style="padding: 12px; text-align: right;">Monto (Act)</th>
+                                <th style="padding: 12px; text-align: right;">Dif. Monto</th>
+                                <th style="padding: 12px; text-align: right;">Dif. %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ocr-table-sec2"></tbody>
+                    </table>
+                </div>
+
+                <!-- Section 3 -->
+                <h2 style="color: #e74c3c; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">3. Códigos No Coincidentes</h2>
+                <div style="overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px;">
+                    <table class="display" style="width:100%; max-width: 600px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #e74c3c; color: white; text-align: left;">
+                                <th style="padding: 12px;">Código</th>
+                                <th style="padding: 12px;">Encontrado en</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ocr-table-sec3"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- VISTA CONFIGURACIÓN -->
         <div id="configuracion-view" class="container" style="display: none;">
             <h1>Configuración de Parámetros</h1>
@@ -1212,6 +1324,16 @@
             });
         }
 
+        // --- LÓGICA DETALLE VS DETALLE ---
+        const menuDetalleVsDetalle = document.getElementById('menu-detalle-vs-detalle');
+        if (menuDetalleVsDetalle) {
+            menuDetalleVsDetalle.addEventListener('click', function(e) {
+                e.preventDefault();
+                showSection('detalle-vs-detalle-view');
+                closeNav();
+            });
+        }
+
         function setupNovedadesMenu(menuId, title, endpoint) {
             const menu = document.getElementById(menuId);
             if (menu) {
@@ -1305,6 +1427,8 @@
             if (novedadesView) novedadesView.style.display = 'none';
             const informeModeloView = document.getElementById('informe-modelo-view');
             if (informeModeloView) informeModeloView.style.display = 'none';
+            const detalleVsDetalleView = document.getElementById('detalle-vs-detalle-view');
+            if (detalleVsDetalleView) detalleVsDetalleView.style.display = 'none';
 
             // Mostrar solo el solicitado
             if (sectionId === 'conversion-form') {
@@ -1326,6 +1450,9 @@
             }
             else if (sectionId === 'informe-modelo-view') {
                 if (informeModeloView) informeModeloView.style.display = 'block';
+            }
+            else if (sectionId === 'detalle-vs-detalle-view') {
+                if (detalleVsDetalleView) detalleVsDetalleView.style.display = 'block';
             }
         }
 
@@ -1721,12 +1848,84 @@
 
                         searchInput.onkeyup = function () {
                             api.search(this.value).draw();
-                        }
-
-                            ;
+                        };
 
                         // Reset search input on new load
                         searchInput.value = '';
+
+                        // --- Iniciar lógica de filtros por PERIODO ---
+                        const hasPeriodos = columns.some(c => c.data === 'PERIODO_IMPUTADO') && columns.some(c => c.data === 'PERIODO_LIQUIDADO');
+
+                        if (hasPeriodos) {
+                            const btnGroup = document.createElement('div');
+                            btnGroup.className = 'btn-filter-group';
+
+                            const btnTodos = document.createElement('button');
+                            btnTodos.innerText = 'Todos';
+                            btnTodos.className = 'btn-filter active';
+
+                            const btnMensual = document.createElement('button');
+                            btnMensual.innerText = 'Mensual';
+                            btnMensual.className = 'btn-filter';
+
+                            const btnRetro = document.createElement('button');
+                            btnRetro.innerText = 'Retroactivo';
+                            btnRetro.className = 'btn-filter';
+
+                            btnGroup.appendChild(btnTodos);
+                            btnGroup.appendChild(btnMensual);
+                            btnGroup.appendChild(btnRetro);
+
+                            const dtContainer = api.table().container();
+                            const dtButtons = dtContainer.querySelector('.dt-buttons');
+                            if (dtButtons) {
+                                // dtButtons y dtFilter comparten el layout por defecto, lo ajustamos para meter btnGroup al medio
+                                dtButtons.parentNode.style.display = 'flex';
+                                dtButtons.parentNode.style.alignItems = 'center';
+                                dtButtons.parentNode.style.justifyContent = 'flex-start';
+                                dtButtons.parentNode.style.flexWrap = 'wrap';
+
+                                dtButtons.parentNode.insertBefore(btnGroup, dtButtons.nextSibling);
+                            }
+
+                            // Limpiar busquedas custom anteriores para evitar que se acumulen duplicados
+                            $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(func => !func.isPeriodoFilter);
+
+                            let currentFilterMode = 'todos'; // todos, mensual, retroactivo
+
+                            const periodoFilter = function (settings, dataArray, dataIndex, originalData) {
+                                if (settings.nTable.id !== 'tabla-datos') return true;
+                                if (currentFilterMode === 'todos') return true;
+
+                                const imputado = originalData.PERIODO_IMPUTADO ? String(originalData.PERIODO_IMPUTADO).trim() : '';
+                                const liquidado = originalData.PERIODO_LIQUIDADO ? String(originalData.PERIODO_LIQUIDADO).trim() : '';
+
+                                if (currentFilterMode === 'mensual') {
+                                    return imputado === liquidado;
+                                } else if (currentFilterMode === 'retroactivo') {
+                                    return imputado !== liquidado;
+                                }
+                                return true;
+                            };
+                            periodoFilter.isPeriodoFilter = true;
+                            $.fn.dataTable.ext.search.push(periodoFilter);
+
+                            const updateButtons = (activeBtn, mode) => {
+                                btnTodos.classList.remove('active');
+                                btnMensual.classList.remove('active');
+                                btnRetro.classList.remove('active');
+                                activeBtn.classList.add('active');
+                                currentFilterMode = mode;
+                                api.draw();
+                            };
+
+                            btnTodos.onclick = () => updateButtons(btnTodos, 'todos');
+                            btnMensual.onclick = () => updateButtons(btnMensual, 'mensual');
+                            btnRetro.onclick = () => updateButtons(btnRetro, 'retroactivo');
+                        } else {
+                            // Limpiar los filtros si esta pantalla no usa periodos
+                            $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(func => !func.isPeriodoFilter);
+                        }
                     }
                 });
 
@@ -2803,8 +3002,247 @@
             }
         }
 
-        // --- NUEVA FUNCIÓN DE PRUEBA ASÍNCRONA ---
+        // --- LOGICA DE PEGAR IMAGENES Y OCR (DETALLE VS DETALLE) ---
+        let imgBase64Anterior = null;
+        let imgBase64Actual = null;
 
+        function handlePaste(e, containerId, previewId, setterCallback) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let index in items) {
+                const item = items[index];
+                if (item.kind === 'file' && item.type.startsWith('image/')) {
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const base64 = event.target.result;
+                        document.getElementById(previewId).src = base64;
+                        document.getElementById(previewId).style.display = 'block';
+                        
+                        // Ocultar los placeholders visuales
+                        const container = document.getElementById(containerId);
+                        const icon = container.querySelector('.fa-paste');
+                        if(icon) icon.style.display = 'none';
+                        container.querySelectorAll('p').forEach(p => p.style.display = 'none');
+                        
+                        setterCallback(base64);
+                    };
+                    reader.readAsDataURL(blob);
+                    e.preventDefault();
+                    break;
+                }
+            }
+        }
+
+        document.getElementById('img-anterior-container').addEventListener('paste', function(e) {
+            handlePaste(e, 'img-anterior-container', 'preview-anterior', v => imgBase64Anterior = v);
+        });
+        document.getElementById('img-actual-container').addEventListener('paste', function(e) {
+            handlePaste(e, 'img-actual-container', 'preview-actual', v => imgBase64Actual = v);
+        });
+
+        document.getElementById('btn-procesar-ocr').addEventListener('click', async function() {
+            if (!imgBase64Anterior || !imgBase64Actual) {
+                alert('Debe pegar ambas imágenes (Mes Anterior y Mes Actual) presionando Ctrl+V sobre sus respectivos cuadros antes de procesar.');
+                return;
+            }
+
+            const status = document.getElementById('ocr-status');
+            const btn = this;
+            const resultsContainer = document.getElementById('ocr-results-container');
+            
+            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando motor OCR... Esto puede tardar varios segundos dependiendo de su PC.';
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            resultsContainer.style.display = 'none';
+
+            try {
+                status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analizando imagen Mes Anterior...';
+                const workerAnt = await Tesseract.createWorker('spa');
+                const retAnt = await workerAnt.recognize(imgBase64Anterior);
+                const textAnt = retAnt.data.text;
+                await workerAnt.terminate();
+
+                status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analizando imagen Mes Actual...';
+                const workerAct = await Tesseract.createWorker('spa');
+                const retAct = await workerAct.recognize(imgBase64Actual);
+                const textAct = retAct.data.text;
+                await workerAct.terminate();
+
+                status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando datos extraídos...';
+                
+                processOcrData(textAnt, textAct);
+
+                status.innerHTML = '<span style="color: #27ae60;">¡Proceso completo! Resultados listos.</span>';
+                resultsContainer.style.display = 'block';
+                
+            } catch (err) {
+                console.error(err);
+                status.innerHTML = '<span style="color:#e74c3c;"><i class="fas fa-exclamation-triangle"></i> Error procesando imágenes. Revise la consola.</span>';
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        });
+
+        // Parseo de líneas individuales desde OCR (ENFOCADO EN EXTREMOS)
+        function parseOcrLine(line) {
+            // El usuario especificó que solo busquemos el Código (xxx-xx) y el Monto al final.
+            // Ignoraremos por completo lo que haya en el medio (descripción/cantidad).
+            
+            // 1. Encontrar el Código (alfa). Tolera espacios como "092 - 13" o "092- 13".
+            const matchCode = line.match(/^([0-9]{3}\s*-\s*[0-9]{2})/);
+            if (!matchCode) return null; // Si no hay código al inicio de la línea, no es una fila válida.
+
+            const code = matchCode[1].replace(/\s/g, ''); // Lo normalizamos a "000-00"
+            const restOfLine = line.substring(matchCode[0].length).trim();
+
+            if (!restOfLine) return { code, monto: 0 };
+
+            // 2. Extraer el monto. Buscamos el ÚLTIMO número de la cadena.
+            const numPattern = /(-?(?:\d+[\s.,]*)*\d+)\s*$/;
+            const montoMatch = restOfLine.match(numPattern);
+            
+            let monto = 0;
+
+            if (montoMatch) {
+                let montoStr = montoMatch[1].replace(/\s/g, ''); 
+                
+                // Normalizar separadores decimales a formato JS (punto)
+                if (montoStr.includes(',') && montoStr.includes('.')) {
+                    let lastComma = montoStr.lastIndexOf(',');
+                    let lastDot = montoStr.lastIndexOf('.');
+                    if (lastComma > lastDot) {
+                        montoStr = montoStr.replace(/\./g, '').replace(',', '.');
+                    } else {
+                        montoStr = montoStr.replace(/,/g, '');
+                    }
+                } else if (montoStr.includes(',')) {
+                    if (montoStr.match(/,\d{2}$/)) {
+                        montoStr = montoStr.replace(',', '.');
+                    } else {
+                        montoStr = montoStr.replace(',', ''); 
+                    }
+                }
+                
+                monto = parseFloat(montoStr);
+                if (isNaN(monto)) monto = 0;
+            }
+
+            return { code, monto };
+        }
+
+        function extractDataFromText(text) {
+            const lines = text.split('\n');
+            const dataMap = {};
+            lines.forEach(line => {
+                const parsed = parseOcrLine(line.trim());
+                if (parsed && !dataMap[parsed.code]) {
+                    dataMap[parsed.code] = parsed;
+                }
+            });
+            return dataMap;
+        }
+
+        function formatterMoney(val) {
+            return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+        }
+
+        function processOcrData(textAnt, textAct) {
+            const dataAnt = extractDataFromText(textAnt);
+            const dataAct = extractDataFromText(textAct);
+
+            const allCodes = new Set([...Object.keys(dataAnt), ...Object.keys(dataAct)]);
+            const thresholdInput = parseFloat(document.getElementById('input-umbral-porcentaje').value) || 0;
+            const umbralMin = thresholdInput - 0.2;
+            const umbralMax = thresholdInput + 0.2;
+
+            const sec1 = [];
+            const sec2 = [];
+            const sec3 = [];
+
+            Array.from(allCodes).sort().forEach(code => {
+                const ant = dataAnt[code];
+                const act = dataAct[code];
+
+                // Si está solo en uno
+                if (!ant || !act) {
+                    sec3.push({
+                        code: code,
+                        where: ant ? 'MES ANTERIOR' : 'MES ACTUAL'
+                    });
+                    
+                    // Igual lo mostramos en Sec 1 pero con valores cero en el faltante
+                    const montoAnt = ant ? ant.monto : 0;
+                    const montoAct = act ? act.monto : 0;
+                    const difMonto = montoAct - montoAnt;
+                    const difPorcentual = ant ? ((difMonto / ant.monto) * 100) : 100;
+
+                    sec1.push({
+                        code: code,
+                        montoAnt: montoAnt,
+                        montoAct: montoAct,
+                        difMonto: difMonto,
+                        difPorcentual: difPorcentual,
+                        hasWarning: false
+                    });
+                    return;
+                }
+
+                // Si está en ambos
+                const difMonto = act.monto - ant.monto;
+                let difPorcentual = 0;
+                if (ant.monto !== 0) {
+                    difPorcentual = (difMonto / ant.monto) * 100;
+                }
+
+                const row = {
+                    code: code,
+                    montoAnt: ant.monto,
+                    montoAct: act.monto,
+                    difMonto: difMonto,
+                    difPorcentual: difPorcentual,
+                    hasWarning: false
+                };
+
+                // Verificar límite de umbral para Sección 2
+                // Considerar warning si la diferencia porcentual NO está dentro del margen [umbralMin, umbralMax]
+                // También si el umbral base es 0 pero hay diferencia, se marca
+                if (difPorcentual < umbralMin || difPorcentual > umbralMax) {
+                    row.hasWarning = true;
+                    sec2.push(row);
+                }
+
+                sec1.push(row);
+            });
+
+            // Render Tablas
+            document.getElementById('ocr-table-sec1').innerHTML = sec1.map(r => `
+                <tr style="${r.hasWarning ? 'background-color: #ffeaa7;' : ''} border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px; font-family: monospace; font-weight: bold;">${r.code}</td>
+                    <td style="padding: 10px; text-align: right;">${formatterMoney(r.montoAnt)}</td>
+                    <td style="padding: 10px; text-align: right;">${formatterMoney(r.montoAct)}</td>
+                    <td style="padding: 10px; text-align: right; color: ${r.difMonto > 0 ? '#27ae60' : (r.difMonto < 0 ? '#e74c3c' : '#555')}">${formatterMoney(r.difMonto)}</td>
+                    <td style="padding: 10px; text-align: right; font-weight: bold;">${r.difPorcentual.toFixed(2)}%</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('ocr-table-sec2').innerHTML = sec2.map(r => `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px; font-family: monospace; font-weight: bold;">${r.code}</td>
+                    <td style="padding: 10px; text-align: right;">${formatterMoney(r.montoAnt)}</td>
+                    <td style="padding: 10px; text-align: right;">${formatterMoney(r.montoAct)}</td>
+                    <td style="padding: 10px; text-align: right;">${formatterMoney(r.difMonto)}</td>
+                    <td style="padding: 10px; text-align: right; color:#e74c3c; font-weight: bold;">${r.difPorcentual.toFixed(2)}%</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('ocr-table-sec3').innerHTML = sec3.map(r => `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px; font-family: monospace; font-weight: bold;">${r.code}</td>
+                    <td style="padding: 10px; color: ${r.where === 'MES ANTERIOR' ? '#e67e22' : '#27ae60'};">${r.where}</td>
+                </tr>
+            `).join('');
+        }
     </script>
 </body>
 
