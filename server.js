@@ -806,11 +806,13 @@ app.get('/api/gc-liquidacion', (req, res) => {
 
 app.get('/api/preparar-acumulado', (req, res) => {
     const inputPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
-    const outputPath = path.join(CSV_UNIDOS_DIR, 'AcApJub.csv');
+    const outputPathDetalle = path.join(CSV_UNIDOS_DIR, 'AcApJub.csv');
+    const outputPathTope = path.join(CSV_UNIDOS_DIR, 'AcApJub_con_tope.csv');
     const resultados = [];
+    const agrupadoPorDni = new Map();
     const tope = parseFloat(req.query.tope) || 0.0;
 
-    console.log(`🛠️ Iniciando creación de AcApJub.csv con tope: $${tope}...`);
+    console.log(`🛠️ Iniciando creación de reportes AcApJub con tope: $${tope}...`);
 
     if (!fs.existsSync(inputPath)) {
         return res.status(404).json({ success: false, message: "No existe el archivo unificado base." });
@@ -819,34 +821,95 @@ app.get('/api/preparar-acumulado', (req, res) => {
     const stream = fs.createReadStream(inputPath).pipe(csv());
 
     stream.on('data', (row) => {
-        // 1. Crear el nuevo objeto con la columna nueva al inicio
+        // --- 1. Preparar el detalle general (AcApJub.csv) ---
         const nuevoRegistro = {
-            'Tope_Des_ap_jub': tope.toFixed(2)
+            'Tope_Des_ap_jub': tope.toFixed(2),
+            'ApJubPer': row['ApJubPer'] || "",
+            'PLANTA': row['PLANTA'] || "",
+            'PERIODO_IMPUTADO': row['PERIODO_IMPUTADO'] || "",
+            'PERIODO_LIQUIDADO': row['PERIODO_LIQUIDADO'] || "",
+            'NUMERO_CARGO': row['NUMERO_CARGO'] || ""
         };
-
-        // 2. Agregar solo las columnas de CAMPOS_LIQUIDACION
+        const camposExtraList = ['ApJubPer', 'PLANTA', 'PERIODO_IMPUTADO', 'PERIODO_LIQUIDADO', 'NUMERO_CARGO'];
         CAMPOS_LIQUIDACION.forEach(campo => {
-            nuevoRegistro[campo] = row[campo] || "";
+            if (!camposExtraList.includes(campo)) {
+                nuevoRegistro[campo] = row[campo] || "";
+            }
         });
-
         resultados.push(nuevoRegistro);
+
+        // --- 2. Agrupar sumas para (AcApJub_con_tope.csv) ---
+        const dni = row.NRO_DOCUMENTO ? row.NRO_DOCUMENTO.trim() : "";
+        const apJub = parseFloat(row.ApJubPer) || 0;
+        
+        if (dni) {
+            if (!agrupadoPorDni.has(dni)) {
+                agrupadoPorDni.set(dni, 0);
+            }
+            agrupadoPorDni.set(dni, agrupadoPorDni.get(dni) + apJub);
+        }
     });
 
     stream.on('end', () => {
-        // 3. Crear el contenido CSV para guardar el archivo físicamente
-        const encabezados = Object.keys(resultados[0]).join(',');
-        const filas = resultados.map(r => Object.values(r).join(',')).join('\n');
-        const contenidoCompleto = encabezados + '\n' + filas;
-
         try {
-            fs.writeFileSync(outputPath, contenidoCompleto, 'utf8');
-            console.log("✅ Archivo AcApJub.csv creado exitosamente en carpeta csv-unidos");
+            // --- 3. Crear el primer archivo físico: AcApJub_con_tope.csv ---
+            const filtrados = [];
+            for (const [dni, suma] of agrupadoPorDni.entries()) {
+                if (suma > tope) {
+                    filtrados.push({
+                        'NRO_DOCUMENTO': dni,
+                        'Acumulado_Ap_Jub_169_00': suma.toFixed(2)
+                    });
+                }
+            }
 
-            // 4. Enviar los datos al frontend para visualización
+            let encabezadosTope = 'NRO_DOCUMENTO,Acumulado_Ap_Jub_169_00';
+            let filasTope = filtrados.map(r => `${r.NRO_DOCUMENTO},${r.Acumulado_Ap_Jub_169_00}`).join('\n');
+            let contenidoTope = filtrados.length > 0 ? encabezadosTope + '\n' + filasTope : encabezadosTope;
+            
+            fs.writeFileSync(outputPathTope, contenidoTope, 'utf8');
+            console.log("✅ Archivo AcApJub_con_tope.csv creado exitosamente.");
+
+            // --- 4. Crear el segundo archivo físico: AcApJub.csv ---
+            if (resultados.length > 0) {
+                // ORDENAMIENTO DE LAS FILAS
+                resultados.sort((a, b) => {
+                    // 1. NRO_DOCUMENTO (ascendente)
+                    const docA = (a.NRO_DOCUMENTO || "").trim();
+                    const docB = (b.NRO_DOCUMENTO || "").trim();
+                    if (docA !== docB) return docA.localeCompare(docB, undefined, { numeric: true });
+
+                    // 2. ESTADO_LIQUIDACION (ascendente)
+                    const estA = (a.ESTADO_LIQUIDACION || "").trim();
+                    const estB = (b.ESTADO_LIQUIDACION || "").trim();
+                    if (estA !== estB) return estA.localeCompare(estB);
+
+                    // 3. PLANTASS (descendente)
+                    const plantaA = (a.PLANTASS || "").trim();
+                    const plantaB = (b.PLANTASS || "").trim();
+                    if (plantaA !== plantaB) return plantaB.localeCompare(plantaA);
+
+                    // 4. ApJubPer (descendente)
+                    const apA = parseFloat(a.ApJubPer) || 0;
+                    const apB = parseFloat(b.ApJubPer) || 0;
+                    return apB - apA;
+                });
+
+                const encabezados = Object.keys(resultados[0]).join(',');
+                const filas = resultados.map(r => Object.values(r).join(',')).join('\n');
+                const contenidoCompleto = encabezados + '\n' + filas;
+                fs.writeFileSync(outputPathDetalle, contenidoCompleto, 'utf8');
+                console.log("✅ Archivo AcApJub.csv creado exitosamente en carpeta csv-unidos");
+            } else {
+                fs.writeFileSync(outputPathDetalle, "", 'utf8');
+            }
+
+            // --- 5. Enviar los datos detallados al frontend para visualización ---
             res.json(resultados);
+            
         } catch (err) {
-            console.error("❌ Error al escribir AcApJub.csv:", err);
-            res.status(500).send("Error al guardar el archivo.");
+            console.error("❌ Error al escribir los archivos:", err);
+            res.status(500).send("Error al guardar los archivos.");
         }
     });
 
