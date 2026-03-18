@@ -758,16 +758,6 @@
         </div>
     </div>
 
-    <div id="section-acumulado" style="display:none; margin-bottom: 20px;">
-        <div
-            style="background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; position: sticky; top: 10px; z-index: 100;">
-            <label for="input-tope"><b>Tope Jubilatorio ($):</b></label>
-            <input type="number" id="input-tope" placeholder="Ingrese valor..."
-                style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-            <button id="btn-generar-acumulado" class="btn-convertir" style="margin:0; padding: 8px 20px;">Generar
-                Listado</button>
-        </div>
-    </div>
 
     <div id="main-content" class="main-content">
         <button class="menu-btn" onclick="openNav()">☰ Menú</button>
@@ -1302,14 +1292,20 @@
         // index.html
 
         document.getElementById('btn-generar-acumulado').addEventListener('click', function () {
-            console.log("🚀 Paso 1: Generando archivo AcApJub.csv y visualizando...");
+            const topeValue = document.getElementById('input-tope-valor').value;
+            console.log("🚀 Paso 1: Generando archivo AcApJub.csv con tope: " + topeValue);
+
+            if (topeValue === "" || parseFloat(topeValue) < 0) {
+                alert("⚠️ Por favor, ingrese un valor de tope válido (mayor o igual a 0).");
+                return;
+            }
 
             // Mostramos la tabla y el título
             document.getElementById('table-container').style.display = 'block';
 
-            // Llamamos al nuevo endpoint de preparación
-            const url = '/api/preparar-acumulado';
-            loadDataAndRenderTable(url, "Vista Previa: AcApJub.csv (Estructura Base)");
+            // Llamamos al nuevo endpoint de preparación con el tope
+            const url = `/api/preparar-acumulado?tope=${topeValue}`;
+            loadDataAndRenderTable(url, `Acumulado Jubilatorio (Tope: $${topeValue})`);
         });
 
         // --- LÓGICA VISTA NOVEDADES ---
@@ -1376,29 +1372,7 @@
             }
         }
 
-        /* if (btnGenerar) {
-            console.log("🚀 Listener del botón vinculado correctamente"); // Esto debería salir al cargar la página
 
-            btnGenerar.addEventListener('click', function() {
-                const topeValue = document.getElementById('input-tope-valor').value;
-                console.log("⚡ Botón Presionado. Valor del tope:", topeValue);
-
-                if (topeValue === "" || parseFloat(topeValue) < 0) {
-                    alert("⚠️ Por favor, ingrese un valor de tope válido (mayor o igual a 0).");
-                    return;
-                }
-
-                // Mostrar tabla y cargar
-                document.getElementById('table-container').style.display = 'block';
-                
-                const url = `/api/acumulado-jubilatorio?tope=${topeValue}`;
-                console.log("🌐 Llamando a API:", url);
-                
-                loadDataAndRenderTable(url, `Acumulado Jubilatorio (Tope: $${topeValue})`);
-            });
-        } else {
-            console.error("❌ ERROR: No se encontró el botón 'btn-generar-acumulado' en el HTML.");
-        } */
 
         // --- FUNCIONES DE NAVEGACIÓN ---
         function openNav() {
@@ -1417,7 +1391,6 @@
             liquidacionView.style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'none';
             document.getElementById('btn-toggle-edit').style.display = 'none';
-            document.getElementById('section-acumulado').style.display = 'none';
             document.getElementById('panel-tope-jubilatorio').style.display = 'none';
             const panelCalculoLey100 = document.getElementById('panel-calculo-ley100');
             if (panelCalculoLey100) panelCalculoLey100.style.display = 'none';

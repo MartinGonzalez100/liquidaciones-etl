@@ -808,8 +808,9 @@ app.get('/api/preparar-acumulado', (req, res) => {
     const inputPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
     const outputPath = path.join(CSV_UNIDOS_DIR, 'AcApJub.csv');
     const resultados = [];
+    const tope = parseFloat(req.query.tope) || 0.0;
 
-    console.log("🛠️ Iniciando creación de AcApJub.csv...");
+    console.log(`🛠️ Iniciando creación de AcApJub.csv con tope: $${tope}...`);
 
     if (!fs.existsSync(inputPath)) {
         return res.status(404).json({ success: false, message: "No existe el archivo unificado base." });
@@ -820,7 +821,7 @@ app.get('/api/preparar-acumulado', (req, res) => {
     stream.on('data', (row) => {
         // 1. Crear el nuevo objeto con la columna nueva al inicio
         const nuevoRegistro = {
-            'Tope_Des_ap_jub': "0.0"
+            'Tope_Des_ap_jub': tope.toFixed(2)
         };
 
         // 2. Agregar solo las columnas de CAMPOS_LIQUIDACION
