@@ -718,6 +718,7 @@
         <a href="#" id="menu-gc-liquidacion" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ GC
             Liquidación</a>
         <a href="#" id="menu-acumulado"><i class="fas fa-calculator"></i> Acumulado Aporte Jub.</a>
+        <a href="#" id="menu-topes-jubilatorios" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Topes de Ap. Jubilatorios</a>
         <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
         <a href="#" id="menu-calculo-ley100" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Calculo de ley
@@ -2000,6 +2001,19 @@
                     loadDataAndRenderTable('/api/gc-liquidacion', 'Liquidación: Guardias Críticas (Configuradas)');
                     closeNav();
                 });
+            }
+
+            // Conexión del menú Topes de Ap. Jubilatorios
+            const menuTopesJubilatorios = document.getElementById('menu-topes-jubilatorios');
+            if (menuTopesJubilatorios) {
+                menuTopesJubilatorios.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    loadDataAndRenderTable('/api/topes-jubilatorios', 'Topes de Ap. Jubilatorios (>0.10)');
+                    closeNav();
+                });
+            } else {
+                console.error("Elemento 'menu-topes-jubilatorios' no encontrado.");
             }
 
             // Conexión del menú Residentes

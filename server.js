@@ -824,6 +824,8 @@ app.get('/api/preparar-acumulado', (req, res) => {
         // --- 1. Preparar el detalle general (AcApJub.csv) ---
         const nuevoRegistro = {
             'Tope_Des_ap_jub': tope.toFixed(2),
+            'AcumuladoApJub': '',
+            'Dif_ApJub': '',
             'ApJubPer': row['ApJubPer'] || "",
             'PLANTA': row['PLANTA'] || "",
             'PERIODO_IMPUTADO': row['PERIODO_IMPUTADO'] || "",
@@ -872,6 +874,16 @@ app.get('/api/preparar-acumulado', (req, res) => {
 
             // --- 4. Crear el segundo archivo físico: AcApJub.csv ---
             if (resultados.length > 0) {
+                // Rellenar AcumuladoApJub y Dif_ApJub
+                resultados.forEach(r => {
+                    const doc = r.NRO_DOCUMENTO ? r.NRO_DOCUMENTO.trim() : "";
+                    const suma = agrupadoPorDni.get(doc) || 0;
+                    if (suma > tope) {
+                        r['AcumuladoApJub'] = suma.toFixed(2);
+                        r['Dif_ApJub'] = (tope - suma).toFixed(2);
+                    }
+                });
+
                 // ORDENAMIENTO DE LAS FILAS
                 resultados.sort((a, b) => {
                     // 1. NRO_DOCUMENTO (ascendente)
@@ -916,6 +928,28 @@ app.get('/api/preparar-acumulado', (req, res) => {
     stream.on('error', (err) => {
         res.status(500).json({ success: false, message: err.message });
     });
+});
+
+// NUEVO ENDPOINT: Topes de Ap. Jubilatorios
+app.get('/api/topes-jubilatorios', (req, res) => {
+    const csvPath = path.join(CSV_UNIDOS_DIR, 'AcApJub.csv');
+    const results = [];
+
+    if (!fs.existsSync(csvPath)) {
+        return res.status(404).json({ error: 'Archivo AcApJub.csv no encontrado. Genere el acumulado primero.' });
+    }
+
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            const acumulado = parseFloat(row.AcumuladoApJub);
+            // Filtro solicitado: AcumuladoApJub > 0.10
+            if (!isNaN(acumulado) && acumulado > 0.10) {
+                results.push(row);
+            }
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
 });
 
 // Endpoint para el procesamiento
