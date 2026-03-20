@@ -701,13 +701,15 @@
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
         <h2>Menú de Procesos</h2>
         <a href="#" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
-        <a href="#" id="menu-liquidacion-completa">Liquidación Completa</a>
+        <a href="#" id="menu-controles-manuales">Controles Manuales</a>
         <a href="#" id="menu-detalle-vs-detalle" style="padding-left: 50px; font-size: 16px; color: #a29bfe;">└─ Detalle vs Detalle</a>
+        <a href="#" id="menu-informes">Informes</a>
         <a href="#" id="menu-dashboard-informe" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Informe de
             Liquidación</a>
         <a href="#" id="menu-informe-modelo"
             style="display: none; padding-left: 50px; font-size: 16px; color: #a29bfe;">└─ Informe de
             Gestión</a>
+        <a href="#" id="menu-liquidacion-completa">Liquidación Completa</a>
         <a href="#" id="menu-observar-importes" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Observar
             por Importes</a>
         <a href="#" id="menu-observar-planta" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Observar
@@ -717,9 +719,9 @@
             Liquidación</a>
         <a href="#" id="menu-gc-liquidacion" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ GC
             Liquidación</a>
+        <a href="#" id="menu-residentes" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Residentes</a>
         <a href="#" id="menu-acumulado"><i class="fas fa-calculator"></i> Acumulado Aporte Jub.</a>
         <a href="#" id="menu-topes-jubilatorios" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Topes de Ap. Jubilatorios</a>
-        <a href="#" id="menu-residentes">Residentes</a>
         <a href="#" id="menu-ley100">Ley 100%</a>
         <a href="#" id="menu-calculo-ley100" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Calculo de ley
             100%</a>
@@ -768,6 +770,10 @@
             <input type="text" id="custom-filter" class="floating-search-input" placeholder="🔍 Buscar en la tabla...">
         </div>
         <div id="conversion-form" class="container">
+            <div style="position: sticky; top: 10px; z-index: 1000; text-align: center; margin-bottom: 20px;">
+                <button onclick="borrarLiquidacion()" style="background-color: #e74c3c; margin-right: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Borrado de Liquidacion</button>
+                <button onclick="borrarNovedad()" style="background-color: #e74c3c; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Borrado de Novedad</button>
+            </div>
             <h1>Procesador de Lotes de Liquidaciones</h1>
             <div class="mode-selection">
                 <h2>Modo de Carga</h2><label><input type="radio" name="processMode" value="default" checked
@@ -3229,6 +3235,38 @@
                     <td style="padding: 10px; color: ${r.where === 'MES ANTERIOR' ? '#e67e22' : '#27ae60'};">${r.where}</td>
                 </tr>
             `).join('');
+        }
+
+        async function borrarLiquidacion() {
+            if (confirm('¿Está seguro que desea borrar todos los archivos de liquidación procesados?')) {
+                try {
+                    const response = await fetch('/api/borrar-liquidacion', { method: 'DELETE' });
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.message || 'Archivos borrados correctamente.');
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (e) {
+                    alert('Error de conexión.');
+                }
+            }
+        }
+
+        async function borrarNovedad() {
+            if (confirm('¿Está seguro que desea borrar todos los archivos de novedad procesados?')) {
+                try {
+                    const response = await fetch('/api/borrar-novedad', { method: 'DELETE' });
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.message || 'Archivos borrados correctamente.');
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (e) {
+                    alert('Error de conexión.');
+                }
+            }
         }
     </script>
 </body>

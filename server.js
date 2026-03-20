@@ -1085,6 +1085,56 @@ app.get('/api/novedades/:tipo', (req, res) => {
         .on('error', (err) => res.status(500).json({ error: err.message }));
 });
 
+// ENDPOINTS PARA BORRADO DE ARCHIVOS
+app.delete('/api/borrar-liquidacion', (req, res) => {
+    try {
+        const dirs = [
+            path.join(__dirname, 'csv-convertido'),
+            path.join(__dirname, 'csv-unidos'),
+            path.join(__dirname, 'excel-a-convertir')
+        ];
+        dirs.forEach(dir => {
+            if (fs.existsSync(dir)) {
+                const files = fs.readdirSync(dir);
+                for (const file of files) {
+                    const filePath = path.join(dir, file);
+                    if (fs.lstatSync(filePath).isFile()) {
+                        fs.unlinkSync(filePath);
+                    }
+                }
+            }
+        });
+        res.json({ success: true, message: 'Archivos de liquidación borrados correctamente.' });
+    } catch (e) {
+        console.error('Error al borrar archivos de liquidación:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.delete('/api/borrar-novedad', (req, res) => {
+    try {
+        const dirs = [
+            path.join(__dirname, 'csv-unidos-novedades'),
+            path.join(__dirname, 'excel-a-convertir-novedades')
+        ];
+        dirs.forEach(dir => {
+            if (fs.existsSync(dir)) {
+                const files = fs.readdirSync(dir);
+                for (const file of files) {
+                    const filePath = path.join(dir, file);
+                    if (fs.lstatSync(filePath).isFile()) {
+                        fs.unlinkSync(filePath);
+                    }
+                }
+            }
+        });
+        res.json({ success: true, message: 'Archivos de novedad borrados correctamente.' });
+    } catch (e) {
+        console.error('Error al borrar archivos de novedad:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // ==========================================
 // CONFIGURACIÓN DE RED DEL SERVIDOR
 // ==========================================
