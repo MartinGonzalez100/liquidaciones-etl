@@ -31,7 +31,7 @@ const NOMBRES_COLUMNAS_A_LIMPIAR = [
     // Campos numéricos/de monto que deben limpiarse de comas/comillas
     'HAB_C_AP', 'HAB_S_AP', 'ASIG_FAM', 'TOT_HAB', 'RETENCIONES', 'DESCUENTOS', 'LIQUIDO', 
     'BRUTO_LEY7991', 'PENSION_229_92', 'LIQUIDO_LEY7991', 'COSTO_LABORAL_01', 
-    'COSTO_LABORAL_02', 'SUELDO_MANO', 'SUELDO', 'MONTO_ANTIGUEDAD', 'AP100_090_54' 
+    'COSTO_LABORAL_02', 'SUELDO_MANO', 'SUELDO', 'ANTIGUEDAD', 'AP100_090_54' 
     // ... Incluye aquí todos los encabezados relevantes.
     */
 ];

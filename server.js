@@ -62,7 +62,7 @@ const CAMPOS_LIQUIDACION = [
     'COSTO_LABORAL_02',
     'SUELDO_MANO',
     'SUELDO',
-    'MONTO_ANTIGUEDAD',
+    'ANTIGUEDAD',
     'DIAS_INASIST',
     'D_TRAB',
     'ApJubPer',
