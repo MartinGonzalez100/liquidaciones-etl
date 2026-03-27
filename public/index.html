@@ -703,7 +703,6 @@
         <a href="#" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
         <a href="#" id="menu-controles-manuales">Controles Manuales</a>
         <a href="#" id="menu-detalle-vs-detalle" style="padding-left: 50px; font-size: 16px; color: #a29bfe;">└─ Detalle vs Detalle</a>
-                    <a href="#" id="menu-detalle-vs-detalle-importes" style="padding-left: 50px; font-size: 16px; color: #1abc9c;">└─ Detalle Importes (Solo Montos)</a>
         <a href="#" id="menu-informes">Informes</a>
         <a href="#" id="menu-dashboard-informe" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Informe de
             Liquidación</a>
@@ -820,7 +819,8 @@
             <p style="color: #666; font-size: 14px;">Defina el tope para calcular el acumulado de aportes por agente
                 (ordenado por DNI).</p>
             <div style="display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 200px;"><label style="display:block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">VALOR DEL
+                <div style="flex: 1; min-width: 200px;"><label
+                        style="display:block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">VALOR DEL
                         TOPE JUBILATORIO ($)</label><input type="number" id="input-tope-valor" value="0" step="0.01"
                         style="width: 100%; padding: 12px; border: 2px solid #eaecf4; border-radius: 8px; font-size: 18px; outline: none; transition: border-color 0.2s;">
                 </div><button id="btn-generar-acumulado" class="btn-convertir"
@@ -1252,135 +1252,6 @@
         </div>
     </div>
     </div>
-<!-- VISTA DETALLE VS DETALLE -->
-        <div id="detalle-vs-detalle-importes-view" class="container" style="display: none; margin-top: 20px;">
-            <h1 style="color: #5c67f2; border-bottom: 2px solid #5c67f2; padding-bottom: 10px;">Comparación Detalle Vs Detalle (Solo Importes)</h1>
-            <p style="color: #666; margin-bottom: 20px;">Pegue las imágenes de liquidación (Ctrl+V) sobre las cajas para comparar las tablas.</p>
-            <div style="display: flex; gap: 20px;">
-                <div id="img-anterior-container-importes" tabindex="0" style="flex:1; border: 2px dashed #999; padding: 40px; text-align: center; cursor: pointer; border-radius: 8px; background: #f9f9f9; outline: none; position: relative; min-height: 200px; display: flex; flex-direction: column; justify-content: center;">
-                    <i class="fas fa-paste" style="font-size: 40px; color: #ccc; margin-bottom: 15px;"></i>
-                    <p style="margin: 0; color: #555; font-weight: bold;">MES ANTERIOR</p>
-                    <p style="margin: 5px 0 0 0; color: #999; font-size: 14px;">Haga clic aquí y presione Ctrl+V</p>
-                    <img id="preview-anterior-importes" style="display: none; max-width: 100%; max-height: 400px; margin-top: 15px; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-                </div>
-                <div id="img-actual-container-importes" tabindex="0" style="flex:1; border: 2px dashed #999; padding: 40px; text-align: center; cursor: pointer; border-radius: 8px; background: #f9f9f9; outline: none; position: relative; min-height: 200px; display: flex; flex-direction: column; justify-content: center;">
-                    <i class="fas fa-paste" style="font-size: 40px; color: #ccc; margin-bottom: 15px;"></i>
-                    <p style="margin: 0; color: #555; font-weight: bold;">MES ACTUAL</p>
-                    <p style="margin: 5px 0 0 0; color: #999; font-size: 14px;">Haga clic aquí y presione Ctrl+V</p>
-                    <img id="preview-actual-importes" style="display: none; max-width: 100%; max-height: 400px; margin-top: 15px; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-                </div>
-            </div>
-            
-            <div style="margin-top: 30px; display: flex; align-items: center; justify-content: space-between; background: #f0f0f0; padding: 15px 25px; border-radius: 8px;">
-                <label style="font-weight: bold; color: #333; display: flex; align-items: center; gap: 10px;">
-                    Diferencia Porcentual (%) a observar: 
-                    <input type="number" id="input-umbral-porcentaje-importes" value="8.43" step="0.01" style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; width: 100px;">
-                </label>
-                <button id="btn-procesar-ocr-importes" style="padding: 10px 20px; font-weight: bold; border-radius: 20px; box-shadow: 0 4px 10px rgba(92, 103, 242, 0.3);">
-                    <i class="fas fa-cogs"></i> Procesar Imágenes
-                </button>
-            </div>
-            <div id="ocr-status-importes" style="margin-top: 15px; color: #666; font-weight: bold; text-align: center; min-height: 20px;"></div>
-
-            <!-- RESULTADOS OCR -->
-            <div id="ocr-results-container-importes" style="display: none; margin-top: 30px;">
-                <!-- Section 1 -->
-                <h2 style="color: #333; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">1. Comparación General</h2>
-                <div style="overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px;">
-                    <table class="display" style="width:100%; min-width: 800px; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background-color: #5c67f2; color: white; text-align: left;">
-                                <th style="padding: 12px;">Código</th>
-                                <th style="padding: 12px; text-align: right;">Monto (Ant)</th>
-                                <th style="padding: 12px; text-align: right;">Monto (Act)</th>
-                                <th style="padding: 12px; text-align: right;">Dif. Monto</th>
-                                <th style="padding: 12px; text-align: right;">Dif. %</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ocr-table-sec1-importes"></tbody>
-                    </table>
-                </div>
-
-                <!-- Section 2 -->
-                <h2 style="color: #e67e22; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">2. Diferencias Atípicas (Fuera de Rango ±0.2)</h2>
-                <div style="overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px;">
-                    <table class="display" style="width:100%; min-width: 800px; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background-color: #e67e22; color: white; text-align: left;">
-                                <th style="padding: 12px;">Código</th>
-                                <th style="padding: 12px; text-align: right;">Monto (Ant)</th>
-                                <th style="padding: 12px; text-align: right;">Monto (Act)</th>
-                                <th style="padding: 12px; text-align: right;">Dif. Monto</th>
-                                <th style="padding: 12px; text-align: right;">Dif. %</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ocr-table-sec2-importes"></tbody>
-                    </table>
-                </div>
-
-                <!-- Section 3 -->
-                <h2 style="color: #e74c3c; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">3. Códigos No Coincidentes</h2>
-                <div style="overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px;">
-                    <table class="display" style="width:100%; max-width: 600px; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background-color: #e74c3c; color: white; text-align: left;">
-                                <th style="padding: 12px;">Código</th>
-                                <th style="padding: 12px;">Encontrado en</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ocr-table-sec3"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- VISTA CONFIGURACIÓN -->
-        <div id="configuracion-view" class="container" style="display: none;">
-            <h1>Configuración de Parámetros</h1>
-
-            <div id="seccion-ld" style="margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <h2 style="color: #5c67f2; border-bottom: 2px solid #5c67f2; padding-bottom: 10px;">Configuración de
-                    Libres Disponibilidad</h2>
-                <p style="color: #666; margin-bottom: 20px;">Seleccione las columnas que corresponden a Libres
-                    Disponibilidad (inician con LIB_0 o CG_0):</p>
-
-                <div id="ld-columns-list"
-                    style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #eee; background: #fdfdfd; border-radius: 4px;">
-                    <!-- Se llenará dinámicamente -->
-                    <p style="color: #999;">Cargando columnas...</p>
-                </div>
-
-                <div style="margin-top: 30px;">
-                    <button id="btn-save-ld" style="background-color: #27ae60;">
-                        <i class="fas fa-save"></i> Guardar Configuración
-                    </button>
-                    <span id="save-status-ld" style="margin-left: 15px; font-size: 14px;"></span>
-                </div>
-            </div>
-
-            <div id="seccion-gc" style="margin-top: 40px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <h2 style="color: #e67e22; border-bottom: 2px solid #e67e22; padding-bottom: 10px;">Configuración de
-                    Guardias Críticas</h2>
-                <p style="color: #666; margin-bottom: 20px;">Seleccione las columnas que corresponden a Guardias
-                    Críticas (excluye las ya seleccionadas en Libres Disponibilidad):</p>
-
-                <div id="gc-columns-list"
-                    style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #eee; background: #fdfdfd; border-radius: 4px;">
-                    <!-- Se llenará dinámicamente -->
-                    <p style="color: #999;">Cargando columnas...</p>
-                </div>
-
-                <div style="margin-top: 30px;">
-                    <button id="btn-save-gc" style="background-color: #e67e22;">
-                        <i class="fas fa-save"></i> Guardar Configuración GC
-                    </button>
-                    <span id="save-status-gc" style="margin-left: 15px; font-size: 14px;"></span>
-                </div>
-            </div>
-        </div>
-    </div>
-    </div>
-
     <script> // --- CONSTANTES Y ELEMENTOS ---
         const statusMessage = document.getElementById('status-message');
         const statusText = document.getElementById('status-text');
@@ -1431,7 +1302,7 @@
             const topeValue = document.getElementById('input-tope-valor').value;
             console.log("🚀 Paso 1: Generando archivo AcApJub.csv con tope: " + topeValue);
 
-            if (topeValue === "" || parseFloat(topeValue) < 0) {
+            if (topeValue === "" || parseFloat(topeValue) <0) {
                 alert("⚠️ Por favor, ingrese un valor de tope válido (mayor o igual a 0).");
                 return;
             }
@@ -1661,7 +1532,7 @@
                     // Determinar si insertar antes o después
                     const rect = this.getBoundingClientRect();
                     const midpoint = rect.top + rect.height / 2;
-                    if (e.clientY < midpoint) {
+                    if (e.clientY <midpoint) {
                         this.parentNode.insertBefore(draggedItem, this);
                     } else {
                         this.parentNode.insertBefore(draggedItem, this.nextSibling);
@@ -1935,7 +1806,7 @@
 
                 // 4. INICIALIZACIÓN
                 $('#tabla-datos').DataTable({
-
+                    destroy: true,
                     data: data,
                     columns: columns,
                     pageLength: 25,
@@ -2274,7 +2145,7 @@
 
                 // Helper para crear el encabezado de página
                 const pageHeader = () => `
-                        < div style = "display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 20px;" >
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 20px;" >
                             <div>
                                 <div style="font-size: 16px; font-weight: bold; letter-spacing: 1px;">INFORME DE GESTION INTERNA</div>
                                 <div style="font-size: 14px;">FEBRERO 2026</div>
@@ -2283,8 +2154,8 @@
                         `;
 
                 // Wrapper de página
-                const startPage = () => `< div class="pdf-page" style = "width: 100%; min-height: 297mm; padding: 20mm; background: white; box-sizing: border-box; page-break-after: always; position: relative;" > ${pageHeader()} `;
-                const endPage = (pageNum) => `< div style = "position: absolute; bottom: 20mm; right: 20mm; font-size: 12px;" > ${pageNum}</div></div> `;
+                const startPage = () => `<div class="pdf-page" style="width: 100%; min-height: 297mm; padding: 20mm; background: white; box-sizing: border-box; page-break-after: always; position: relative;" > ${pageHeader()} `;
+                const endPage = (pageNum) => `<div style="position: absolute; bottom: 20mm; right: 20mm; font-size: 12px;" > ${pageNum}</div></div> `;
 
                 // --- PÁGINA 1: AREA 1 ---
                 html += startPage();
@@ -2293,12 +2164,12 @@
                 let sumA1Agentes = 0, sumA1Importe = 0;
                 html += '<table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">';
                 a1Data.forEach(row => {
-                    html += `<tr> <td colspan="2" style="font-weight: bold; padding-top: 15px;">${row.planta}</td></tr> `;
-                    html += `<tr><td style="width: 50%; padding: 5px 0;">${row.cantidad}</td><td style="width: 50%; text-align: right; padding: 5px 0;">${formatCurrency(row.importe)}</td></tr> `;
+                    html += `<tr > <td colspan="2" style="font-weight: bold; padding-top: 15px;">${row.planta}</td></tr> `;
+                    html += `<tr ><td style="width: 50%; padding: 5px 0;">${row.cantidad}</td><td style="width: 50%; text-align: right; padding: 5px 0;">${formatCurrency(row.importe)}</td></tr> `;
                     sumA1Agentes += row.cantidad;
                     sumA1Importe += row.importe;
                 });
-                html += `< tr style = "border-top: 1px solid #000;" ><td style="font-weight: bold; padding: 10px 0;">${sumA1Agentes}</td><td style="font-weight: bold; text-align: right; padding: 10px 0;">${formatCurrency(sumA1Importe)}</td></tr> `;
+                html += `<tr style="border-top: 1px solid #000;" ><td style="font-weight: bold; padding: 10px 0;">${sumA1Agentes}</td><td style="font-weight: bold; text-align: right; padding: 10px 0;">${formatCurrency(sumA1Importe)}</td></tr> `;
                 html += '</table>';
                 html += endPage(1);
 
@@ -2309,12 +2180,12 @@
                 let sumA26Agentes = 0, sumA26Importe = 0;
                 html += '<table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">';
                 a26Data.forEach(row => {
-                    html += `<tr><td style="padding: 10px 0;">${row.planta}</td><td style="text-align: right; padding: 10px 0;">${formatCurrency(row.importe)}</td></tr> `;
-                    html += `<tr> <td colspan="2" style="padding-bottom: 10px;">${row.cantidad}</td></tr> `;
+                    html += `<tr ><td style="padding: 10px 0;">${row.planta}</td><td style="text-align: right; padding: 10px 0;">${formatCurrency(row.importe)}</td></tr> `;
+                    html += `<tr > <td colspan="2" style="padding-bottom: 10px;">${row.cantidad}</td></tr> `;
                     sumA26Agentes += row.cantidad;
                     sumA26Importe += row.importe;
                 });
-                html += `< tr style = "border-top: 1px solid #000;" ><td style="font-weight: bold; padding: 10px 0;">${sumA26Agentes}</td><td style="font-weight: bold; text-align: right; padding: 10px 0;">${formatCurrency(sumA26Importe)}</td></tr> `;
+                html += `<tr style="border-top: 1px solid #000;" ><td style="font-weight: bold; padding: 10px 0;">${sumA26Agentes}</td><td style="font-weight: bold; text-align: right; padding: 10px 0;">${formatCurrency(sumA26Importe)}</td></tr> `;
                 html += '</table>';
                 html += endPage(2);
 
@@ -2325,12 +2196,12 @@
                 let sumA27Agentes = 0, sumA27Importe = 0;
                 html += '<table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">';
                 a27Data.forEach(row => {
-                    html += `<tr> <td colspan="2" style="font-weight: bold; padding-top: 15px;">${row.planta}</td></tr> `;
-                    html += `<tr><td style="width: 50%; padding: 5px 0;">${row.cantidad}</td><td style="width: 50%; text-align: right; padding: 5px 0;">${formatCurrency(row.importe)}</td></tr> `;
+                    html += `<tr > <td colspan="2" style="font-weight: bold; padding-top: 15px;">${row.planta}</td></tr> `;
+                    html += `<tr ><td style="width: 50%; padding: 5px 0;">${row.cantidad}</td><td style="width: 50%; text-align: right; padding: 5px 0;">${formatCurrency(row.importe)}</td></tr> `;
                     sumA27Agentes += row.cantidad;
                     sumA27Importe += row.importe;
                 });
-                html += `< tr style = "border-top: 1px solid #000;" ><td style="font-weight: bold; padding: 10px 0;">${sumA27Agentes}</td><td style="font-weight: bold; text-align: right; padding: 10px 0;">${formatCurrency(sumA27Importe)}</td></tr> `;
+                html += `<tr style="border-top: 1px solid #000;" ><td style="font-weight: bold; padding: 10px 0;">${sumA27Agentes}</td><td style="font-weight: bold; text-align: right; padding: 10px 0;">${formatCurrency(sumA27Importe)}</td></tr> `;
                 html += '</table>';
                 html += endPage(3);
 
@@ -2342,11 +2213,11 @@
                 // Formato tipo planilla (fechas falsas en el PDF modelo, usamos valores agregados)
                 html += '<table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">';
                 a3Data.forEach(row => {
-                    html += `<tr><td style="padding: 10px 0;">${row.planta}</td><td style="padding: 10px 0;">${row.cantidad}</td><td style="text-align: right; padding: 10px 0;">${formatCurrency(row.importe)}</td></tr> `;
+                    html += `<tr ><td style="padding: 10px 0;">${row.planta}</td><td style="padding: 10px 0;">${row.cantidad}</td><td style="text-align: right; padding: 10px 0;">${formatCurrency(row.importe)}</td></tr> `;
                     sumA3Agentes += row.cantidad;
                     sumA3Importe += row.importe;
                 });
-                html += `< tr style = "border-top: 1px solid #000;" ><td colspan="2" style="padding: 10px 0;"></td><td style="font-weight: bold; text-align: right; padding: 10px 0;">${formatCurrency(sumA3Importe)}</td></tr> `;
+                html += `<tr style="border-top: 1px solid #000;" ><td colspan="2" style="padding: 10px 0;"></td><td style="font-weight: bold; text-align: right; padding: 10px 0;">${formatCurrency(sumA3Importe)}</td></tr> `;
                 html += '</table>';
                 html += endPage(4);
 
@@ -2356,12 +2227,12 @@
                 let sumRetroAgentes = 0, sumRetroImporte = 0;
                 html += '<table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">';
                 dataRetro.porPlanta.forEach(row => {
-                    html += `<tr> <td colspan="2" style="font-weight: bold; padding-top: 15px;">${row.nombre}</td></tr> `;
-                    html += `<tr><td style="width: 50%; padding: 5px 0;">${row.cantidad}</td><td style="width: 50%; text-align: right; padding: 5px 0;">${formatCurrency(row.importe)}</td></tr> `;
+                    html += `<tr > <td colspan="2" style="font-weight: bold; padding-top: 15px;">${row.nombre}</td></tr> `;
+                    html += `<tr ><td style="width: 50%; padding: 5px 0;">${row.cantidad}</td><td style="width: 50%; text-align: right; padding: 5px 0;">${formatCurrency(row.importe)}</td></tr> `;
                     sumRetroAgentes += row.cantidad;
                     sumRetroImporte += row.importe;
                 });
-                html += `< tr style = "border-top: 1px solid #000;" ><td style="font-weight: bold; padding: 10px 0;">${sumRetroAgentes}</td><td style="font-weight: bold; text-align: right; padding: 10px 0;">${formatCurrency(sumRetroImporte)}</td></tr> `;
+                html += `<tr style="border-top: 1px solid #000;" ><td style="font-weight: bold; padding: 10px 0;">${sumRetroAgentes}</td><td style="font-weight: bold; text-align: right; padding: 10px 0;">${formatCurrency(sumRetroImporte)}</td></tr> `;
                 html += '</table>';
                 html += endPage(5);
 
@@ -2373,11 +2244,11 @@
                 html += '<table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 40px;">';
                 let totalMensualAgentes = 0, totalMensualImporte = 0;
                 dataMensual.porAreaPlanta.forEach(row => {
-                    html += `<tr><td style="padding: 4px 0;">${row.area} ${row.planta}</td><td style="text-align: right; padding: 4px 0;">${row.cantidad}</td><td style="text-align: right; padding: 4px 0;">${formatCurrency(row.importe)}</td></tr> `;
+                    html += `<tr ><td style="padding: 4px 0;">${row.area} ${row.planta}</td><td style="text-align: right; padding: 4px 0;">${row.cantidad}</td><td style="text-align: right; padding: 4px 0;">${formatCurrency(row.importe)}</td></tr> `;
                     totalMensualAgentes += row.cantidad;
                     totalMensualImporte += row.importe;
                 });
-                html += `< tr style = "border-top: 1px solid #000;" ><td style="font-weight: bold; padding: 8px 0;"></td><td style="font-weight: bold; text-align: right; padding: 8px 0;">${totalMensualAgentes}</td><td style="font-weight: bold; text-align: right; padding: 8px 0;">${formatCurrency(totalMensualImporte)}</td></tr> `;
+                html += `<tr style="border-top: 1px solid #000;" ><td style="font-weight: bold; padding: 8px 0;"></td><td style="font-weight: bold; text-align: right; padding: 8px 0;">${totalMensualAgentes}</td><td style="font-weight: bold; text-align: right; padding: 8px 0;">${formatCurrency(totalMensualImporte)}</td></tr> `;
                 html += '</table>';
 
                 // Tabla final porcentual
@@ -2386,15 +2257,15 @@
                 dataMensual.porArea.forEach(a => {
                     const pctAgentes = ((a.cantidad / totalMensualAgentes) * 100).toFixed(2);
                     const pctImporte = ((a.importe / totalMensualImporte) * 100).toFixed(2);
-                    html += `<tr><td style="padding: 6px 0;">AREA ${a.nombre.replace('A', '')}</td><td style="text-align: right; padding: 6px 0;">${a.cantidad}</td><td style="text-align: right; padding: 6px 0;">${pctAgentes}%</td><td style="text-align: right; padding: 6px 0;">${formatCurrency(a.importe)}</td><td style="text-align: right; padding: 6px 0;">${pctImporte}%</td></tr> `;
+                    html += `<tr ><td style="padding: 6px 0;">AREA ${a.nombre.replace('A', '')}</td><td style="text-align: right; padding: 6px 0;">${a.cantidad}</td><td style="text-align: right; padding: 6px 0;">${pctAgentes}%</td><td style="text-align: right; padding: 6px 0;">${formatCurrency(a.importe)}</td><td style="text-align: right; padding: 6px 0;">${pctImporte}%</td></tr> `;
                 });
                 html += '</table>';
                 html += endPage(6);
 
-                content.innerHTML = `< div id = "informe-pdf-container" style = "background:#ccc; padding:20px; display:flex; flex-direction:column; gap:20px; align-items:center;" > ${html}</div> `;
+                content.innerHTML = `<div id="informe-pdf-container" style="background:#ccc; padding:20px; display:flex; flex-direction:column; gap:20px; align-items:center;" > ${html}</div> `;
             } catch (error) {
                 console.error("Error loading informe modelo:", error);
-                content.innerHTML = `< p style = "color: red;" > Error: ${error.message}</p > `;
+                content.innerHTML = `<p style="color: red;" > Error: ${error.message}</p> `;
             }
         }
 
@@ -2411,7 +2282,7 @@
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
 
-            for (let i = 0; i < pages.length; i++) {
+            for (let i = 0; i <pages.length; i++) {
                 const pageEl = pages[i];
                 // Render page directly ignoring the parent grey background
                 const canvas = await html2canvas(pageEl, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
@@ -2514,7 +2385,7 @@
             document.getElementById('label-planta-count').innerText = `${items.length} tipos`;
 
             listPlanta.innerHTML = items.map(p => `
-                <div class="breakdown-item">
+                <div class="breakdown-item" >
                     <div class="item-name">${p.nombre}</div>
                     <div class="item-stats">
                         <span class="item-amt">${formatCurrency(p.importe)}</span>
@@ -2581,7 +2452,7 @@
             document.getElementById('label-area-count').innerText = `${items.length} áreas`;
 
             listArea.innerHTML = items.map(a => `
-                <div class="breakdown-item">
+                <div class="breakdown-item" >
                     <div class="item-name">${a.nombre}</div>
                     <div class="item-stats">
                         <span class="item-amt">${formatCurrency(a.importe)}</span>
@@ -2645,7 +2516,7 @@
             document.getElementById('label-organismo-count').innerText = `${items.length} organismos`;
 
             listOrg.innerHTML = items.map(o => `
-                <div class="breakdown-item">
+                <div class="breakdown-item" >
                     <div class="item-name">${o.nombre}</div>
                     <div class="item-stats">
                         <span class="item-amt">${formatCurrency(o.importe)}</span>
@@ -2706,7 +2577,7 @@
 
             label.innerText = `${items.length} ${labelSuffix}`;
             list.innerHTML = items.map(i => `
-                <div class="breakdown-item">
+                <div class="breakdown-item" >
                     <div class="item-name">${i.nombre}</div>
                     <div class="item-stats">
                         <span class="item-amt">${formatCurrency(i.importe)}</span>
@@ -2780,7 +2651,7 @@
             labelCount.innerText = `${items.length} plantas(Area 1)`;
 
             listArea1.innerHTML = items.map(a => `
-                <div class="breakdown-item">
+                <div class="breakdown-item" >
                     <div class="item-name">${a.nombre}</div>
                     <div class="item-stats">
                         <span class="item-amt">${formatCurrency(a.importe)}</span>
@@ -2798,7 +2669,7 @@
 
             label.innerText = `${items.length} niveles`;
             list.innerHTML = items.map(i => `
-                <div class="breakdown-item">
+                <div class="breakdown-item" >
                     <div class="item-name">${i.nombre}</div>
                     <div class="item-stats">
                         <span class="item-amt">${formatCurrency(i.importe)}</span>
@@ -2836,7 +2707,7 @@
 
             label.innerText = `${items.length} organismos`;
             list.innerHTML = items.map(i => `
-                <div class="breakdown-item">
+                <div class="breakdown-item" >
                     <div class="item-name">${i.nombre}</div>
                     <div class="item-stats">
                         <span class="item-amt">${formatCurrency(i.importe)}</span>
@@ -2904,7 +2775,7 @@
                 // 3. Renderizar Libres Disponibilidad (Solo LIB_0 y GC_0)
                 const ldAvailable = allColumns.filter(col => col.startsWith('LIB_0') || col.startsWith('GC_0'));
                 ldContainer.innerHTML = ldAvailable.map(col => `
-                    < label style = "display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;" >
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;" >
                     <input type="checkbox" name="ld-col" value="${col}" ${selectedLD.includes(col) ? 'checked' : ''}>
                         <span style="font-family: monospace;">${col}</span>
                     </label>
@@ -2917,7 +2788,7 @@
                     gcContainer.innerHTML = '<p style="color: #999;">No hay columnas disponibles para Guardias Críticas.</p>';
                 } else {
                     gcContainer.innerHTML = gcAvailable.map(col => `
-                    < label style = "display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;" >
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;" >
                     <input type="checkbox" name="gc-col" value="${col}" ${selectedGC.includes(col) ? 'checked' : ''}>
                         <span style="font-family: monospace;">${col}</span>
                     </label>
@@ -2930,7 +2801,7 @@
 
             } catch (err) {
                 console.error("Error cargando configuración:", err);
-                const errorMsg = `< p style = "color: #e74c3c;" > Error: ${err.message}</p > `;
+                const errorMsg = `<p style="color: #e74c3c;" > Error: ${err.message}</p> `;
                 ldContainer.innerHTML = errorMsg;
                 gcContainer.innerHTML = errorMsg;
             }
@@ -3206,152 +3077,6 @@
             }
         });
 
-        
-        // --- LOGICA DE PEGAR IMAGENES Y OCR (DETALLE VS DETALLE IMPORTES) ---
-        let imgBase64AnteriorImportes = null;
-        let imgBase64ActualImportes = null;
-
-        document.getElementById('img-anterior-container-importes').addEventListener('paste', function(e) {
-            handlePaste(e, 'img-anterior-container-importes', 'preview-anterior-importes', v => imgBase64AnteriorImportes = v);
-        });
-        document.getElementById('img-actual-container-importes').addEventListener('paste', function(e) {
-            handlePaste(e, 'img-actual-container-importes', 'preview-actual-importes', v => imgBase64ActualImportes = v);
-        });
-
-        document.getElementById('btn-procesar-ocr-importes').addEventListener('click', async function() {
-            if (!imgBase64AnteriorImportes || !imgBase64ActualImportes) {
-                alert('Debe pegar ambas imágenes de la columna Monto antes de procesar.');
-                return;
-            }
-
-            const status = document.getElementById('ocr-status-importes');
-            const btn = this;
-            const resultsContainer = document.getElementById('ocr-results-container-importes');
-            
-            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando motor OCR...';
-            btn.disabled = true;
-            btn.style.opacity = '0.6';
-            resultsContainer.style.display = 'none';
-
-            try {
-                status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Pre-procesando imágenes (Filtro B/N y recorte)...';
-                const processedAnt = await preprocessImageForOCR(imgBase64AnteriorImportes);
-                const processedAct = await preprocessImageForOCR(imgBase64ActualImportes);
-
-                status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analizando imagen Mes Anterior...';
-                const workerAnt = await Tesseract.createWorker('spa');
-                await workerAnt.setParameters({ tessedit_pageseg_mode: '6' });
-                const retAnt = await workerAnt.recognize(processedAnt);
-                const textAnt = retAnt.data.text;
-                await workerAnt.terminate();
-
-                status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analizando imagen Mes Actual...';
-                const workerAct = await Tesseract.createWorker('spa');
-                await workerAct.setParameters({ tessedit_pageseg_mode: '6' });
-                const retAct = await workerAct.recognize(processedAct);
-                const textAct = retAct.data.text;
-                await workerAct.terminate();
-
-                status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando datos extraídos...';
-                
-                processOcrDataImportes(textAnt, textAct);
-
-                status.innerHTML = '<span style="color: #27ae60;">¡Proceso completo! Resultados listos.</span>';
-                resultsContainer.style.display = 'block';
-                
-            } catch (err) {
-                console.error(err);
-                status.innerHTML = '<span style="color:#e74c3c;"><i class="fas fa-exclamation-triangle"></i> Error procesando imágenes. Revise la consola.</span>';
-            } finally {
-                btn.disabled = false;
-                btn.style.opacity = '1';
-            }
-        });
-
-        function parseOcrLineImportes(line) {
-            const numPattern = /(-?\d{1,7}[.,]\d{2})\s*$/;
-            const montoMatch = line.match(numPattern);
-            let monto = 0;
-            if (montoMatch) {
-                let montoStr = montoMatch[1].replace(',', '.');
-                monto = parseFloat(montoStr);
-                if (isNaN(monto)) monto = 0;
-                return monto;
-            }
-            return null; // Return null if no valid amount found to ignore text lines
-        }
-
-        function extractDataFromTextImportes(text) {
-            const lines = text.split('\n');
-            const arr = [];
-            lines.forEach(line => {
-                const monto = parseOcrLineImportes(line.trim());
-                if (monto !== null) {
-                    arr.push(monto);
-                }
-            });
-            return arr;
-        }
-
-        function processOcrDataImportes(textAnt, textAct) {
-            const dataAnt = extractDataFromTextImportes(textAnt);
-            const dataAct = extractDataFromTextImportes(textAct);
-
-            const thresholdInput = parseFloat(document.getElementById('input-umbral-porcentaje-importes').value) || 0;
-            const umbralMin = thresholdInput - 0.2;
-            const umbralMax = thresholdInput + 0.2;
-
-            const sec1 = [];
-            const sec2 = [];
-
-            const maxLen = Math.max(dataAnt.length, dataAct.length);
-
-            for(let i = 0; i < maxLen; i++) {
-                const montoAnt = dataAnt[i] || 0;
-                const montoAct = dataAct[i] || 0;
-
-                const difMonto = montoAct - montoAnt;
-                let difPorcentual = 0;
-                if (montoAnt !== 0) {
-                    difPorcentual = (difMonto / montoAnt) * 100;
-                } else if (montoAct !== 0) {
-                    difPorcentual = 100;
-                }
-
-                const row = {
-                    montoAnt: montoAnt,
-                    montoAct: montoAct,
-                    difMonto: difMonto,
-                    difPorcentual: difPorcentual,
-                    hasWarning: false
-                };
-
-                if (difPorcentual < umbralMin || difPorcentual > umbralMax) {
-                    row.hasWarning = true;
-                    sec2.push(row);
-                }
-                sec1.push(row);
-            }
-
-            document.getElementById('ocr-table-sec1-importes').innerHTML = sec1.map(r => `
-                <tr style="${r.hasWarning ? 'background-color: #ffeaa7;' : ''} border-bottom: 1px solid #eee;">
-                    <td style="padding: 10px; text-align: right;">${formatterMoney(r.montoAnt)}</td>
-                    <td style="padding: 10px; text-align: right;">${formatterMoney(r.montoAct)}</td>
-                    <td style="padding: 10px; text-align: right; color: ${r.difMonto > 0 ? '#27ae60' : (r.difMonto < 0 ? '#e74c3c' : '#555')}">${formatterMoney(r.difMonto)}</td>
-                    <td style="padding: 10px; text-align: right; font-weight: bold;">${r.difPorcentual.toFixed(2)}%</td>
-                </tr>
-            `).join('');
-
-            document.getElementById('ocr-table-sec2-importes').innerHTML = sec2.map(r => `
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 10px; text-align: right;">${formatterMoney(r.montoAnt)}</td>
-                    <td style="padding: 10px; text-align: right;">${formatterMoney(r.montoAct)}</td>
-                    <td style="padding: 10px; text-align: right;">${formatterMoney(r.difMonto)}</td>
-                    <td style="padding: 10px; text-align: right; color:#e74c3c; font-weight: bold;">${r.difPorcentual.toFixed(2)}%</td>
-                </tr>
-            `).join('');
-        }
-
         // Parseo de líneas individuales desde OCR (ENFOCADO EN EXTREMOS)
         function parseOcrLine(line) {
             // El usuario especificó que solo busquemos el Código (xxx-xx) y el Monto al final.
@@ -3475,7 +3200,7 @@
                 // Verificar límite de umbral para Sección 2
                 // Considerar warning si la diferencia porcentual NO está dentro del margen [umbralMin, umbralMax]
                 // También si el umbral base es 0 pero hay diferencia, se marca
-                if (difPorcentual < umbralMin || difPorcentual > umbralMax) {
+                if (difPorcentual <umbralMin || difPorcentual > umbralMax) {
                     row.hasWarning = true;
                     sec2.push(row);
                 }
@@ -3489,7 +3214,7 @@
                     <td style="padding: 10px; font-family: monospace; font-weight: bold;">${r.code}</td>
                     <td style="padding: 10px; text-align: right;">${formatterMoney(r.montoAnt)}</td>
                     <td style="padding: 10px; text-align: right;">${formatterMoney(r.montoAct)}</td>
-                    <td style="padding: 10px; text-align: right; color: ${r.difMonto > 0 ? '#27ae60' : (r.difMonto < 0 ? '#e74c3c' : '#555')}">${formatterMoney(r.difMonto)}</td>
+                    <td style="padding: 10px; text-align: right; color: ${r.difMonto > 0 ? '#27ae60' : (r.difMonto <0 ? '#e74c3c' : '#555')}">${formatterMoney(r.difMonto)}</td>
                     <td style="padding: 10px; text-align: right; font-weight: bold;">${r.difPorcentual.toFixed(2)}%</td>
                 </tr>
             `).join('');
