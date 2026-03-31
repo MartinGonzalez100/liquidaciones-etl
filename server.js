@@ -810,6 +810,7 @@ app.get('/api/preparar-acumulado', (req, res) => {
     const outputPathTope = path.join(CSV_UNIDOS_DIR, 'AcApJub_con_tope.csv');
     const resultados = [];
     const agrupadoPorDni = new Map();
+    const dniOccurrences = new Map(); // Mapa para contar duplicados por DNI
     const tope = parseFloat(req.query.tope) || 0.0;
 
     console.log(`🛠️ Iniciando creación de reportes AcApJub con tope: $${tope}...`);
@@ -821,13 +822,20 @@ app.get('/api/preparar-acumulado', (req, res) => {
     const stream = fs.createReadStream(inputPath).pipe(csv());
 
     stream.on('data', (row) => {
+        let dni = row.NRO_DOCUMENTO ? row.NRO_DOCUMENTO.trim() : "";
+        const count = (dniOccurrences.get(dni) || 0) + 1;
+        dniOccurrences.set(dni, count);
+
         // --- 1. Preparar el detalle general (AcApJub.csv) ---
         const nuevoRegistro = {
             'Tope_Des_ap_jub': tope.toFixed(2),
             'AcumuladoApJub': '',
             'Dif_ApJub': '',
+            'Enviar_A_Descontar_automatico': '',
+            'Dif_Sobrante_Descuento': '',
+            'duplicado': count,
             'ApJubPer': row['ApJubPer'] || "",
-            'PLANTA': row['PLANTA'] || "",
+            'PLANTASS': row['PLANTA'] || "",
             'PERIODO_IMPUTADO': row['PERIODO_IMPUTADO'] || "",
             'PERIODO_LIQUIDADO': row['PERIODO_LIQUIDADO'] || "",
             'NUMERO_CARGO': row['NUMERO_CARGO'] || ""
@@ -841,7 +849,7 @@ app.get('/api/preparar-acumulado', (req, res) => {
         resultados.push(nuevoRegistro);
 
         // --- 2. Agrupar sumas para (AcApJub_con_tope.csv) ---
-        const dni = row.NRO_DOCUMENTO ? row.NRO_DOCUMENTO.trim() : "";
+        dni = row.NRO_DOCUMENTO ? row.NRO_DOCUMENTO.trim() : "";
         const apJub = parseFloat(row.ApJubPer) || 0;
         
         if (dni) {
