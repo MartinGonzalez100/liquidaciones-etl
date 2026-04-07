@@ -22,6 +22,7 @@ const CSV_UNIDOS_NOVEDADES_DIR = path.join(__dirname, 'csv-unidos-novedades');
 const CONFIG_DIR = path.join(__dirname, 'configuracion_parametros');
 const LD_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config.csv');
 const GC_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config.csv');
+const GC_EFECTORES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_efectores.csv');
 
 //-----------
 
@@ -521,7 +522,7 @@ app.get('/api/config/available-columns', (req, res) => {
     fs.createReadStream(csvPath)
         .pipe(csv())
         .on('headers', (headers) => {
-            const prefixes = ['LIB_0', 'GC_0', 'LIB_D', 'LIB_N', 'LIB_SC', 'LIB_COB'];
+            const prefixes = ['LIB_0', 'GC_0', 'LIB_D', 'LIB_N', 'LIB_SC', 'LIB_COB', 'LIB_B'];
             const filtered = headers.filter(h => prefixes.some(p => h.startsWith(p)));
             res.json(filtered);
             // Destruir el stream ya que solo necesitamos los headers
@@ -579,6 +580,46 @@ app.get('/api/config/load-gc', (req, res) => {
         .on('data', (data) => results.push(data.columna))
         .on('end', () => res.json({ columns: results }))
         .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 6. Cargar configuración de Guardias Críticas Efectores
+app.get('/api/config/load-gc-efectores', (req, res) => {
+    if (!fs.existsSync(GC_EFECTORES_CONFIG_FILE)) return res.json([]);
+
+    const results = [];
+    fs.createReadStream(GC_EFECTORES_CONFIG_FILE, { encoding: 'utf8' })
+        .pipe(csv())
+        .on('data', (data) => {
+            const efectorKey = data['EFECTORES'] !== undefined ? 'EFECTORES' : '\uFEFFEFECTORES';
+            
+            if (data[efectorKey] || data['NUEVOS EFECTORES']) {
+                results.push({
+                    efector: data[efectorKey] || '',
+                    nuevoEfector: data['NUEVOS EFECTORES'] || ''
+                });
+            }
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 7. Guardar configuración de Guardias Críticas Efectores (ABM)
+app.post('/api/config/save-gc-efectores', (req, res) => {
+    const data = req.body;
+    if (!Array.isArray(data)) return res.status(400).json({ error: 'Formato inválido. Debe ser un array.' });
+
+    try {
+        let content = 'EFECTORES,NUEVOS EFECTORES\n';
+        data.forEach(row => {
+            const efector = (row.efector || '').replace(/,/g, ' '); // Evitar romper el CSV
+            const nuevoEfector = (row.nuevoEfector || '').replace(/,/g, ' ');
+            content += `${efector},${nuevoEfector}\n`;
+        });
+        fs.writeFileSync(GC_EFECTORES_CONFIG_FILE, content, 'utf8');
+        res.json({ success: true, message: 'Configuración de Efectores guardada correctamente' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // NUEVO ENDPOINT: Liquidaciones a observar por importes
@@ -800,6 +841,158 @@ app.get('/api/gc-liquidacion', (req, res) => {
         })
         .on('end', () => res.json(results))
         .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+// NUEVOS ENDPOINTS PARA GC CONTROL
+
+/**
+ * Función auxiliar para generar AuxGCLiquidacion.csv
+ * Se basa en las columnas configuradas en GC_config.csv y los datos de liquidaciones_unificadas.csv
+ */
+async function generateAuxGCLiquidacion() {
+    const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    const auxPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
+
+    if (!fs.existsSync(csvPath)) throw new Error('Archivo unificado no encontrado');
+
+    // 1. Cargar configuración de GC
+    const configColumns = [];
+    if (fs.existsSync(GC_CONFIG_FILE)) {
+        const content = fs.readFileSync(GC_CONFIG_FILE, 'utf8').split('\n');
+        content.shift();
+        content.forEach(line => { if (line.trim()) configColumns.push(line.trim()); });
+    }
+
+    if (configColumns.length === 0) return false;
+
+    const results = [];
+    return new Promise((resolve, reject) => {
+        fs.createReadStream(csvPath)
+            .pipe(csv())
+            .on('data', (row) => {
+                // Reutilizamos la lógica de GC Liquidación para filtrar
+                const hasValue = configColumns.some(col => {
+                    const val = parseFloat(row[col]);
+                    return !isNaN(val) && val !== 0;
+                });
+
+                if (hasValue) {
+                    const newRow = {};
+                    
+                    // CLAVE_AGRUPACION: NRO_DOCUMENTO + ORGANISMO (sin espacios a la derecha)
+                    const nroDoc = (row.NRO_DOCUMENTO || '').toString().trimEnd();
+                    const organismo = (row.ORGANISMO || '').toString().trimEnd();
+                    newRow['CLAVE_AGRUPACION'] = nroDoc + organismo;
+
+                    // SUMA_GC: Suma de las columnas de GC
+                    let sumaGC = 0;
+                    configColumns.forEach(col => {
+                        const val = parseFloat(row[col]) || 0;
+                        sumaGC += val;
+                    });
+                    newRow['SUMA_GC'] = sumaGC.toFixed(2);
+
+                    // Copiamos los campos estándar de CAMPOS_LIQUIDACION
+                    CAMPOS_LIQUIDACION.forEach(field => {
+                        newRow[field] = row[field] ?? '';
+                    });
+
+                    // Agregamos las columnas de GC
+                    configColumns.forEach(col => {
+                        newRow[col] = row[col] ?? '0';
+                    });
+
+                    results.push(newRow);
+                }
+            })
+            .on('end', () => {
+                if (results.length === 0) {
+                    resolve(false);
+                    return;
+                }
+                // Escribir el nuevo CSV
+                const headers = Object.keys(results[0]);
+                const csvContent = [
+                    headers.join(','),
+                    ...results.map(r => headers.map(h => {
+                        let val = (r[h] !== undefined && r[h] !== null) ? r[h].toString() : '';
+                        if (val.includes(',') || val.includes('"')) val = `"${val.replace(/"/g, '""')}"`;
+                        return val;
+                    }).join(','))
+                ].join('\n');
+
+                fs.writeFileSync(auxPath, csvContent, 'utf8');
+                console.log(`[SERVER] ✅ AuxGCLiquidacion.csv generado con ${results.length} registros.`);
+                resolve(true);
+            })
+            .on('error', reject);
+    });
+}
+
+function processGCControl(csvFile, filterFn, res) {
+    const auxPath = path.join(CSV_UNIDOS_DIR, csvFile);
+    if (!fs.existsSync(auxPath)) return res.status(404).json({ error: 'Archivo auxiliar no encontrado' });
+
+    const groupings = new Map();
+
+    fs.createReadStream(auxPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            if (filterFn(row)) {
+                const clave = row.CLAVE_AGRUPACION;
+                if (!groupings.has(clave)) {
+                    groupings.set(clave, {
+                        ORGANISMO: row.ORGANISMO,
+                        NRO_DOCUMENTO: row.NRO_DOCUMENTO,
+                        NIVEL: row.NIVEL,
+                        NUMERO_LIQ: row.NUMERO_LIQ || '',
+                        DESCAGENTE: row.DESCAGENTE,
+                        PERIODO_IMPUTADO: row.PERIODO_IMPUTADO,
+                        NUMERO_CARGO: row.NUMERO_CARGO,
+                        PERIODO_LIQUIDADO: row.PERIODO_LIQUIDADO,
+                        SUMA: parseFloat(row.SUMA_GC) || 0,
+                        GC: '',
+                        CLAVE: clave
+                    });
+                } else {
+                    const existing = groupings.get(clave);
+                    existing.SUMA += parseFloat(row.SUMA_GC) || 0;
+                }
+            }
+        })
+        .on('end', () => {
+            const results = Array.from(groupings.values()).map(r => ({
+                ...r,
+                SUMA: r.SUMA.toFixed(2)
+            }));
+            res.json(results);
+        })
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+}
+
+app.get('/api/gc-control', async (req, res) => {
+    try {
+        await generateAuxGCLiquidacion();
+        processGCControl('AuxGCLiquidacion.csv', (row) => {
+            const pImp = (row.PERIODO_IMPUTADO || '').trim();
+            const pLiq = (row.PERIODO_LIQUIDADO || '').trim();
+            return pImp === pLiq;
+        }, res);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/gc-control-retro', async (req, res) => {
+    try {
+        await generateAuxGCLiquidacion();
+        processGCControl('AuxGCLiquidacion.csv', (row) => {
+            const pImp = (row.PERIODO_IMPUTADO || '').trim();
+            const pLiq = (row.PERIODO_LIQUIDADO || '').trim();
+            return pImp < pLiq;
+        }, res);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // server.js

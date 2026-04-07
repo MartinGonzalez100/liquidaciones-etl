@@ -68,10 +68,42 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
   1. El empleado corresponde a las zonas contables `A1`, `A26` o `A27` (`Area2`).
   2. Si su sexo contable extraído del CUIL denota ser mujer, debe tener una edad superior al parámetro `Edad F` provisto en el calendario del frontend (típicamente 60).
   3. Si denota ser hombre, debe superar el parámetro `Edad M` (típicamente 65).
-  4. Su antigüedad calculada (generalmente leída desde columnas nativas como `ANTIGUEDAD_MINISTERIO`) debe superar el parámetro numérico base (ej. 30 años).
+  4. Su antigüedad calculada (generalmente leída desde columnas nativas como `ANTIGUEDAD`) debe superar el parámetro numérico base (ej. 30 años).
+
+### 2.7 Reportes de Control GC (Guardias Críticas)
+- **Función:** Permite realizar un control detallado de los montos de Guardias Críticas agrupados por agente y organismo, facilitando la auditoría de liquidaciones mensuales y retroactivas.
+- **Generación de Datos (`AuxGCLiquidacion.csv`):** El sistema crea automáticamente una tabla auxiliar para el cálculo:
+  - **CLAVE_AGRUPACION:** Unión de `NRO_DOCUMENTO` + `ORGANISMO` (sin espacios a la derecha).
+  - **SUMA_GC:** Suma horizontal de todos los montos de las columnas configuradas como GC en ese registro.
+- **Submenú: GC Para Control:**
+  - **Filtro:** Registros donde `PERIODO_IMPUTADO` == `PERIODO_LIQUIDADO`.
+  - **Lógica:** Agrupa por `CLAVE_AGRUPACION` y muestra la suma total de `SUMA_GC` como la columna **SUMA**. 
+- **Submenú: GC Para Control Retro:**
+  - **Filtro:** Registros donde `PERIODO_IMPUTADO` < `PERIODO_LIQUIDADO`.
+  - **Lógica:** Agrupa por `CLAVE_AGRUPACION` y suma los montos retroactivos de GC.
 
 ---
 
 ## 3. Configuración del Sistema
-- **Función:** Vista dedicada a mapear columnas crudas a descripciones legibles (Ej: "Concepto 4440" => "Libre Disponibilidad B").
-- Esta configuración determina las reglas de inyección de los filtros. Si un concepto se mapea como Libre Disponibilidad (LD), los gráficos del Dashboard agruparán automáticamente todos los importes de esa columna en los reportes correspondientes.
+Esta sección es el "cerebro" del sistema, donde se definen las reglas de negocio que transforman los datos crudos en información analítica.
+
+### 3.1 Mapeo de Columnas (LD y GC)
+El sistema detecta automáticamente columnas en los archivos originales que sigan ciertos patrones de nomenclatura técnicos. Estas columnas son las que el usuario puede clasificar:
+- **Prefijos Detectados:** El buscador de configuración rastrea encabezados que comiencen con: `LIB_0`, `GC_0`, `LIB_D`, `LIB_N`, `LIB_SC`, `LIB_COB`, `LIB_B`.
+- **Libres Disponibilidad (LD):** El usuario selecciona qué columnas de este universo corresponden a incentivos o disponibilidades libres.
+- **Guardias Críticas (GC):** El usuario selecciona las columnas restantes para conformar el reporte de Guardias Críticas. 
+  - *Nota:* Una columna no puede pertenecer a ambos grupos simultáneamente.
+
+### 3.2 Campos Estándar Predefinidos
+Independientemente de la configuración de LD o GC, el sistema siempre proyecta y valida un conjunto de 33 campos base (Campos de Liquidación Completa). Entre los más importantes:
+- **Identificación:** `NRO_DOCUMENTO`, `DESCAGENTE`, `CUIT_CUIL`.
+- **Laborales:** `PLANTA`, `ORGANISMO`, `NIVEL`, `NUMERO_CARGO`, `FUNCION`.
+- **Financieros:** `TOT_HAB`, `LIQUIDO`, `COSTO_LABORAL_02`, `SUELDO_MANO`.
+- **Períodos:** `PERIODO_IMPUTADO`, `PERIODO_LIQUIDADO`.
+
+### 3.3 Impacto de la Configuración en Reportes
+La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_config.csv` dentro de la carpeta `configuracion_parametros/`. Su impacto es:
+1. **Reportes Específicos:** Los submenús "LD Liquidación" y "GC Liquidación" solo filtran registros que tengan valores distintos de cero en las columnas mapeadas.
+2. **Cálculo de Control GC:** La columna `SUMA_GC` de la tabla auxiliar `AuxGCLiquidacion.csv` se calcula sumando únicamente las columnas mapeadas como GC.
+3. **Dashboards:** Los gráficos de sectores (Tortas/Donuts) de LD y GC en el Informe de Liquidación se alimentan directamente de estos mapeos.
+4. **Resumen de Gestión:** Las hojas de cálculo de áreas inyectan estos montos si están configurados.
