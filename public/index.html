@@ -1350,6 +1350,47 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Acordeón: Códigos Guardias Críticas Importes -->
+            <div class="config-accordion-item" id="accordion-gc-codigos-efectores">
+                <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-gc-codigos-efectores')">
+                    <h2><i class="fas fa-barcode" style="margin-right: 10px; color: #9b59b6;"></i> Configuración de Códigos Guardias Críticas Importes</h2>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="config-accordion-content">
+                    <p style="color: #666; margin-bottom: 20px;">Gestión de códigos de guardias críticas importes. Puede agregar, editar o eliminar filas:</p>
+                    <div style="overflow-x: auto; margin-bottom: 20px; max-height: 600px;">
+                        <table id="table-gc-codigos-efectores" style="width: 100%; border-collapse: collapse;">
+                            <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                                <tr style="background: #f8f9fa; border-bottom: 2px solid #5c67f2;">
+                                    <th style="padding: 10px; text-align: left;">CLAVEUNICA</th>
+                                    <th style="padding: 10px; text-align: left;">DIAS</th>
+                                    <th style="padding: 10px; text-align: left;">TIPO DE GUARDIA</th>
+                                    <th style="padding: 10px; text-align: left;">NIVEL</th>
+                                    <th style="padding: 10px; text-align: left;">CODIGO</th>
+                                    <th style="padding: 10px; text-align: left;">IMPORTE</th>
+                                    <th style="padding: 10px; text-align: center; width: 50px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gc-codigos-efectores-list">
+                                <!-- Se llenará dinámicamente -->
+                                <tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">Cargando códigos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                        <button onclick="addGCCodigosEfectorRow()" style="background-color: #5c67f2;">
+                            <i class="fas fa-plus"></i> Agregar Fila
+                        </button>
+                        <div>
+                            <button id="btn-save-gc-codigos-efectores" onclick="saveGCCodigosEfectoresConfig()" style="background-color: #27ae60;">
+                                <i class="fas fa-save"></i> Guardar Códigos
+                            </button>
+                            <span id="save-status-gc-codigos-efectores" style="margin-left: 15px; font-size: 14px;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     </div>
@@ -2941,6 +2982,7 @@
 
                 // 6. Cargar configuración de Efectores
                 loadGCEfectoresConfig();
+                loadGCCodigosEfectoresConfig();
 
             } catch (err) {
                 console.error("Error cargando configuración:", err);
@@ -3073,6 +3115,107 @@
 
             try {
                 const response = await fetch('/api/config/save-gc-efectores', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    statusLabel.innerText = "✅ " + result.message;
+                    statusLabel.style.color = "#27ae60";
+                    setTimeout(() => { statusLabel.innerText = ""; }, 3000);
+                } else {
+                    throw new Error(result.error || "Fallo desconocido");
+                }
+            } catch (err) {
+                statusLabel.innerText = "❌ Error: " + err.message;
+                statusLabel.style.color = "#e74c3c";
+            }
+        }
+
+        async function loadGCCodigosEfectoresConfig() {
+            const container = document.getElementById('gc-codigos-efectores-list');
+            container.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">Cargando códigos...</td></tr>';
+
+            try {
+                const response = await fetch('/api/config/load-gc-codigos-efectores');
+                const data = await response.json();
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    container.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">No hay códigos configurados.</td></tr>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                data.forEach(row => {
+                    const claveUnicaKey = row['CLAVEUNICA'] !== undefined ? 'CLAVEUNICA' : '\uFEFFCLAVEUNICA';
+                    addGCCodigosEfectorRow(row[claveUnicaKey] || '', row['DIAS'] || '', row['TIPO DE GUARDIA'] || '', row['NIVEL'] || '', row['CODIGO'] || '', row['IMPORTE'] || '');
+                });
+            } catch (err) {
+                container.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #e74c3c;">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function updateClaveUnica(inputElement) {
+            const tr = inputElement.closest('tr');
+            const dias = tr.querySelector('.dias-input').value;
+            const tipo = tr.querySelector('.tipo-input').value;
+            const nivel = tr.querySelector('.nivel-input').value;
+            const claveUnicaInput = tr.querySelector('.claveunica-input');
+            claveUnicaInput.value = `${dias}${tipo}${nivel}`;
+        }
+
+        function addGCCodigosEfectorRow(clave = '', dias = '', tipo = '', nivel = '', codigo = '', importe = '') {
+            const container = document.getElementById('gc-codigos-efectores-list');
+            
+            if (container.querySelector('td[colspan="7"]')) {
+                container.innerHTML = '';
+            }
+
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #eee';
+            tr.innerHTML = `
+                <td style="padding: 5px;"><input type="text" class="claveunica-input" value="${clave}" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f8f9fa;" title="Calculado automáticamente"></td>
+                <td style="padding: 5px;"><input type="text" class="dias-input" value="${dias}" oninput="updateClaveUnica(this)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
+                <td style="padding: 5px;"><input type="text" class="tipo-input" value="${tipo}" oninput="updateClaveUnica(this)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
+                <td style="padding: 5px;"><input type="text" class="nivel-input" value="${nivel}" oninput="updateClaveUnica(this)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
+                <td style="padding: 5px;"><input type="text" class="codigo-input" value="${codigo}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
+                <td style="padding: 5px;"><input type="text" class="importe-input" value="${importe}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
+                <td style="padding: 5px; text-align: center;">
+                    <button onclick="this.closest('tr').remove()" style="background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            container.appendChild(tr);
+            if (!clave) {
+                updateClaveUnica(tr.querySelector('.dias-input'));
+            }
+        }
+
+        async function saveGCCodigosEfectoresConfig() {
+            const rows = document.querySelectorAll('#gc-codigos-efectores-list tr');
+            const data = [];
+            const statusLabel = document.getElementById('save-status-gc-codigos-efectores');
+
+            rows.forEach(row => {
+                const claveunica = row.querySelector('.claveunica-input')?.value;
+                const dias = row.querySelector('.dias-input')?.value;
+                const tipo = row.querySelector('.tipo-input')?.value;
+                const nivel = row.querySelector('.nivel-input')?.value;
+                const codigo = row.querySelector('.codigo-input')?.value;
+                const importe = row.querySelector('.importe-input')?.value;
+                if (claveunica || dias || tipo || nivel || codigo || importe) {
+                    data.push({ CLAVEUNICA: claveunica, DIAS: dias, TIPODEGUARDIA: tipo, NIVEL: nivel, CODIGO: codigo, IMPORTE: importe });
+                }
+            });
+
+            statusLabel.innerText = "Guardando...";
+            statusLabel.style.color = "#666";
+
+            try {
+                const response = await fetch('/api/config/save-gc-codigos-efectores', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)

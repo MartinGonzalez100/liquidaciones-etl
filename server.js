@@ -23,6 +23,7 @@ const CONFIG_DIR = path.join(__dirname, 'configuracion_parametros');
 const LD_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config.csv');
 const GC_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config.csv');
 const GC_EFECTORES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_efectores.csv');
+const GC_CODIGOS_IMPORTES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_codigos_importes.csv');
 
 //-----------
 
@@ -617,6 +618,44 @@ app.post('/api/config/save-gc-efectores', (req, res) => {
         });
         fs.writeFileSync(GC_EFECTORES_CONFIG_FILE, content, 'utf8');
         res.json({ success: true, message: 'Configuración de Efectores guardada correctamente' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 8. Cargar configuración de Códigos Guardias Críticas Importes
+app.get('/api/config/load-gc-codigos-efectores', (req, res) => {
+    if (!fs.existsSync(GC_CODIGOS_IMPORTES_CONFIG_FILE)) return res.json([]);
+
+    const results = [];
+    fs.createReadStream(GC_CODIGOS_IMPORTES_CONFIG_FILE, { encoding: 'latin1' })
+        .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
+        .on('data', (data) => {
+             results.push(data);
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 9. Guardar configuración de Códigos Guardias Críticas Importes (ABM)
+app.post('/api/config/save-gc-codigos-efectores', (req, res) => {
+    const data = req.body;
+    if (!Array.isArray(data)) return res.status(400).json({ error: 'Formato inválido. Debe ser un array.' });
+
+    try {
+        let content = 'CLAVEUNICA;DIAS;TIPO DE GUARDIA;NIVEL;CODIGO;IMPORTE\n';
+        data.forEach(row => {
+            const claveUnica = (row.CLAVEUNICA || '').replace(/;/g, ' ');
+            const dias = (row.DIAS || '').replace(/;/g, ' ');
+            const tipo = (row.TIPODEGUARDIA || '').replace(/;/g, ' ');
+            const nivel = (row.NIVEL || '').replace(/;/g, ' ');
+            const codigo = (row.CODIGO || '').replace(/;/g, ' ');
+            const importe = (row.IMPORTE || '').replace(/;/g, ' ');
+            
+            content += `${claveUnica};${dias};${tipo};${nivel};${codigo};${importe}\n`;
+        });
+        fs.writeFileSync(GC_CODIGOS_IMPORTES_CONFIG_FILE, content, 'latin1');
+        res.json({ success: true, message: 'Configuración de Códigos guardada correctamente' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
