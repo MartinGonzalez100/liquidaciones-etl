@@ -24,6 +24,7 @@ const LD_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config.csv');
 const GC_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config.csv');
 const GC_EFECTORES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_efectores.csv');
 const GC_CODIGOS_IMPORTES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_codigos_importes.csv');
+const GC_SDYF_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_sdyf.csv');
 
 //-----------
 
@@ -656,6 +657,39 @@ app.post('/api/config/save-gc-codigos-efectores', (req, res) => {
         });
         fs.writeFileSync(GC_CODIGOS_IMPORTES_CONFIG_FILE, content, 'latin1');
         res.json({ success: true, message: 'Configuración de Códigos guardada correctamente' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 10. Cargar configuración de Guardias Críticas Fines de Semanas y Feriados (SDYF)
+app.get('/api/config/load-gc-sdyf', (req, res) => {
+    if (!fs.existsSync(GC_SDYF_CONFIG_FILE)) return res.json([]);
+
+    const results = [];
+    fs.createReadStream(GC_SDYF_CONFIG_FILE, { encoding: 'utf8' })
+        .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
+        .on('data', (data) => {
+             results.push(data);
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 11. Guardar configuración de SDYF
+app.post('/api/config/save-gc-sdyf', (req, res) => {
+    const data = req.body;
+    if (!Array.isArray(data)) return res.status(400).json({ error: 'Formato inválido. Debe ser un array.' });
+
+    try {
+        let content = 'DIA;SDYF\n';
+        data.forEach(row => {
+            const dia = (row.DIA || '').replace(/;/g, ' ');
+            const sdyf = (row.SDYF || '').replace(/;/g, ' ');
+            content += `${dia};${sdyf}\n`;
+        });
+        fs.writeFileSync(GC_SDYF_CONFIG_FILE, content, 'utf8');
+        res.json({ success: true, message: 'Configuración de Fines de Semanas y Feriados guardada' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
