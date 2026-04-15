@@ -1227,6 +1227,21 @@ app.get('/api/topes-jubilatorios', (req, res) => {
 });
 
 // Endpoint para el procesamiento
+// API para obtener lotes trabajados
+app.get('/api/lotes-trabajados', (req, res) => {
+    const filePath = path.join(CONFIG_DIR, 'excel-convertidos.csv');
+    if (!fs.existsSync(filePath)) return res.json([]);
+    const results = [];
+    fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (data) => {
+            const key = data['excel-convertidos'] !== undefined ? 'excel-convertidos' : '\uFEFFexcel-convertidos';
+            if (data[key]) results.push(data[key]);
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
 app.post('/api/process', upload.array('excelFiles'), async (req, res) => {
 
     // El frontend nos dirá si debemos usar la carpeta por defecto o los archivos subidos
@@ -1267,6 +1282,20 @@ app.post('/api/process', upload.array('excelFiles'), async (req, res) => {
         // Ejecutar la lógica ETL centralizada
         const result = await ejecutarProcesoETL(excelFilesToProcess);
 
+        if (result.success) {
+            try {
+                const excelConvertidosCsvPath = path.join(CONFIG_DIR, 'excel-convertidos.csv');
+                let contentConvertidos = 'excel-convertidos\n';
+                excelFilesToProcess.forEach(fileName => {
+                    const nameWithoutExt = fileName.replace(/\.(xlsx|xls)$/i, '');
+                    contentConvertidos += `${nameWithoutExt}\n`;
+                });
+                fs.writeFileSync(excelConvertidosCsvPath, contentConvertidos, 'utf8');
+            } catch (err) {
+                console.error("Error al actualizar excel-convertidos.csv:", err);
+            }
+        }
+
         // Limpieza: Aunque los archivos ya están en EXCEL_DIR, para el modo 'upload' 
         // podríamos querer eliminarlos después de la unificación para evitar repetición.
         // MANTENDREMOS los archivos en la carpeta 'excel-a-convertir' para que la lógica 
@@ -1278,6 +1307,21 @@ app.post('/api/process', upload.array('excelFiles'), async (req, res) => {
         console.error('Error en el endpoint /api/process:', error);
         res.status(500).json({ success: false, message: 'Error interno del servidor: ' + error.message });
     }
+});
+
+// API para obtener lotes de novedades trabajados
+app.get('/api/lotes-novedades-trabajados', (req, res) => {
+    const filePath = path.join(CONFIG_DIR, 'excel-convertidos-novedades.csv');
+    if (!fs.existsSync(filePath)) return res.json([]);
+    const results = [];
+    fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (data) => {
+            const key = data['excel-convertidos-novedades'] !== undefined ? 'excel-convertidos-novedades' : '\uFEFFexcel-convertidos-novedades';
+            if (data[key]) results.push(data[key]);
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
 });
 
 // Endpoint para procesamiento de Novedades
@@ -1309,6 +1353,21 @@ app.post('/api/process-novedades', upload.array('excelFilesNovedades'), async (r
         }
 
         const result = await ejecutarProcesoNovedades(excelFilesToProcess);
+
+        if (result.success) {
+            try {
+                const excelConvertidosCsvPath = path.join(CONFIG_DIR, 'excel-convertidos-novedades.csv');
+                let contentConvertidos = 'excel-convertidos-novedades\n';
+                excelFilesToProcess.forEach(fileName => {
+                    const nameWithoutExt = fileName.replace(/\.(xlsx|xls)$/i, '');
+                    contentConvertidos += `${nameWithoutExt}\n`;
+                });
+                fs.writeFileSync(excelConvertidosCsvPath, contentConvertidos, 'utf8');
+            } catch (err) {
+                console.error("Error al actualizar excel-convertidos-novedades.csv:", err);
+            }
+        }
+
         res.json(result);
 
     } catch (error) {

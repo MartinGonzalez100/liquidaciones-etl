@@ -874,6 +874,21 @@
                     id="status-text-novedades">Esperando para iniciar el proceso de novedades...</span><span
                     id="loading-dots-novedades" style="color: #1f202c; display: none; font-size: 25px;"></span></div>
         </div>
+
+        <div style="display: flex; gap: 20px; align-items: flex-start; margin-top: 20px;">
+            <div id="lotes-trabajados-container" class="container" style="margin-top: 0; flex: 1;">
+                <h3 style="color: #4e73df; margin-bottom: 15px;"><i class="fas fa-file-excel" style="margin-right: 8px;"></i>Lotes de Liquidaciones Trabajados</h3>
+                <ul id="lotes-trabajados-list" style="list-style-type: none; padding: 0;">
+                    <li>Cargando lotes...</li>
+                </ul>
+            </div>
+            <div id="lotes-novedades-trabajados-container" class="container" style="margin-top: 0; flex: 1;">
+                <h3 style="color: #27ae60; margin-bottom: 15px;"><i class="fas fa-file-excel" style="margin-right: 8px;"></i>Lotes de Novedades Trabajadas</h3>
+                <ul id="lotes-novedades-trabajados-list" style="list-style-type: none; padding: 0;">
+                    <li>Cargando lotes...</li>
+                </ul>
+            </div>
+        </div>
         <div id="panel-tope-jubilatorio"
             style="display:none; background: #fdfdfd; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 25px; border-left: 6px solid #4e73df;">
             <h3 style="margin-top:0; color: #4e73df;"><i class="fas fa-calculator"></i>Configuración de Reporte
@@ -1857,6 +1872,7 @@
 
                 if (result.success) {
                     mostrarStatus(result.message, 'success');
+                    if (typeof loadLotesTrabajados === 'function') loadLotesTrabajados();
                 }
 
                 else {
@@ -1935,6 +1951,7 @@
 
                 if (result.success) {
                     showStatusNov(result.message + (result.unprocessedFiles ? " (Nota: hubieron archivos ignorados por no pertenecer al formato)" : ""), 'success');
+                    if (typeof loadLotesNovedadesTrabajados === 'function') loadLotesNovedadesTrabajados();
                     if (result.unprocessedFiles && result.unprocessedFiles.length > 0) {
                         alert("⚠️ Los siguientes archivos no fueron procesados porque no empiezan con prefijos válidos:\n" + result.unprocessedFiles.join("\n"));
                     }
@@ -3266,14 +3283,15 @@
         function toggleSubAccordion(headerElement) {
             const content = headerElement.nextElementSibling;
             const icon = headerElement.querySelector('i.fas.fa-chevron-down');
-            if (content.style.maxHeight) {
-                content.style.maxHeight = null;
-                content.style.padding = "0";
-                if(icon) icon.style.transform = "rotate(0deg)";
-            } else {
+            
+            if (!content.style.maxHeight || content.style.maxHeight === "0px" || content.style.maxHeight === "0") {
                 content.style.maxHeight = content.scrollHeight + "px";
                 content.style.padding = "15px";
                 if(icon) icon.style.transform = "rotate(180deg)";
+            } else {
+                content.style.maxHeight = "0px";
+                content.style.padding = "0px";
+                if(icon) icon.style.transform = "rotate(0deg)";
             }
         }
 
@@ -3793,6 +3811,48 @@
                 }
             }
         }
+        async function loadLotesTrabajados() {
+            try {
+                const response = await fetch('/api/lotes-trabajados');
+                const lotes = await response.json();
+                const list = document.getElementById('lotes-trabajados-list');
+                if (!list) return;
+                
+                if (lotes.length === 0) {
+                    list.innerHTML = '<li style="color: #999;">No hay lotes trabajados recientes.</li>';
+                } else {
+                    list.innerHTML = lotes.map(lote => `<li style="padding: 8px 0; border-bottom: 1px solid #eee;"><i class="fas fa-check-circle" style="color: #27ae60; margin-right: 8px;"></i>${lote}</li>`).join('');
+                }
+            } catch (err) {
+                console.error('Error cargando lotes:', err);
+                const list = document.getElementById('lotes-trabajados-list');
+                if (list) list.innerHTML = '<li style="color: #e74c3c;">Error al cargar los lotes.</li>';
+            }
+        }
+
+        async function loadLotesNovedadesTrabajados() {
+            try {
+                const response = await fetch('/api/lotes-novedades-trabajados');
+                const lotes = await response.json();
+                const list = document.getElementById('lotes-novedades-trabajados-list');
+                if (!list) return;
+                
+                if (lotes.length === 0) {
+                    list.innerHTML = '<li style="color: #999;">No hay lotes de novedades recientes.</li>';
+                } else {
+                    list.innerHTML = lotes.map(lote => `<li style="padding: 8px 0; border-bottom: 1px solid #eee;"><i class="fas fa-check-circle" style="color: #e67e22; margin-right: 8px;"></i>${lote}</li>`).join('');
+                }
+            } catch (err) {
+                console.error('Error cargando lotes novedades:', err);
+                const list = document.getElementById('lotes-novedades-trabajados-list');
+                if (list) list.innerHTML = '<li style="color: #e74c3c;">Error al cargar los lotes de novedades.</li>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLotesTrabajados();
+            loadLotesNovedadesTrabajados();
+        });
     </script>
 </body>
 
