@@ -875,7 +875,7 @@
                     id="loading-dots-novedades" style="color: #1f202c; display: none; font-size: 25px;"></span></div>
         </div>
 
-        <div style="display: flex; gap: 20px; align-items: flex-start; margin-top: 20px;">
+        <div id="lotes-wrapper" style="display: flex; gap: 20px; align-items: flex-start; margin-top: 20px;">
             <div id="lotes-trabajados-container" class="container" style="margin-top: 0; flex: 1;">
                 <h3 style="color: #4e73df; margin-bottom: 15px;"><i class="fas fa-file-excel" style="margin-right: 8px;"></i>Lotes de Liquidaciones Trabajados</h3>
                 <ul id="lotes-trabajados-list" style="list-style-type: none; padding: 0;">
@@ -1593,6 +1593,8 @@
             // Ocultar todos los contenedores principales
             conversionForm.style.display = 'none';
             document.getElementById('conversion-novedades-form').style.display = 'none';
+            const lotesWrapper = document.getElementById('lotes-wrapper');
+            if (lotesWrapper) lotesWrapper.style.display = 'none';
             liquidacionView.style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'none';
             document.getElementById('btn-toggle-edit').style.display = 'none';
@@ -1612,6 +1614,8 @@
             if (sectionId === 'conversion-form') {
                 conversionForm.style.display = 'block';
                 document.getElementById('conversion-novedades-form').style.display = 'block';
+                const lotesWrapper = document.getElementById('lotes-wrapper');
+                if (lotesWrapper) lotesWrapper.style.display = 'flex';
             }
             else if (sectionId === 'liquidacion-completa-view') {
                 liquidacionView.style.display = 'block';

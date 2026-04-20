@@ -7,13 +7,21 @@ Esta es la pantalla inicial del sistema, encargada de procesar archivos Excel en
 
 ### 1.1 Conversión de Liquidaciones
 - **Función:** Permite procesar los archivos de Liquidación.
-- **Acciones:**
+- **Acciones Principales:**
   - **Usar carpeta local:** Procesa todos los archivos `.xlsx` y `.xls` ubicados en la carpeta `excel-a-convertir/`.
   - **Subir archivos manualmente:** Abre un diálogo para seleccionar archivos Excel.
+  - **Borrado de Liquidación:** Elimina de forma segura y permanente los archivos procesados para reiniciar el proceso. Se encarga de vaciar todos los archivos contenidos dentro de tres directorios: 
+    - `excel-a-convertir/` (Archivos fuente originales).
+    - `csv-convertido/` (Versiones transformadas).
+    - `csv-unidos/` (Archivos consolidados finales como `liquidaciones_unificadas.csv`).
 - **Proceso (ETL):** Los archivos leídos son transformados a CSV. Luego son unificados en un único gran archivo llamado `liquidaciones_unificadas.csv`.
 
 ### 1.2 Conversión de Novedades
 - **Validación:** El sistema verifica que el nombre del archivo comience con ciertos prefijos válidos (`ld`, `reem`, `gc`, `residentes`, `criticidad`, `fortalecimiento`).
+- **Acción Adicional:**
+  - **Borrado de Novedad:** Elimina únicamente los archivos correspondientes a las dependencias de novedades, permitiendo mantener las liquidaciones intactas y reiniciar el ciclo de las novedades. Vacía por completo las siguientes carpetas:
+    - `excel-a-convertir-novedades/` (Archivos origen de novedades subidos).
+    - `csv-unidos-novedades/` (Lotes e informes generados de novedades).
 
 ---
 
@@ -107,3 +115,9 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
 2. **Cálculo de Control GC:** La columna `SUMA_GC` de la tabla auxiliar `AuxGCLiquidacion.csv` se calcula sumando únicamente las columnas mapeadas como GC.
 3. **Dashboards:** Los gráficos de sectores (Tortas/Donuts) de LD y GC en el Informe de Liquidación se alimentan directamente de estos mapeos.
 4. **Resumen de Gestión:** Las hojas de cálculo de áreas inyectan estos montos si están configurados.
+
+---
+
+## 4. Historial de Cambios (Abril 2026)
+- **Correcciones UI:** Se solucionó un bug de navegación donde el bloque de "Lotes de Liquidaciones Trabajados" y "Lotes de Novedades Trabajadas" permanecía visible al cambiar de pantalla. Se le asignó el identificador `lotes-wrapper` y lógica nativa en `showSection()` para ocultarse temporalmente.
+- **Parametrización del Asistente:** Se configuró el archivo `.antigravity_rules.md` para estandarizar los procesos automatizados de despliegue y documentación en el repositorio.
