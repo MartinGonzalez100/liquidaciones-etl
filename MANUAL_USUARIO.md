@@ -95,21 +95,29 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
 ## 3. Configuración del Sistema
 Esta sección es el "cerebro" del sistema, donde se definen las reglas de negocio que transforman los datos crudos en información analítica.
 
-### 3.1 Mapeo de Columnas (LD y GC)
+### 3.1 Temas Visuales y Paletas de Colores
+- **Función:** Permite al usuario personalizar la experiencia visual de toda la plataforma web. Esta configuración afecta a tablas, dashboards, barra de navegación y fondos, guardando la preferencia de manera persistente en la memoria local del navegador.
+- **Opciones Disponibles:**
+  - **Normal:** Interfaz gráfica base con diseño plano tradicional de alto contraste.
+  - **Pro:** Diseño moderno (estilo SaaS) con interfaz en tonos *slate*, sombras profundas flotantes, acentos blancos estructurales y tipografía actualizada.
+  - **Oscura:** Modo bajo contraste para descanso visual o ambientes nocturnos. Anula fondos blancos de manera inteligente y adapta las tablas de datos para una excelente legibilidad. Al exportar PDF, este modo aplica una corrección dinámica temporal de un segundo hacia la "vista Normal", logrando que las impresiones en hojas blancas no salgan vacías.
+  - **Siprosa Tucumán:** Paleta con identidad institucional basada en azules profundos, celestes de jerarquía y acentos en verde salud.
+
+### 3.2 Mapeo de Columnas (LD y GC)
 El sistema detecta automáticamente columnas en los archivos originales que sigan ciertos patrones de nomenclatura técnicos. Estas columnas son las que el usuario puede clasificar:
 - **Prefijos Detectados:** El buscador de configuración rastrea encabezados que comiencen con: `LIB_0`, `GC_0`, `LIB_D`, `LIB_N`, `LIB_SC`, `LIB_COB`, `LIB_B`.
 - **Libres Disponibilidad (LD):** El usuario selecciona qué columnas de este universo corresponden a incentivos o disponibilidades libres.
 - **Guardias Críticas (GC):** El usuario selecciona las columnas restantes para conformar el reporte de Guardias Críticas. 
   - *Nota:* Una columna no puede pertenecer a ambos grupos simultáneamente.
 
-### 3.2 Campos Estándar Predefinidos
+### 3.3 Campos Estándar Predefinidos
 Independientemente de la configuración de LD o GC, el sistema siempre proyecta y valida un conjunto de 33 campos base (Campos de Liquidación Completa). Entre los más importantes:
 - **Identificación:** `NRO_DOCUMENTO`, `DESCAGENTE`, `CUIT_CUIL`.
 - **Laborales:** `PLANTA`, `ORGANISMO`, `NIVEL`, `NUMERO_CARGO`, `FUNCION`.
 - **Financieros:** `TOT_HAB`, `LIQUIDO`, `COSTO_LABORAL_02`, `SUELDO_MANO`.
 - **Períodos:** `PERIODO_IMPUTADO`, `PERIODO_LIQUIDADO`.
 
-### 3.3 Impacto de la Configuración en Reportes
+### 3.4 Impacto de la Configuración en Reportes
 La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_config.csv` dentro de la carpeta `configuracion_parametros/`. Su impacto es:
 1. **Reportes Específicos:** Los submenús "LD Liquidación" y "GC Liquidación" solo filtran registros que tengan valores distintos de cero en las columnas mapeadas.
 2. **Cálculo de Control GC:** La columna `SUMA_GC` de la tabla auxiliar `AuxGCLiquidacion.csv` se calcula sumando únicamente las columnas mapeadas como GC.

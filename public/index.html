@@ -721,6 +721,154 @@
             max-height: 2000px;
             transition: max-height 0.5s ease-in, padding 0.3s ease;
         }
+
+        /* =========================================
+           SISTEMA DE TEMAS Y VARIABLES GLOBALES
+           ========================================= */
+        :root, body.theme-normal {
+            --bg-body: #f4f4f9;
+            --bg-sidebar: #333;
+            --bg-sidebar-hover: #575757;
+            --text-main: #333;
+            --text-muted: #666;
+            --bg-container: white;
+            --bg-header: #5c67f2;
+            --primary: #5c67f2;
+            --border-color: #ddd;
+            --border-radius: 8px;
+            --shadow-sm: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* --- THEME PRO --- */
+        body.theme-pro {
+            --bg-body: #f8fafc;
+            --bg-sidebar: #0f172a;
+            --bg-sidebar-hover: #1e293b;
+            --text-main: #334155;
+            --bg-container: #ffffff;
+            --primary: #3b82f6;
+            --bg-header: #3b82f6;
+            --border-radius: 16px;
+            --shadow-sm: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            background-color: var(--bg-body) !important;
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        body.theme-pro .container, body.theme-pro .kpi-card, body.theme-pro .breakdown-card {
+           border: 1px solid #e2e8f0 !important;
+        }
+        body.theme-pro .btn-convertir { box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); }
+
+        /* --- THEME DARK --- */
+        body.theme-dark {
+            --bg-body: #111827;
+            --bg-sidebar: #1f2937;
+            --bg-sidebar-hover: #374151;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --bg-container: #1f2937;
+            --bg-header: #4f46e5;
+            --primary: #818cf8;
+            --border-color: #374151;
+            --border-radius: 8px;
+            --shadow-sm: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            background-color: var(--bg-body) !important;
+            color: var(--text-main) !important;
+        }
+
+        /* --- THEME SIPROSA TUCUMAN --- */
+        body.theme-siprosa {
+            --bg-body: #e3f2fd;
+            --bg-sidebar: #004d99; /* Azul Tucuman */
+            --bg-sidebar-hover: #003366;
+            --text-main: #1a237e;
+            --bg-container: #ffffff;
+            --primary: #00b0ff; /* Celeste Tucuman */
+            --bg-header: #004d99;
+            --border-color: #bbdefb;
+            --border-radius: 6px;
+            --shadow-sm: 0 2px 10px rgba(0, 77, 153, 0.1);
+            background-color: var(--bg-body) !important;
+            color: var(--text-main) !important;
+        }
+
+        /* ====== APLICACIÓN DE VARIABLES (OVERRIDES GENERALES) ====== */
+        body.theme-pro .container, body.theme-dark .container, body.theme-siprosa .container,
+        body.theme-pro .kpi-card, body.theme-dark .kpi-card, body.theme-siprosa .kpi-card,
+        body.theme-pro .breakdown-card, body.theme-dark .breakdown-card, body.theme-siprosa .breakdown-card {
+            background-color: var(--bg-container) !important;
+            color: var(--text-main) !important;
+            border-radius: var(--border-radius) !important;
+            box-shadow: var(--shadow-sm) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        /* Sidebar overrides */
+        body.theme-pro .sidebar, body.theme-dark .sidebar, body.theme-siprosa .sidebar {
+            background-color: var(--bg-sidebar) !important;
+        }
+        body.theme-pro .sidebar a:hover, body.theme-dark .sidebar a:hover, body.theme-siprosa .sidebar a:hover {
+            background-color: var(--bg-sidebar-hover) !important;
+            color: white !important;
+        }
+        body.theme-pro .btn-convertir, body.theme-siprosa .btn-convertir, body.theme-dark .btn-convertir,
+        body.theme-pro button:not(.btn-filter):not(.closebtn):not(.filter-btn),
+        body.theme-dark button:not(.btn-filter):not(.closebtn):not(.filter-btn) {
+            background-color: var(--primary); 
+        }
+
+        /* Elements Overrides para Dark Mode (crucial por estilos en línea) */
+        body.theme-dark [style*="background: white"], body.theme-dark [style*="background: #fff"], 
+        body.theme-dark [style*="background:#fff"], body.theme-dark [style*="background: #fdfdfd"],
+        body.theme-dark [style*="background: #f9f9f9"], body.theme-dark [style*="background:#f0f0f0"],
+        body.theme-dark .config-accordion-item, body.theme-dark .theme-btn-card {
+            background-color: var(--bg-container) !important;
+            color: var(--text-main) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        body.theme-dark .config-accordion-header { background-color: var(--bg-sidebar) !important; border-bottom: 1px solid var(--border-color); }
+        body.theme-dark .config-accordion-header:hover { background-color: var(--bg-sidebar-hover) !important; }
+        body.theme-dark .config-accordion-item.active .config-accordion-header { background-color: #1a2333 !important; }
+        
+        body.theme-dark [style*="color: #333"], body.theme-dark [style*="color: #666"], 
+        body.theme-dark [style*="color: #999"], body.theme-dark [style*="color: #555"],
+        body.theme-dark h1, body.theme-dark h2, body.theme-dark h3, body.theme-dark p, body.theme-dark span,
+        body.theme-dark th, body.theme-dark td, body.theme-dark label, body.theme-dark li {
+            color: var(--text-main) !important;
+        }
+        body.theme-dark #configuracion-view * { color: var(--text-main) !important; }
+        
+        body.theme-dark input, body.theme-dark select, body.theme-dark textarea {
+            background-color: var(--bg-body) !important;
+            color: white !important; border-color: var(--border-color) !important;
+        }
+        
+        /* DataTables En modo oscuro */
+        body.theme-dark table.dataTable, body.theme-dark table.dataTable th, body.theme-dark table.dataTable td,
+        body.theme-dark table.dataTable tbody tr td.sorting_1, body.theme-dark table.dataTable tbody tr th.sorting_1 {
+            color: var(--text-main) !important; 
+            border-color: var(--border-color) !important;
+            background-color: transparent !important;
+        }
+        body.theme-dark table.dataTable tbody tr.odd, body.theme-dark table.dataTable tbody tr.odd td.sorting_1 { background-color: #1a2333 !important; }
+        body.theme-dark table.dataTable tbody tr.even, body.theme-dark table.dataTable tbody tr { background-color: var(--bg-container) !important; }
+        body.theme-dark table.dataTable tbody tr:hover, body.theme-dark table.dataTable tbody tr:hover td.sorting_1 { background-color: var(--bg-sidebar-hover) !important; }
+        body.theme-dark .dataTables_wrapper .dataTables_paginate .paginate_button { color: var(--text-main) !important; }
+
+        /* Estilo para los botones de Tema en Configuración */
+        .theme-btn-card {
+            flex: 1; min-width: 120px; padding: 25px 15px; border-radius: 10px; border: 2px solid #ddd;
+            text-align: center; cursor: pointer; transition: 0.3s; background: white; color: #333;
+        }
+        .theme-btn-card:hover { transform: translateY(-5px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+        .theme-btn-card h3 { margin: 10px 0 5px; font-size: 18px; }
+        .theme-btn-card p { margin: 0; font-size: 12px; color: #777; }
+        /* Tema Selected States */
+        .theme-btn-card.active-normal { border-color: #5c67f2; border-width: 3px; background: #f4f4f9; }
+        .theme-btn-card.active-pro { border-color: #4e73df; border-width: 3px; background: #eaecf4; }
+        .theme-btn-card.active-dark { border-color: #4f46e5; border-width: 3px; background: #111827; color: white !important; }
+        .theme-btn-card.active-siprosa { border-color: #00b0ff; border-width: 3px; background: #e3f2fd; }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -1286,6 +1434,39 @@
         <!-- VISTA CONFIGURACIÓN -->
         <div id="configuracion-view" class="container" style="display: none; background: transparent; box-shadow: none; padding: 0;">
             <h1 style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin-bottom: 20px;">Configuración de Parámetros</h1>
+
+            <!-- Acordeón: Paletas de Colores -->
+            <div class="config-accordion-item" id="accordion-theme">
+                <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-theme')">
+                    <h2><i class="fas fa-palette" style="margin-right: 10px; color: #e94560;"></i> Configuración de Paletas de Colores</h2>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="config-accordion-content" style="padding-top: 15px;">
+                    <p style="color: #666; margin-bottom: 20px;">Seleccione el tema visual de la aplicación. Al hacer clic, se aplicará inmediatamente y quedará guardado de forma permanente en su navegador.</p>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div class="theme-btn-card" id="theme-btn-normal" onclick="setTheme('normal')">
+                            <i class="fas fa-desktop" style="font-size: 24px; color: #5c67f2;"></i>
+                            <h3>Normal</h3>
+                            <p>Versión Clara Original</p>
+                        </div>
+                        <div class="theme-btn-card pro" id="theme-btn-pro" onclick="setTheme('pro')">
+                            <i class="fas fa-briefcase" style="font-size: 24px; color: #4e73df;"></i>
+                            <h3>Pro</h3>
+                            <p>Vista Profesional Limpia</p>
+                        </div>
+                        <div class="theme-btn-card dark" id="theme-btn-dark" onclick="setTheme('dark')">
+                            <i class="fas fa-moon" style="font-size: 24px; color: #818cf8;"></i>
+                            <h3>Oscura</h3>
+                            <p>Bajo Contraste (Cuidado Visual)</p>
+                        </div>
+                        <div class="theme-btn-card siprosa" id="theme-btn-siprosa" onclick="setTheme('siprosa')">
+                            <i class="fas fa-hospital" style="font-size: 24px; color: #00b0ff;"></i>
+                            <h3>Siprosa Tucumán</h3>
+                            <p>Colores Institucionales</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Acordeón: Libres Disponibilidad -->
             <div class="config-accordion-item" id="accordion-ld">
@@ -2508,6 +2689,9 @@
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
 
+            const currentTheme = localStorage.getItem('appTheme') || 'normal';
+            if (currentTheme !== 'normal') setTheme('normal');
+
             for (let i = 0; i <pages.length; i++) {
                 const pageEl = pages[i];
                 // Render page directly ignoring the parent grey background
@@ -2521,6 +2705,8 @@
                 // For A4 standard aspect ratio, a full height page will fit exactly
                 pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
             }
+
+            if (currentTheme !== 'normal') setTheme(currentTheme);
 
             pdf.save(`Informe_Gestion_Interna_${new Date().toISOString().split('T')[0]}.pdf`);
         }
@@ -3464,6 +3650,9 @@
                     console.warn("No se pudieron cargar los logos de la cabecera.", e);
                 }
 
+                const currentTheme = localStorage.getItem('appTheme') || 'normal';
+                if (currentTheme !== 'normal') setTheme('normal');
+
                 const canvas = await html2canvas(element, {
                     scale: 2,
                     useCORS: true,
@@ -3471,6 +3660,8 @@
                     backgroundColor: '#ffffff',
                     windowWidth: element.scrollWidth + 100 // Capturar ancho real
                 });
+
+                if (currentTheme !== 'normal') setTheme(currentTheme);
 
                 const imgData = canvas.toDataURL('image/jpeg', 0.8);
 
@@ -3853,7 +4044,47 @@
             }
         }
 
+        function setTheme(themeName) {
+            document.body.classList.remove('theme-normal', 'theme-pro', 'theme-dark', 'theme-siprosa');
+            
+            // Si bien el "normal" funge de fallback, le agregamos clase explícita
+            document.body.classList.add(`theme-${themeName}`);
+
+            localStorage.setItem('appTheme', themeName);
+
+            // Resaltar boton seleccionado en la configuracion
+            document.querySelectorAll('.theme-btn-card').forEach(btn => {
+                btn.classList.remove('active-normal', 'active-pro', 'active-dark', 'active-siprosa');
+            });
+            const activeBtn = document.getElementById(`theme-btn-${themeName}`);
+            if (activeBtn) {
+                activeBtn.classList.add(`active-${themeName}`);
+            }
+
+            // Actualizar Chart.js global config si esta cargado
+            // Asi los graficos de tarta y barras se ven legibles en Dark Mode
+            if (typeof Chart !== 'undefined') {
+                const isDark = themeName === 'dark';
+                Chart.defaults.color = isDark ? '#e8e8e8' : '#666';
+                Chart.defaults.borderColor = isDark ? '#2a3b5c' : '#ddd';
+                
+                // Forzar repintado interactivo si existen los graficos
+                for (let id in Chart.instances) {
+                    if (Chart.instances.hasOwnProperty(id)) {
+                        Chart.instances[id].update();
+                    }
+                }
+            }
+        }
+
+        function initTheme() {
+            // Leer desde la memoria del navegador y setear el color. Default: normal.
+            const savedTheme = localStorage.getItem('appTheme') || 'normal';
+            setTheme(savedTheme);
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
             loadLotesTrabajados();
             loadLotesNovedadesTrabajados();
         });
