@@ -115,9 +115,3 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
 2. **Cálculo de Control GC:** La columna `SUMA_GC` de la tabla auxiliar `AuxGCLiquidacion.csv` se calcula sumando únicamente las columnas mapeadas como GC.
 3. **Dashboards:** Los gráficos de sectores (Tortas/Donuts) de LD y GC en el Informe de Liquidación se alimentan directamente de estos mapeos.
 4. **Resumen de Gestión:** Las hojas de cálculo de áreas inyectan estos montos si están configurados.
-
----
-
-## 4. Historial de Cambios (Abril 2026)
-- **Correcciones UI:** Se solucionó un bug de navegación donde el bloque de "Lotes de Liquidaciones Trabajados" y "Lotes de Novedades Trabajadas" permanecía visible al cambiar de pantalla. Se le asignó el identificador `lotes-wrapper` y lógica nativa en `showSection()` para ocultarse temporalmente.
-- **Parametrización del Asistente:** Se configuró el archivo `.antigravity_rules.md` para estandarizar los procesos automatizados de despliegue y documentación en el repositorio.
