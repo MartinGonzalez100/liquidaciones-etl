@@ -90,6 +90,16 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
   - **Filtro:** Registros donde `PERIODO_IMPUTADO` < `PERIODO_LIQUIDADO`.
   - **Lógica:** Agrupa por `CLAVE_AGRUPACION` y suma los montos retroactivos de GC.
 
+### 2.8 Novedades Mensuales
+- **Función:** Es un módulo dedicado exclusivamente a la visualización y control de las novedades cargadas al sistema (Guardias Críticas, Residentes, etc.), listándolas por categoría.
+- **Novedades Mensuales (Resumen):** Haciendo clic en el menú principal "Novedades Mensuales", se despliega una vista de resumen mostrando un listado de todos los archivos (lotes generados) a partir de los documentos Excel de novedades que fueron previamente subidos y procesados.
+- **Submenús de Visualización de Datos (Tablas):**
+  - **Novedades GC:** Despliega una tabla consolidada con toda la información pertinente a Guardias Críticas subida por novedad.
+  - **Novedades GC Para Control:** Genera de forma automática (o lee, si ya existe) un cruce entre las novedades de Guardias Críticas y las configuraciones del sistema (efectores y calendario feriados/fines de semana), uniendo el DNI y el efector para visualizar de manera ágil el reporte consolidado.
+  - **Novedades Residentes:** Muestra el detalle tabular con los datos de las novedades correspondientes a la planta de Residentes.
+  - **Residentes - Criticidad:** Muestra el detalle de los datos procesados correspondientes a la categoría de Criticidad para Residentes.
+  - **Residentes - Fortalecimiento:** Muestra el detalle de los datos procesados para los complementos de Fortalecimiento de Residentes.
+
 ---
 
 ## 3. Configuración del Sistema

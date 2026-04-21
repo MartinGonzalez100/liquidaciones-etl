@@ -1398,6 +1398,129 @@ app.get('/api/novedades/resumen', (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+// NUEVA FUNCIONALIDAD: NOVEDADES GC PARA CONTROL
+async function generateAuxGcNovedades() {
+    const gcCsvPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'gc.csv');
+    const auxPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxGcNovedades.csv');
+
+    if (!fs.existsSync(gcCsvPath)) throw new Error('Archivo origen de Novedades GC no encontrado');
+
+    const efectoresMap = new Map();
+    if (fs.existsSync(GC_EFECTORES_CONFIG_FILE)) {
+        await new Promise((resolve, reject) => {
+            fs.createReadStream(GC_EFECTORES_CONFIG_FILE, { encoding: 'utf8' })
+                .pipe(csv())
+                .on('data', (data) => {
+                    const efectorKey = data['EFECTORES'] !== undefined ? 'EFECTORES' : '\uFEFFEFECTORES';
+                    const key = (data[efectorKey] || '').trim().toUpperCase();
+                    const val = (data['NUEVOS EFECTORES'] || '').trim();
+                    if (key) efectoresMap.set(key, val);
+                })
+                .on('end', resolve)
+                .on('error', reject);
+        });
+    }
+
+    const sdyfMap = new Map();
+    if (fs.existsSync(GC_SDYF_CONFIG_FILE)) {
+        await new Promise((resolve, reject) => {
+            fs.createReadStream(GC_SDYF_CONFIG_FILE, { encoding: 'utf8' })
+                .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
+                .on('data', (data) => {
+                    const dia = (data['DIA'] || '').trim();
+                    const sdyf = (data['SDYF'] || '').trim().toUpperCase();
+                    if (dia) sdyfMap.set(dia, sdyf);
+                })
+                .on('end', resolve)
+                .on('error', reject);
+        });
+    }
+
+    const results = [];
+    return new Promise((resolve, reject) => {
+        fs.createReadStream(gcCsvPath)
+            .pipe(csv())
+            .on('data', (row) => {
+                const efectorRaw = (row['Efector'] || '').trim().toUpperCase();
+                const transformado = efectoresMap.get(efectorRaw) || '';
+                
+                const doc = (row['Documento'] || '').trim();
+                const clave = doc + transformado; 
+                
+                let sdyfVal = '';
+                const fechaFormatMatch = (row['Fecha'] || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (fechaFormatMatch) {
+                    const diaStr = `${fechaFormatMatch[3]}/${fechaFormatMatch[2]}/${fechaFormatMatch[1]}`;
+                    const dictVal = sdyfMap.get(diaStr);
+                    if (dictVal === 'SI') sdyfVal = 'SI';
+                } else if ((row['Fecha'] || '').includes('/')) {
+                    // Por si la fecha ya vino formateada DD/MM/YYYY o similar
+                    let parts = row['Fecha'].split('/');
+                    if(parts[0].length === 4) { // YYYY/MM/DD
+                        const diaStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                        if (sdyfMap.get(diaStr) === 'SI') sdyfVal = 'SI';
+                    } else if (parts[2].length === 4) { // DD/MM/YYYY
+                        let d = parts[0].padStart(2, '0');
+                        let m = parts[1].padStart(2, '0');
+                        const diaStr = `${d}/${m}/${parts[2]}`;
+                        if (sdyfMap.get(diaStr) === 'SI') sdyfVal = 'SI';
+                    }
+                }
+
+                results.push({
+                    ...row,
+                    EfectorTransformado: transformado,
+                    clave: clave,
+                    SDYF: sdyfVal
+                });
+            })
+            .on('end', () => {
+                if (results.length === 0) {
+                    resolve(false);
+                    return;
+                }
+                const headers = Object.keys(results[0]);
+                const csvContent = [
+                    headers.join(','),
+                    ...results.map(r => headers.map(h => {
+                        let val = (r[h] !== undefined && r[h] !== null) ? r[h].toString() : '';
+                        if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+                            val = `"${val.replace(/"/g, '""')}"`;
+                        }
+                        return val;
+                    }).join(','))
+                ].join('\n');
+
+                fs.writeFileSync(auxPath, csvContent, 'utf8');
+                console.log(`[SERVER] ✅ AuxGcNovedades.csv generado.`);
+                resolve(true);
+            })
+            .on('error', reject);
+    });
+}
+
+app.get('/api/novedades/gc-para-control', async (req, res) => {
+    try {
+        const auxPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxGcNovedades.csv');
+        if (!fs.existsSync(auxPath)) {
+            await generateAuxGcNovedades();
+        }
+
+        if (!fs.existsSync(auxPath)) {
+            return res.json([]);
+        }
+
+        const results = [];
+        fs.createReadStream(auxPath)
+            .pipe(csv())
+            .on('data', (row) => results.push(row))
+            .on('end', () => res.json(results))
+            .on('error', (err) => res.status(500).json({ error: err.message }));
+    } catch (error) {
+        console.error('[SERVER] ❌ Error en /api/novedades/gc-para-control:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
 
 app.get('/api/novedades/:tipo', (req, res) => {
     const { tipo } = req.params;
