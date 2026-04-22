@@ -1467,11 +1467,17 @@ async function generateAuxGcNovedades() {
                     }
                 }
 
+                const prefijo = (sdyfVal === 'SI') ? 'S,DYF' : 'LAV';
+                const tipoGuardia = (row['Tipo Guardia'] || '').trim();
+                const tipoNivel = (row['Tipo Nivel'] || '').trim();
+                const claveImporte = prefijo + tipoGuardia + tipoNivel.charAt(0);
+
                 results.push({
                     ...row,
                     EfectorTransformado: transformado,
                     clave: clave,
-                    SDYF: sdyfVal
+                    SDYF: sdyfVal,
+                    clave_importe: claveImporte
                 });
             })
             .on('end', () => {
