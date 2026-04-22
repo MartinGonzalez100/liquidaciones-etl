@@ -1398,6 +1398,12 @@ app.get('/api/novedades/resumen', (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+// FUNCIÓN PARA NORMALIZAR CADENAS (Quitar acentos y estandarizar)
+function normalizeStr(str) {
+    if (!str) return '';
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+}
+
 // NUEVA FUNCIONALIDAD: NOVEDADES GC PARA CONTROL
 async function generateAuxGcNovedades() {
     const gcCsvPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'gc.csv');
@@ -1451,7 +1457,7 @@ async function generateAuxGcNovedades() {
                     let importe = parseFloat(val);
                     
                     if (key) {
-                        importesMap.set(key, isNaN(importe) ? 0 : importe);
+                        importesMap.set(normalizeStr(key), isNaN(importe) ? 0 : importe);
                     }
                 })
                 .on('end', resolve)
@@ -1494,10 +1500,11 @@ async function generateAuxGcNovedades() {
                 const tipoGuardia = (row['Tipo Guardia'] || '').trim();
                 const tipoNivel = (row['Tipo Nivel'] || '').trim();
                 const claveImporte = prefijo + tipoGuardia + tipoNivel.charAt(0);
+                const claveImporteNorm = normalizeStr(claveImporte);
 
                 // Nuevo cálculo de importe_guardia
                 const horas = parseFloat(row['Horas']) || 0;
-                const importeBase = importesMap.get(claveImporte) || 0;
+                const importeBase = importesMap.get(claveImporteNorm) || 0;
                 
                 let importeGuardiaFinal = 1; // Valor por defecto si no se encuentra o es cero
                 if (importeBase > 0) {
