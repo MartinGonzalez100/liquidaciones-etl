@@ -1560,6 +1560,13 @@ app.delete('/api/borrar-liquidacion', (req, res) => {
                 }
             }
         });
+
+        // También borrar el seguimiento de lotes trabajados
+        const trackingFile = path.join(CONFIG_DIR, 'excel-convertidos.csv');
+        if (fs.existsSync(trackingFile)) {
+            fs.unlinkSync(trackingFile);
+        }
+
         res.json({ success: true, message: 'Archivos de liquidación borrados correctamente.' });
     } catch (e) {
         console.error('Error al borrar archivos de liquidación:', e);
@@ -1584,6 +1591,13 @@ app.delete('/api/borrar-novedad', (req, res) => {
                 }
             }
         });
+
+        // También borrar el seguimiento de lotes de novedades trabajados
+        const trackingFile = path.join(CONFIG_DIR, 'excel-convertidos-novedades.csv');
+        if (fs.existsSync(trackingFile)) {
+            fs.unlinkSync(trackingFile);
+        }
+
         res.json({ success: true, message: 'Archivos de novedad borrados correctamente.' });
     } catch (e) {
         console.error('Error al borrar archivos de novedad:', e);

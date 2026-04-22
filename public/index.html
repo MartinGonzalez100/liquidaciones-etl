@@ -3984,6 +3984,7 @@
                     const result = await response.json();
                     if (response.ok) {
                         alert(result.message || 'Archivos borrados correctamente.');
+                        loadLotesTrabajados();
                     } else {
                         alert('Error: ' + result.error);
                     }
@@ -4000,6 +4001,7 @@
                     const result = await response.json();
                     if (response.ok) {
                         alert(result.message || 'Archivos borrados correctamente.');
+                        loadLotesNovedadesTrabajados();
                     } else {
                         alert('Error: ' + result.error);
                     }

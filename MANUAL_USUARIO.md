@@ -10,18 +10,20 @@ Esta es la pantalla inicial del sistema, encargada de procesar archivos Excel en
 - **Acciones Principales:**
   - **Usar carpeta local:** Procesa todos los archivos `.xlsx` y `.xls` ubicados en la carpeta `excel-a-convertir/`.
   - **Subir archivos manualmente:** Abre un diálogo para seleccionar archivos Excel.
-  - **Borrado de Liquidación:** Elimina de forma segura y permanente los archivos procesados para reiniciar el proceso. Se encarga de vaciar todos los archivos contenidos dentro de tres directorios: 
+- **Borrado de Liquidación:** Elimina de forma segura y permanente los archivos procesados para reiniciar el proceso. Se encarga de vaciar todos los archivos contenidos dentro de tres directorios: 
     - `excel-a-convertir/` (Archivos fuente originales).
     - `csv-convertido/` (Versiones transformadas).
     - `csv-unidos/` (Archivos consolidados finales como `liquidaciones_unificadas.csv`).
+  - **Lotes de Liquidaciones Trabajados:** Muestra un listado histórico de los nombres de archivos procesados exitosamente. Este listado se actualiza automáticamente tras cada proceso de conversión y se limpia de forma sincronizada al ejecutar el **Borrado de Liquidación**, eliminando el archivo de registro `excel-convertidos.csv`.
 - **Proceso (ETL):** Los archivos leídos son transformados a CSV. Luego son unificados en un único gran archivo llamado `liquidaciones_unificadas.csv`.
 
 ### 1.2 Conversión de Novedades
 - **Validación:** El sistema verifica que el nombre del archivo comience con ciertos prefijos válidos (`ld`, `reem`, `gc`, `residentes`, `criticidad`, `fortalecimiento`).
 - **Acción Adicional:**
-  - **Borrado de Novedad:** Elimina únicamente los archivos correspondientes a las dependencias de novedades, permitiendo mantener las liquidaciones intactas y reiniciar el ciclo de las novedades. Vacía por completo las siguientes carpetas:
-    - `excel-a-convertir-novedades/` (Archivos origen de novedades subidos).
-    - `csv-unidos-novedades/` (Lotes e informes generados de novedades).
+  - **Borrado de Novedad:** Elimina únicamente los archivos correspondientes a las dependencias de novedades, permitiendo reiniciar el ciclo sin afectar las liquidaciones. Vacía por completo:
+    - `excel-a-convertir-novedades/` (Archivos origen de novedades).
+    - `csv-unidos-novedades/` (Lotes e informes generados).
+  - **Lotes de Novedades Trabajadas:** Listado que rastrea los archivos de novedades integrados al sistema. Al igual que en liquidaciones, este panel se actualiza en tiempo real tras la carga y se vacía automáticamente al realizar el **Borrado de Novedad**, eliminando el archivo `excel-convertidos-novedades.csv`.
 
 ---
 
