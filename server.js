@@ -1436,6 +1436,29 @@ async function generateAuxGcNovedades() {
         });
     }
 
+    const importesMap = new Map();
+    if (fs.existsSync(GC_CODIGOS_IMPORTES_CONFIG_FILE)) {
+        await new Promise((resolve, reject) => {
+            fs.createReadStream(GC_CODIGOS_IMPORTES_CONFIG_FILE, { encoding: 'utf8' })
+                .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
+                .on('data', (data) => {
+                    const claveUnicaKey = data['CLAVEUNICA'] !== undefined ? 'CLAVEUNICA' : '\uFEFFCLAVEUNICA';
+                    const key = (data[claveUnicaKey] || '').trim();
+                    const rawImporte = (data['IMPORTE'] || '').trim();
+                    
+                    // Procesar importe (ej: " 230.000,00 ")
+                    let val = rawImporte.replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+                    let importe = parseFloat(val);
+                    
+                    if (key) {
+                        importesMap.set(key, isNaN(importe) ? 0 : importe);
+                    }
+                })
+                .on('end', resolve)
+                .on('error', reject);
+        });
+    }
+
     const results = [];
     return new Promise((resolve, reject) => {
         fs.createReadStream(gcCsvPath)
@@ -1472,12 +1495,22 @@ async function generateAuxGcNovedades() {
                 const tipoNivel = (row['Tipo Nivel'] || '').trim();
                 const claveImporte = prefijo + tipoGuardia + tipoNivel.charAt(0);
 
+                // Nuevo cálculo de importe_guardia
+                const horas = parseFloat(row['Horas']) || 0;
+                const importeBase = importesMap.get(claveImporte) || 0;
+                
+                let importeGuardiaFinal = 1; // Valor por defecto si no se encuentra o es cero
+                if (importeBase > 0) {
+                    importeGuardiaFinal = (importeBase / 10) * horas;
+                }
+
                 results.push({
                     ...row,
                     EfectorTransformado: transformado,
                     clave: clave,
                     SDYF: sdyfVal,
-                    clave_importe: claveImporte
+                    clave_importe: claveImporte,
+                    importe_guardia: importeGuardiaFinal
                 });
             })
             .on('end', () => {
