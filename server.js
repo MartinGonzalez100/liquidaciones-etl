@@ -1445,7 +1445,7 @@ async function generateAuxGcNovedades() {
     const importesMap = new Map();
     if (fs.existsSync(GC_CODIGOS_IMPORTES_CONFIG_FILE)) {
         await new Promise((resolve, reject) => {
-            fs.createReadStream(GC_CODIGOS_IMPORTES_CONFIG_FILE, { encoding: 'utf8' })
+            fs.createReadStream(GC_CODIGOS_IMPORTES_CONFIG_FILE, { encoding: 'latin1' })
                 .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
                 .on('data', (data) => {
                     const claveUnicaKey = data['CLAVEUNICA'] !== undefined ? 'CLAVEUNICA' : '\uFEFFCLAVEUNICA';
