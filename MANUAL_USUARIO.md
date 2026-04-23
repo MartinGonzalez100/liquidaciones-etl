@@ -91,16 +91,31 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
 - **Submenú: GC Para Control Retro:**
   - **Filtro:** Registros donde `PERIODO_IMPUTADO` < `PERIODO_LIQUIDADO`.
   - **Lógica:** Agrupa por `CLAVE_AGRUPACION` y suma los montos retroactivos de GC.
+- **Submenú: Control GC Liquidacion a Eps:**
+  - **Lógica:** Combina la base mensual de *GC Para Control* con los datos de *Novedades GC Para Control*. Realiza un cruce por el campo `CLAVE_AGRUPACION` (DNI + Efector) contra la `clave` de Novedades.
+  - **Columnas añadidas:** Muestra `Importes_Eps` con la suma de los montos cargados en Novedades, y `Control`, que calcula la diferencia exacta (`SUMA - Importes_Eps`). Si un agente en liquidación no posee novedades cargadas, su valor en `Importes_Eps` asume un 0.
 
 ### 2.8 Novedades Mensuales
 - **Función:** Es un módulo dedicado exclusivamente a la visualización y control de las novedades cargadas al sistema (Guardias Críticas, Residentes, etc.), listándolas por categoría.
 - **Novedades Mensuales (Resumen):** Haciendo clic en el menú principal "Novedades Mensuales", se despliega una vista de resumen mostrando un listado de todos los archivos (lotes generados) a partir de los documentos Excel de novedades que fueron previamente subidos y procesados.
 - **Submenús de Visualización de Datos (Tablas):**
   - **Novedades GC:** Despliega una tabla consolidada con toda la información pertinente a Guardias Críticas subida por novedad.
-  - **Novedades GC Para Control:** Genera de forma automática (o lee, si ya existe) un cruce entre las novedades de Guardias Críticas y las configuraciones del sistema (efectores y calendario feriados/fines de semana). Incluye la columna **clave_importe** (prefijo + tipo + nivel) e **importe_guardia**, calculada como: `(Importe Base / 10) * Horas`. Si el importe base es cero o no se encuentra, se asigna un valor de `1`.
+  - **Novedades GC Para Control:** Muestra los datos del archivo auxiliar `AuxGcNovedades.csv`, pero de forma **agrupada por la columna `clave`** (Documento + EfectorTransformado). La columna de `importe_guardia` representa la sumatoria total calculada para dicha clave, facilitando el cruce visual y algorítmico contra el sistema de Liquidaciones.
   - **Novedades Residentes:** Muestra el detalle tabular con los datos de las novedades correspondientes a la planta de Residentes.
   - **Residentes - Criticidad:** Muestra el detalle de los datos procesados correspondientes a la categoría de Criticidad para Residentes.
   - **Residentes - Fortalecimiento:** Muestra el detalle de los datos procesados para los complementos de Fortalecimiento de Residentes.
+
+### 2.8.1 Proceso de Generación y Cálculos de AuxGcNovedades
+El archivo `AuxGcNovedades.csv` es un pilar fundamental para el control cruzado. Se genera y calcula en tiempo real a partir del archivo base de novedades (`gc.csv`), aplicando las siguientes reglas de negocio (ETL):
+- **EfectorTransformado:** Analiza la columna original `Efector` y la cruza contra la base de datos de homologación (`GC_config_efectores.csv`), devolviendo el nombre estandarizado que coincide con las liquidaciones.
+- **clave:** Es la concatenación estricta de la columna `Documento` más el texto calculado en `EfectorTransformado`. Identifica de manera única a cada agente y su cargo hospitalario, permitiendo el "Match" directo contra la `CLAVE_AGRUPACION` del sistema de liquidaciones.
+- **SDYF (Sábado, Domingo y Feriado):** Evalúa la columna `Fecha` contra el calendario oficial del sistema (`GC_config_sdyf.csv`). Si la fecha figura y está marcada como "SI", el sistema inyecta la etiqueta `SI`.
+- **clave_importe:** Es el código maestro tarifario. Se construye dinámicamente uniendo 3 partes:
+  1. *Prefijo:* `S,DYF` (si la columna SDYF indica "SI") o `LAV` (Laborable normal).
+  2. *Tipo Guardia:* El string original, por ejemplo `CRÍTICA MÉDICOS`.
+  3. *Nivel:* El primer carácter del `Tipo Nivel` reportado (ej. "A.1" se convierte en "A").
+  Ejemplo de resultado: `LAVCRÍTICA MÉDICOSA`.
+- **importe_guardia:** Realiza una búsqueda algorítmica de la `clave_importe` (normalizando tildes y espacios) dentro de la tarifa oficial de códigos (`GC_config_codigos_importes.csv`). Una vez extraído el importe base, aplica la fórmula: `Importe Base * Horas`. En caso de que el código tarifario no exista o esté en cero, el sistema asigna el valor excepcional de `1` como alerta visual.
 
 ---
 

@@ -1508,7 +1508,7 @@ async function generateAuxGcNovedades() {
                 
                 let importeGuardiaFinal = 1; // Valor por defecto si no se encuentra o es cero
                 if (importeBase > 0) {
-                    importeGuardiaFinal = (importeBase / 10) * horas;
+                    importeGuardiaFinal = importeBase * horas;
                 }
 
                 results.push({
@@ -1556,14 +1556,116 @@ app.get('/api/novedades/gc-para-control', async (req, res) => {
             return res.json([]);
         }
 
-        const results = [];
+        const groupings = new Map();
         fs.createReadStream(auxPath)
             .pipe(csv())
-            .on('data', (row) => results.push(row))
-            .on('end', () => res.json(results))
+            .on('data', (row) => {
+                const clave = row.clave;
+                const importe = parseFloat(row.importe_guardia) || 0;
+                
+                if (!groupings.has(clave)) {
+                    // Keep the first row's data and initialize the sum
+                    groupings.set(clave, {
+                        ...row,
+                        importe_guardia: importe
+                    });
+                } else {
+                    // Just add to the sum
+                    const existing = groupings.get(clave);
+                    existing.importe_guardia += importe;
+                }
+            })
+            .on('end', () => {
+                // Convert Map values to array
+                const results = Array.from(groupings.values());
+                res.json(results);
+            })
             .on('error', (err) => res.status(500).json({ error: err.message }));
     } catch (error) {
         console.error('[SERVER] ❌ Error en /api/novedades/gc-para-control:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/gc-liquidacion-eps', async (req, res) => {
+    try {
+        // 1. Asegurar que AuxGCLiquidacion y AuxGcNovedades existen
+        await generateAuxGCLiquidacion();
+        const auxNovedadesPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxGcNovedades.csv');
+        if (!fs.existsSync(auxNovedadesPath)) {
+            await generateAuxGcNovedades();
+        }
+
+        // 2. Leer y agrupar Novedades por 'clave'
+        const novedadesMap = new Map();
+        if (fs.existsSync(auxNovedadesPath)) {
+            await new Promise((resolve, reject) => {
+                fs.createReadStream(auxNovedadesPath)
+                    .pipe(csv())
+                    .on('data', (row) => {
+                        const clave = row.clave;
+                        const importe = parseFloat(row.importe_guardia) || 0;
+                        novedadesMap.set(clave, (novedadesMap.get(clave) || 0) + importe);
+                    })
+                    .on('end', resolve)
+                    .on('error', reject);
+            });
+        }
+
+        // 3. Procesar Liquidacion (similar a processGCControl) y hacer el cruce
+        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
+        if (!fs.existsSync(auxLiqPath)) return res.status(404).json({ error: 'Archivo auxiliar de liquidacion no encontrado' });
+
+        const groupings = new Map();
+
+        fs.createReadStream(auxLiqPath)
+            .pipe(csv())
+            .on('data', (row) => {
+                const pImp = (row.PERIODO_IMPUTADO || '').trim();
+                const pLiq = (row.PERIODO_LIQUIDADO || '').trim();
+                
+                // Filtro: Solo periodo imputado == liquidado (Igual que GC Para Control normal)
+                if (pImp === pLiq) {
+                    const clave = row.CLAVE_AGRUPACION;
+                    if (!groupings.has(clave)) {
+                        groupings.set(clave, {
+                            ORGANISMO: row.ORGANISMO,
+                            NRO_DOCUMENTO: row.NRO_DOCUMENTO,
+                            NIVEL: row.NIVEL,
+                            NUMERO_LIQ: row.NUMERO_LIQ || '',
+                            DESCAGENTE: row.DESCAGENTE,
+                            PERIODO_IMPUTADO: row.PERIODO_IMPUTADO,
+                            NUMERO_CARGO: row.NUMERO_CARGO,
+                            PERIODO_LIQUIDADO: row.PERIODO_LIQUIDADO,
+                            SUMA: parseFloat(row.SUMA_GC) || 0,
+                            GC: '',
+                            CLAVE: clave
+                        });
+                    } else {
+                        const existing = groupings.get(clave);
+                        existing.SUMA += parseFloat(row.SUMA_GC) || 0;
+                    }
+                }
+            })
+            .on('end', () => {
+                const results = Array.from(groupings.values()).map(r => {
+                    const sumaLiq = r.SUMA;
+                    const importeEps = novedadesMap.get(r.CLAVE) || 0;
+                    const control = sumaLiq - importeEps;
+                    
+                    return {
+                        Importes_Eps: importeEps.toFixed(2),
+                        Control: control.toFixed(2),
+                        ...r,
+                        SUMA: sumaLiq.toFixed(2)
+                    };
+                });
+                res.json(results);
+            })
+            .on('error', (err) => res.status(500).json({ error: err.message }));
+
+    } catch (error) {
+        console.error('[SERVER] ❌ Error en /api/gc-liquidacion-eps:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
