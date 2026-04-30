@@ -28,7 +28,7 @@ Esta es la pantalla inicial del sistema, encargada de procesar archivos Excel en
 ---
 
 ## 2. Menú de Procesos (Barra Lateral)
-Aquí se encuentra la navegación principal hacia los reportes analíticos de los datos unificados.
+Aquí se encuentra la navegación principal hacia los reportes analíticos de los datos unificados. La interfaz utiliza un sistema de **acordeones interactivos** que agrupan los submenús por categorías lógicas (Informes, Liquidación Completa, Ley 100%, Acumulado Aporte Jub., Novedades Mensuales y Configuración de Parámetros). Al pasar el ratón sobre cada categoría, se desplegarán suavemente sus respectivas opciones.
 
 ### 2.1 Liquidación Completa
 - Muestra una tabla masiva utilizando *DataTables* con todos los registros encontrados en `liquidaciones_unificadas.csv`.

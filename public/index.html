@@ -104,6 +104,43 @@
             margin-left: 50px;
         }
 
+        .menu-accordion {
+            position: relative;
+        }
+
+        .menu-accordion-header {
+            display: flex !important;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+            opacity: 0;
+            background-color: #222;
+        }
+
+        .menu-accordion:hover .menu-accordion-content,
+        .menu-accordion-content:hover {
+            max-height: 800px;
+            opacity: 1;
+        }
+
+        .menu-accordion-content a {
+            padding-left: 50px !important;
+            font-size: 16px !important;
+            color: #bbb !important;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-accordion-content a:hover {
+            border-left: 3px solid #5c67f2;
+            background-color: #333 !important;
+            color: #fff !important;
+        }
+
         .main-content {
             transition: margin-left .5s;
             padding: 20px;
@@ -908,53 +945,71 @@
     <div id="mySidebar" class="sidebar">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
         <h2>Menú de Procesos</h2>
+        
         <a href="#" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
         <a href="#" id="menu-controles-manuales">Controles Manuales</a>
         <a href="#" id="menu-detalle-vs-detalle" style="padding-left: 50px; font-size: 16px; color: #a29bfe;">└─ Detalle vs Detalle</a>
-        <a href="#" id="menu-informes">Informes</a>
-        <a href="#" id="menu-dashboard-informe" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Informe de
-            Liquidación</a>
-        <a href="#" id="menu-informe-modelo"
-            style="display: none; padding-left: 50px; font-size: 16px; color: #a29bfe;">└─ Informe de
-            Gestión</a>
-        <a href="#" id="menu-liquidacion-completa">Liquidación Completa</a>
-        <a href="#" id="menu-observar-importes" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Observar
-            por Importes</a>
-        <a href="#" id="menu-observar-planta" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Observar
-            por Planta</a>
-        <a href="#" id="menu-gc-liquidacion-eps" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Control GC Liquidacion a Eps</a>
-        <a href="#" id="menu-reemplazos" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Reemplazos</a>
-        <a href="#" id="menu-ld-liquidacion" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ LD
-            Liquidación</a>
-        <a href="#" id="menu-gc-liquidacion" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ GC
-            Liquidación</a>
-        <a href="#" id="menu-gc-control" style="padding-left: 70px; font-size: 14px; color: #999;">└─ GC Para Control</a>
-        <a href="#" id="menu-gc-control-retro" style="padding-left: 70px; font-size: 14px; color: #999;">└─ GC Para Control Retro</a>
-        <a href="#" id="menu-residentes" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Residentes</a>
-        <a href="#" id="menu-acumulado"><i class="fas fa-calculator"></i> Acumulado Aporte Jub.</a>
-        <a href="#" id="menu-topes-jubilatorios" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Topes de Ap. Jubilatorios</a>
-        <a href="#" id="menu-ley100">Ley 100%</a>
-        <a href="#" id="menu-calculo-ley100" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Calculo de ley
-            100%</a>
-        <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')">Pago Familiar Discapacitado</a>
 
-        <a href="#" id="menu-novedades-mensuales"
-            style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px; color: #f1c40f;">
-            <i class="fas fa-calendar-alt"></i> Novedades Mensuales
-        </a>
-        <a href="#" id="menu-novedades-gc" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─ Novedades GC</a>
-        <a href="#" id="menu-novedades-gc-control" style="padding-left: 70px; font-size: 14px; color: #999;">└─ Novedades GC Para Control</a>
-        <a href="#" id="menu-novedades-residentes" style="padding-left: 50px; font-size: 16px; color: #bbb;">└─
-            Novedades Residentes</a>
-        <a href="#" id="menu-novedades-criticidad" style="padding-left: 70px; font-size: 14px; color: #999;">└─
-            Criticidad</a>
-        <a href="#" id="menu-novedades-fortalecimiento" style="padding-left: 70px; font-size: 14px; color: #999;">└─
-            Fortalecimiento</a>
+        <div class="menu-accordion">
+            <a href="#" id="menu-informes" class="menu-accordion-header">Informes <i class="fas fa-chevron-down" style="font-size: 14px; margin-right: 15px;"></i></a>
+            <div class="menu-accordion-content">
+                <a href="#" id="menu-dashboard-informe">└─ Informe de Liquidación</a>
+                <a href="#" id="menu-informe-modelo" style="display: none; color: #a29bfe !important;">└─ Informe de Gestión</a>
+            </div>
+        </div>
 
-        <a href="#" id="menu-configuracion"
-            style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px; color: #5c67f2;">
-            <i class="fas fa-cog"></i> Configuración de Parámetros
-        </a>
+        <div class="menu-accordion">
+            <a href="#" id="menu-liquidacion-completa" class="menu-accordion-header">Liquidación Completa <i class="fas fa-chevron-down" style="font-size: 14px; margin-right: 15px;"></i></a>
+            <div class="menu-accordion-content">
+                <a href="#" id="menu-observar-importes">└─ Observar por Importes</a>
+                <a href="#" id="menu-observar-planta">└─ Observar por Planta</a>
+                <a href="#" id="menu-gc-liquidacion-eps">└─ Control GC Liquidacion a Eps</a>
+                <a href="#" id="menu-reemplazos">└─ Reemplazos</a>
+                <a href="#" id="menu-ld-liquidacion">└─ LD Liquidación</a>
+                <a href="#" id="menu-gc-liquidacion">└─ GC Liquidación</a>
+                <a href="#" id="menu-gc-control" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ GC Para Control</a>
+                <a href="#" id="menu-gc-control-retro" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ GC Para Control Retro</a>
+                <a href="#" id="menu-residentes">└─ Residentes</a>
+            </div>
+        </div>
+
+        <div class="menu-accordion">
+            <a href="#" id="menu-ley100" class="menu-accordion-header">Ley 100% <i class="fas fa-chevron-down" style="font-size: 14px; margin-right: 15px;"></i></a>
+            <div class="menu-accordion-content">
+                <a href="#" id="menu-calculo-ley100">└─ Calculo de ley 100%</a>
+            </div>
+        </div>
+
+        <div class="menu-accordion">
+            <a href="#" id="menu-acumulado" class="menu-accordion-header"><i class="fas fa-calculator"></i> Acumulado Aporte Jub. <i class="fas fa-chevron-down" style="font-size: 14px; margin-right: 15px;"></i></a>
+            <div class="menu-accordion-content">
+                <a href="#" id="menu-topes-jubilatorios">└─ Topes de Ap. Jubilatorios</a>
+            </div>
+        </div>
+
+        <div class="menu-accordion">
+            <a href="#" id="menu-novedades-mensuales" class="menu-accordion-header" style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px; color: #f1c40f;">
+                <span><i class="fas fa-calendar-alt"></i> Novedades Mensuales</span> <i class="fas fa-chevron-down" style="font-size: 14px; margin-right: 15px; color: #f1c40f;"></i>
+            </a>
+            <div class="menu-accordion-content">
+                <a href="#" id="menu-novedades-gc">└─ Novedades GC</a>
+                <a href="#" id="menu-novedades-gc-control" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Novedades GC Para Control</a>
+                <a href="#" id="menu-novedades-residentes">└─ Novedades Residentes</a>
+                <a href="#" id="menu-novedades-criticidad" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Criticidad</a>
+                <a href="#" id="menu-novedades-fortalecimiento" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Fortalecimiento</a>
+            </div>
+        </div>
+
+        <div class="menu-accordion">
+            <a href="#" id="menu-configuracion" class="menu-accordion-header" style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px; color: #5c67f2;">
+                <span><i class="fas fa-cog"></i> Configuración de Parámetros</span> <i class="fas fa-chevron-down" style="font-size: 14px; margin-right: 15px; color: #5c67f2;"></i>
+            </a>
+            <div class="menu-accordion-content">
+                <!-- Por ahora sin submenús directos en el sidebar, pero preparado -->
+            </div>
+        </div>
+
+        <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')" style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px;">Pago Familiar Discapacitado</a>
     </div>
 
     <div id="editSidebar" class="sidebar-right">
