@@ -961,6 +961,7 @@
         <div class="menu-accordion">
             <a href="#" id="menu-liquidacion-completa" class="menu-accordion-header">Liquidación Completa <i class="fas fa-chevron-down" style="font-size: 14px; margin-right: 15px;"></i></a>
             <div class="menu-accordion-content">
+                <a href="#" id="menu-unicos-planta">└─ Unicos de Planta</a>
                 <a href="#" id="menu-observar-importes">└─ Observar por Importes</a>
                 <a href="#" id="menu-observar-planta">└─ Observar por Planta</a>
                 <a href="#" id="menu-gc-liquidacion-eps">└─ Control GC Liquidacion a Eps</a>
@@ -2389,6 +2390,18 @@
                     resetHelpIcon();
                     showSection('liquidacion-completa-view');
                     loadLiquidacionCompleta();
+                    closeNav();
+                });
+            }
+
+            // Asignar evento a Unicos de Planta
+            const menuUnicosPlanta = document.getElementById('menu-unicos-planta');
+            if (menuUnicosPlanta) {
+                menuUnicosPlanta.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    showSection('liquidacion-completa-view');
+                    loadDataAndRenderTable('/api/unicos-planta', 'Únicos de Planta');
                     closeNav();
                 });
             }

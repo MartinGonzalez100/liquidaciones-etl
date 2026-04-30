@@ -37,6 +37,10 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
   - **Todos:** Muestra el universo de datos completo, sin aplicar ninguna exclusión.
   - **Mensual:** Filtra la tabla mostrando **únicamente** los registros en los que el campo `PERIODO_IMPUTADO` coincide de forma exacta con el `PERIODO_LIQUIDADO` (ej. Imputado '202603' y Liquidado '202603'). Se excluyen las diferencias.
   - **Retroactivo:** Filtra la tabla mostrando **únicamente** los registros en los que el campo `PERIODO_IMPUTADO` es **diferente** al `PERIODO_LIQUIDADO` (ej. liquidando meses pasados en el mes actual).
+- **Submenú: Unicos de Planta:**
+  - Extrae de manera deduplicada los registros de personal de planta, mostrando únicamente el cargo más alto por cada agente (DNI).
+  - **Filtro de Planta:** Solo procesa los registros de `Permanente Interino`, `Permanente Titular`, `Transitorios`, `Residentes`, `Residentes Nacionales`, `RetVol2024-Permanente Titular` y `RetVol2024-Permanente Interino`.
+  - **Filtro Lógico:** Exige que los días trabajados sean mayores a cero (`D_TRAB > 0`) y que corresponda a liquidaciones del mes actual (`PERIODO_IMPUTADO == PERIODO_LIQUIDADO`).
 
 ### 2.2 Informe de Liquidación (Dashboard)
 - Es el cuadro de mando principal basado en gráficos y tablas agregadas por diferentes categorías: Planta, Área, Organismo, Reemplazos y configuraciones combinadas (LD, GC).

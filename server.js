@@ -127,6 +127,76 @@ app.get('/api/liquidacion-completa', (req, res) => {
         });
 });
 
+// NUEVO ENDPOINT: Unicos de Planta
+app.get('/api/unicos-planta', (req, res) => {
+    const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    const results = [];
+    const plantasValidas = [
+        'Permanente Interino', 
+        'Permanente Titular', 
+        'Transitorios',
+        'Residentes',
+        'Residentes Nacionales',
+        'RetVol2024-Permanente Titular',
+        'RetVol2024-Permanente Interino'
+    ];
+    
+    if (!fs.existsSync(csvPath)) {
+        console.error('[SERVER] ❌ Archivo CSV unificado no encontrado. Enviando 404.');
+        return res.status(404).json({ error: 'Archivo CSV unificado no encontrado. Ejecute primero la Conversión.' });
+    }
+
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            const planta = row.PLANTA ? row.PLANTA.trim() : '';
+            const dTrab = parseFloat(row.D_TRAB);
+            const pImputado = row.PERIODO_IMPUTADO ? row.PERIODO_IMPUTADO.trim() : '';
+            const pLiquidado = row.PERIODO_LIQUIDADO ? row.PERIODO_LIQUIDADO.trim() : '';
+
+            // 1. (PLANTA= Permanente Interino O Permanente titular O Transitorios)
+            // 2. (D_TRAB >0)
+            // 3. (PERIODO_IMPUTADO=PERIODO_LIQUIDADO)
+            if (plantasValidas.includes(planta) && !isNaN(dTrab) && dTrab > 0 && pImputado === pLiquidado) {
+                const projectedRow = {};
+                CAMPOS_LIQUIDACION.forEach(field => {
+                    projectedRow[field] = row[field] ?? '';
+                });
+                results.push(projectedRow);
+            }
+        })
+        .on('end', () => {
+            // 4. Ordenar por NRO_DOCUMENTO ASC, y NUMERO_CARGO DESC
+            results.sort((a, b) => {
+                const docA = String(a.NRO_DOCUMENTO).padStart(15, '0');
+                const docB = String(b.NRO_DOCUMENTO).padStart(15, '0');
+                if (docA < docB) return -1;
+                if (docA > docB) return 1;
+                
+                const cargoA = parseInt(a.NUMERO_CARGO) || 0;
+                const cargoB = parseInt(b.NUMERO_CARGO) || 0;
+                return cargoB - cargoA; // DESC
+            });
+
+            // 5. Dejar valores unicos tomando en cuenta NRO_DOCUMENTO (tomaremos el primero)
+            const unicos = [];
+            const dnisVistos = new Set();
+            for (const row of results) {
+                if (!dnisVistos.has(row.NRO_DOCUMENTO)) {
+                    dnisVistos.add(row.NRO_DOCUMENTO);
+                    unicos.push(row);
+                }
+            }
+
+            console.log(`[SERVER] ✅ Proceso Unicos de Planta completo. Registros filtrados y enviados: ${unicos.length}.`);
+            res.json(unicos);
+        })
+        .on('error', (error) => {
+            console.error('[SERVER] ❌ Error en el proceso de Unicos de Planta:', error.message);
+            res.status(500).json({ error: `Error interno: ${error.message}` });
+        });
+});
+
 // NUEVO ENDPOINT: Obtener datos filtrados para Residentes
 app.get('/api/residentes', (req, res) => {
     const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
