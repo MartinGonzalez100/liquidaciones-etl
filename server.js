@@ -385,6 +385,67 @@ app.get('/api/calculo-ley100', (req, res) => {
         });
 });
 
+// NUEVO ENDPOINT: Asignaciones Familiares
+app.get('/api/asignaciones-familiares', (req, res) => {
+    const isReempOnly = req.query.tipo === 'reemp';
+    const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    const results = [];
+
+    if (!fs.existsSync(csvPath)) {
+        console.error('[SERVER] ❌ Archivo CSV unificado no encontrado para Asignaciones Familiares. Enviando 404.');
+        return res.status(404).json({ error: 'Archivo CSV unificado no encontrado' });
+    }
+
+    const getPreviousMonth = (periodoStr) => {
+        if (!periodoStr || typeof periodoStr !== 'string' || !periodoStr.includes('/')) return periodoStr;
+        const parts = periodoStr.split('/');
+        if (parts.length !== 3) return periodoStr;
+        
+        const day = parts[0];
+        let month = parseInt(parts[1], 10);
+        let year = parseInt(parts[2], 10);
+        
+        if (month === 1) {
+            month = 12;
+            year -= 1;
+        } else {
+            month -= 1;
+        }
+        
+        return `${day}/${month.toString().padStart(2, '0')}/${year}`;
+    };
+
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (row) => {
+            const asigFam = parseFloat(row[' ASIG_FAM '] || row['ASIG_FAM']) || 0;
+            const dTrab = parseFloat(row.D_TRAB) || 0;
+            const planta = (row.PLANTA || '').trim();
+            const periodoImputado = (row.PERIODO_IMPUTADO || '').trim();
+            const periodoLiquidado = (row.PERIODO_LIQUIDADO || '').trim();
+
+            if (asigFam !== 0 && planta !== 'Reemplazante no permanente-LD' && dTrab > 0) {
+                if (isReempOnly && planta !== 'Reemplazante no permanente') return;
+
+                if (planta === 'Reemplazante no permanente') {
+                    if (periodoImputado === periodoLiquidado || periodoImputado === getPreviousMonth(periodoLiquidado)) {
+                        results.push(row);
+                    }
+                } else {
+                    if (periodoImputado === periodoLiquidado) {
+                        results.push(row);
+                    }
+                }
+            }
+        })
+        .on('end', () => {
+            res.json(results);
+        })
+        .on('error', (error) => {
+            res.status(500).json({ error: error.message });
+        });
+});
+
 // NUEVO ENDPOINT: Datos para el Dashboard (Informe de Liquidación)
 app.get('/api/dashboard-info', (req, res) => {
     const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);

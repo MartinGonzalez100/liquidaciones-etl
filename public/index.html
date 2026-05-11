@@ -982,7 +982,15 @@
         </div>
 
         <div class="menu-accordion">
-            <a href="#" id="menu-acumulado" class="menu-accordion-header"><i class="fas fa-calculator"></i> Acumulado Aporte Jub. <i class="fas fa-chevron-down" style="font-size: 14px; margin-right: 15px;"></i></a>
+            <a href="#" id="menu-asignaciones" class="menu-accordion-header"><span><i class="fas fa-child"></i> Asignaciones</span> <i class="fas fa-chevron-down" style="font-size: 14px; margin-right: 15px;"></i></a>
+            <div class="menu-accordion-content">
+                <a href="#" id="menu-asignaciones-familiares">└─ Asignaciones Familiares</a>
+                <a href="#" id="menu-asignaciones-familiares-reemp">└─ Asignaciones Familiares - Reemp</a>
+            </div>
+        </div>
+
+        <div class="menu-accordion">
+            <a href="#" id="menu-acumulado" class="menu-accordion-header"><span><i class="fas fa-calculator"></i> Acumulado Aporte Jub.</span> <i class="fas fa-chevron-down" style="font-size: 14px; margin-right: 15px;"></i></a>
             <div class="menu-accordion-content">
                 <a href="#" id="menu-topes-jubilatorios">└─ Topes de Ap. Jubilatorios</a>
             </div>
@@ -2593,6 +2601,28 @@
                     document.getElementById('panel-calculo-ley100').style.display = 'block';
                     document.getElementById('table-container').style.display = 'none';
                     document.getElementById('liquidacion-completa-view').style.display = 'none';
+                    closeNav();
+                });
+            }
+
+            // Conexión del menú Asignaciones Familiares
+            const menuAsigFam = document.getElementById('menu-asignaciones-familiares');
+            if (menuAsigFam) {
+                menuAsigFam.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    loadDataAndRenderTable('/api/asignaciones-familiares', 'Asignaciones Familiares');
+                    closeNav();
+                });
+            }
+
+            // Conexión del menú Asignaciones Familiares - Reemp
+            const menuAsigFamReemp = document.getElementById('menu-asignaciones-familiares-reemp');
+            if (menuAsigFamReemp) {
+                menuAsigFamReemp.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    loadDataAndRenderTable('/api/asignaciones-familiares?tipo=reemp', 'Asignaciones Familiares - Reemp');
                     closeNav();
                 });
             }

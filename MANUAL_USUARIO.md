@@ -121,6 +121,15 @@ El archivo `AuxGcNovedades.csv` es un pilar fundamental para el control cruzado.
   Ejemplo de resultado: `LAVCRÍTICA MÉDICOSA`.
 - **importe_guardia:** Realiza una búsqueda algorítmica de la `clave_importe` (normalizando tildes y espacios) dentro de la tarifa oficial de códigos (`GC_config_codigos_importes.csv`). Una vez extraído el importe base, aplica la fórmula: `Importe Base * Horas`. En caso de que el código tarifario no exista o esté en cero, el sistema asigna el valor excepcional de `1` como alerta visual.
 
+### 2.9 Asignaciones
+- **Función:** Módulo dedicado a mostrar reportes de los agentes que perciben Asignaciones Familiares, extrayendo los datos de la liquidación unificada basándose en reglas estrictas de periodo y tipo de planta.
+- **Filtros Base Universales:** Solo se toman en cuenta aquellos registros donde el monto liquidado de la asignación sea distinto de cero (`ASIG_FAM <> 0`), que además reporten días trabajados (`D_TRAB > 0`), y cuya planta de origen no sea explícitamente `Reemplazante no permanente-LD`.
+- **Submenú: Asignaciones Familiares:**
+  - Aplica los filtros base.
+  - **Lógica de Periodos:** Para todos los agentes, se requiere que el periodo imputado y el liquidado sean exactamente iguales. La única excepción a esta regla aplica a la planta de `Reemplazante no permanente`, donde el sistema también autoriza mostrar registros cuyo periodo imputado pertenezca a exactamente un mes anterior al periodo liquidado.
+- **Submenú: Asignaciones Familiares - Reemp:**
+  - Replica exactamente las lógicas del submenú principal, pero añade un filtro forzoso donde la planta del agente debe ser estrictamente `Reemplazante no permanente`.
+
 ---
 
 ## 3. Configuración del Sistema
