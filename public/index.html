@@ -1669,6 +1669,44 @@
                 </div>
             </div>
 
+            <!-- Acordeón: Asignaciones A3 -->
+            <div class="config-accordion-item" id="accordion-asig-a3">
+                <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-asig-a3')">
+                    <h2><i class="fas fa-users" style="margin-right: 10px; color: #1abc9c;"></i> Configuración de Asignaciones - Base Asignaciones A3</h2>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="config-accordion-content">
+                    <p style="color: #666; margin-bottom: 20px;">Gestión de Asignaciones Familiares A3. Puede agregar, editar o eliminar filas:</p>
+                    <div style="overflow-x: auto; margin-bottom: 20px; max-height: 600px;">
+                        <table id="table-asig-a3" style="width: 100%; border-collapse: collapse;">
+                            <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                                <tr style="background: #f8f9fa; border-bottom: 2px solid #5c67f2;">
+                                    <th style="padding: 10px; text-align: left;">DESCAGENTE</th>
+                                    <th style="padding: 10px; text-align: left;">NRO_DOCUMENTO</th>
+                                    <th style="padding: 10px; text-align: left;">ASIG_FAM</th>
+                                    <th style="padding: 10px; text-align: left;">PLANTA</th>
+                                    <th style="padding: 10px; text-align: left;">ORGANISMO</th>
+                                    <th style="padding: 10px; text-align: center; width: 50px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="asig-a3-list">
+                                <tr><td colspan="6" style="text-align: center; padding: 20px; color: #999;">Cargando asignaciones...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                        <button onclick="addAsigA3Row()" style="background-color: #5c67f2;">
+                            <i class="fas fa-plus"></i> Agregar Fila
+                        </button>
+                        <div>
+                            <button id="btn-save-asig-a3" onclick="saveAsigA3Config()" style="background-color: #27ae60;">
+                                <i class="fas fa-save"></i> Guardar Asignaciones A3
+                            </button>
+                            <span id="save-status-asig-a3" style="margin-left: 15px; font-size: 14px;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     </div>
@@ -3297,6 +3335,7 @@
                 loadGCEfectoresConfig();
                 loadGCCodigosEfectoresConfig();
                 loadGCSdyfConfig();
+                loadAsigA3Config();
 
             } catch (err) {
                 console.error("Error cargando configuración:", err);
@@ -4158,6 +4197,122 @@
                         Chart.instances[id].update();
                     }
                 }
+            }
+        }
+
+        async function loadAsigA3Config() {
+            const container = document.getElementById('asig-a3-list');
+            container.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #999;">Cargando asignaciones...</td></tr>';
+
+            try {
+                const response = await fetch('/api/config/load-asig-a3');
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Error al cargar asignaciones');
+
+                container.innerHTML = '';
+                if (data.length === 0) {
+                    addAsigA3Row();
+                    return;
+                }
+
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding: 5px;"><input type="text" value="${row.DESCAGENTE || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></td>
+                        <td style="padding: 5px;"><input type="text" value="${row.NRO_DOCUMENTO || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></td>
+                        <td style="padding: 5px;"><input type="text" value="${row[' ASIG_FAM '] || row.ASIG_FAM || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></td>
+                        <td style="padding: 5px;"><input type="text" value="${row.PLANTA || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></td>
+                        <td style="padding: 5px;"><input type="text" value="${row.ORGANISMO || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></td>
+                        <td style="padding: 5px; text-align: center;"><button onclick="deleteAsigA3Row(this)" style="background: #e74c3c; padding: 6px 10px; border-radius: 4px;"><i class="fas fa-trash"></i></button></td>
+                    `;
+                    container.appendChild(tr);
+                });
+            } catch (err) {
+                container.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: #e74c3c;">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function addAsigA3Row() {
+            const container = document.getElementById('asig-a3-list');
+            
+            if (container.querySelector('td[colspan="6"]')) {
+                container.innerHTML = '';
+            }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding: 5px;"><input type="text" placeholder="DESCAGENTE" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></td>
+                <td style="padding: 5px;"><input type="text" placeholder="NRO_DOCUMENTO" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></td>
+                <td style="padding: 5px;"><input type="text" placeholder="ASIG_FAM" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></td>
+                <td style="padding: 5px;"><input type="text" placeholder="PLANTA" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></td>
+                <td style="padding: 5px;"><input type="text" placeholder="ORGANISMO" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></td>
+                <td style="padding: 5px; text-align: center;"><button onclick="deleteAsigA3Row(this)" style="background: #e74c3c; padding: 6px 10px; border-radius: 4px;"><i class="fas fa-trash"></i></button></td>
+            `;
+            container.appendChild(tr);
+        }
+
+        function deleteAsigA3Row(btn) {
+            btn.closest('tr').remove();
+            
+            const container = document.getElementById('asig-a3-list');
+            if (container.children.length === 0) {
+                container.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #999;">No hay filas.</td></tr>';
+            }
+        }
+
+        async function saveAsigA3Config() {
+            const btn = document.getElementById('btn-save-asig-a3');
+            const statusLabel = document.getElementById('save-status-asig-a3');
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            btn.disabled = true;
+            statusLabel.innerText = '';
+
+            const rows = document.querySelectorAll('#asig-a3-list tr');
+            const data = [];
+
+            rows.forEach(tr => {
+                const inputs = tr.querySelectorAll('input');
+                if (inputs.length === 5) {
+                    const desc = inputs[0].value.trim();
+                    const nro = inputs[1].value.trim();
+                    const asig = inputs[2].value.trim();
+                    const planta = inputs[3].value.trim();
+                    const org = inputs[4].value.trim();
+                    if (desc || nro || asig || planta || org) {
+                        data.push({
+                            DESCAGENTE: desc,
+                            NRO_DOCUMENTO: nro,
+                            ASIG_FAM: asig,
+                            PLANTA: planta,
+                            ORGANISMO: org
+                        });
+                    }
+                }
+            });
+
+            try {
+                const response = await fetch('/api/config/save-asig-a3', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) throw new Error(result.error || 'Error al guardar');
+                
+                statusLabel.innerHTML = '<i class="fas fa-check-circle"></i> Guardado exitosamente';
+                statusLabel.style.color = '#27ae60';
+                
+                setTimeout(() => { statusLabel.innerText = ''; }, 3000);
+            } catch (err) {
+                statusLabel.innerHTML = '<i class="fas fa-times-circle"></i> Error: ' + err.message;
+                statusLabel.style.color = '#e74c3c';
+            } finally {
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar Asignaciones A3';
+                btn.disabled = false;
             }
         }
 

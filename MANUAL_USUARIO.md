@@ -154,3 +154,13 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
 2. **Cálculo de Control GC:** La columna `SUMA_GC` de la tabla auxiliar `AuxGCLiquidacion.csv` se calcula sumando únicamente las columnas mapeadas como GC.
 3. **Dashboards:** Los gráficos de sectores (Tortas/Donuts) de LD y GC en el Informe de Liquidación se alimentan directamente de estos mapeos.
 4. **Resumen de Gestión:** Las hojas de cálculo de áreas inyectan estos montos si están configurados.
+
+### 3.5 Configuración de Asignaciones (Base A3)
+- **Función:** Permite la gestión (Alta, Baja, Modificación) de los datos de base de Asignaciones Familiares correspondientes al Área 3, desde una tabla interactiva en la interfaz.
+- **Archivo de Persistencia:** Toda modificación realizada a través de la interfaz visual se guarda directamente en el archivo `Asig_A3_config_agentes_base.csv` ubicado en la carpeta `configuracion_parametros/`.
+- **Columnas Administrables:**
+  - `DESCAGENTE`: Nombre y apellido del agente.
+  - `NRO_DOCUMENTO`: Número de documento identificatorio.
+  - `ASIG_FAM`: Monto de la asignación familiar.
+  - `PLANTA`: Categoría o régimen de contratación (Ej. Reemplazante no permanente).
+  - `ORGANISMO`: Efector o entidad de prestación de servicio.

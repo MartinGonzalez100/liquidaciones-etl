@@ -25,6 +25,7 @@ const GC_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config.csv');
 const GC_EFECTORES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_efectores.csv');
 const GC_CODIGOS_IMPORTES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_codigos_importes.csv');
 const GC_SDYF_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_sdyf.csv');
+const ASIG_A3_CONFIG_FILE = path.join(CONFIG_DIR, 'Asig_A3_config_agentes_base.csv');
 
 //-----------
 
@@ -760,6 +761,42 @@ app.post('/api/config/save-gc-sdyf', (req, res) => {
         });
         fs.writeFileSync(GC_SDYF_CONFIG_FILE, content, 'utf8');
         res.json({ success: true, message: 'Configuración de Fines de Semanas y Feriados guardada' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 12. Cargar configuración de Asignaciones A3
+app.get('/api/config/load-asig-a3', (req, res) => {
+    if (!fs.existsSync(ASIG_A3_CONFIG_FILE)) return res.json([]);
+
+    const results = [];
+    fs.createReadStream(ASIG_A3_CONFIG_FILE, { encoding: 'latin1' })
+        .pipe(csv({ mapHeaders: ({ header }) => header.trim() }))
+        .on('data', (data) => {
+             results.push(data);
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 13. Guardar configuración de Asignaciones A3
+app.post('/api/config/save-asig-a3', (req, res) => {
+    const data = req.body;
+    if (!Array.isArray(data)) return res.status(400).json({ error: 'Formato inválido. Debe ser un array.' });
+
+    try {
+        let content = 'DESCAGENTE,NRO_DOCUMENTO, ASIG_FAM ,PLANTA,ORGANISMO\n';
+        data.forEach(row => {
+            const desc = (row.DESCAGENTE || '').replace(/,/g, ' ');
+            const nro = (row.NRO_DOCUMENTO || '').replace(/,/g, ' ');
+            const asig = (row[' ASIG_FAM '] || row.ASIG_FAM || '').replace(/,/g, ' ');
+            const planta = (row.PLANTA || '').replace(/,/g, ' ');
+            const org = (row.ORGANISMO || '').replace(/,/g, ' ');
+            content += `${desc},${nro},${asig},${planta},${org}\n`;
+        });
+        fs.writeFileSync(ASIG_A3_CONFIG_FILE, content, 'latin1');
+        res.json({ success: true, message: 'Configuración de Asignaciones A3 guardada correctamente' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
