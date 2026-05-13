@@ -105,11 +105,25 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
 - **Submenús de Visualización de Datos (Tablas):**
   - **Novedades GC:** Despliega una tabla consolidada con toda la información pertinente a Guardias Críticas subida por novedad.
   - **Novedades GC Para Control:** Muestra los datos del archivo auxiliar `AuxGcNovedades.csv`, pero de forma **agrupada por la columna `clave`** (Documento + EfectorTransformado). La columna de `importe_guardia` representa la sumatoria total calculada para dicha clave, facilitando el cruce visual y algorítmico contra el sistema de Liquidaciones.
-  - **Novedades Residentes:** Muestra el detalle tabular con los datos de las novedades correspondientes a la planta de Residentes.
-  - **Residentes - Criticidad:** Muestra el detalle de los datos procesados correspondientes a la categoría de Criticidad para Residentes.
-  - **Residentes - Fortalecimiento:** Muestra el detalle de los datos procesados para los complementos de Fortalecimiento de Residentes.
+  - **Novedades Residentes:** Despliega el listado completo de los registros contenidos en el archivo `residentes.csv`. Este reporte es dinámico y muestra toda la información biográfica, administrativa y de haberes de la planta de Residentes procesada.
+  - **Residentes - Criticidad:** Muestra específicamente el detalle de los datos correspondientes a la categoría de Criticidad, extrayendo los datos del archivo `criticidad.csv`.
+  - **Residentes - Fortalecimiento:** Muestra el detalle de los complementos de Fortalecimiento a partir del archivo `fortalecimiento.csv`.
 
-### 2.8.1 Proceso de Generación y Cálculos de AuxGcNovedades
+#### 2.8.1 Funcionamiento y Limpieza de Datos (Fix de Visualización)
+Para garantizar la integridad de las tablas y evitar errores de visualización (como filas rotas o datos desplazados), el sistema aplica un proceso de **Limpieza Celular Automática** durante la conversión de Excel a CSV:
+- **Remoción de Saltos de Línea:** El sistema detecta automáticamente si existen saltos de línea (`Enter`) dentro de una celda (común en campos de nombres o resoluciones largas) y los reemplaza por espacios. Esto garantiza que cada agente ocupe exactamente una fila en la tabla y que el parser de CSV no interprete erróneamente el fin de un registro.
+- **Normalización de Texto:** Se eliminan espacios en blanco accidentales (trim) y se asegura la codificación correcta de caracteres especiales.
+
+#### 2.8.2 Campos Detallados en Novedades Residentes
+La tabla de Residentes incluye los siguientes campos clave para el control de la auditoría:
+- **DNI / Apellido y Nombre:** Identificación unívoca del agente.
+- **ORGANISMO:** Efector asignado.
+- **RESIDENCIA / MODALIDAD:** Especialidad en formación y tipo de beca/residencia.
+- **Resolución / DescrpResol:** Datos del acto administrativo (altas, promociones, reasignaciones).
+- **Importe Escala Criticidad 003-31:** Monto asignado por criticidad.
+- **Importe Escala Forta. 003-91:** Monto asignado por fortalecimiento.
+
+### 2.8.3 Proceso de Generación y Cálculos de AuxGcNovedades
 El archivo `AuxGcNovedades.csv` es un pilar fundamental para el control cruzado. Se genera y calcula en tiempo real a partir del archivo base de novedades (`gc.csv`), aplicando las siguientes reglas de negocio (ETL):
 - **EfectorTransformado:** Analiza la columna original `Efector` y la cruza contra la base de datos de homologación (`GC_config_efectores.csv`), devolviendo el nombre estandarizado que coincide con las liquidaciones.
 - **clave:** Es la concatenación estricta de la columna `Documento` más el texto calculado en `EfectorTransformado`. Identifica de manera única a cada agente y su cargo hospitalario, permitiendo el "Match" directo contra la `CLAVE_AGRUPACION` del sistema de liquidaciones.

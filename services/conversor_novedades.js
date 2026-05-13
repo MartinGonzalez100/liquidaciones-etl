@@ -28,6 +28,19 @@ function convertirExcelACsvNovedades(excelFileName) {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
 
+        // --- LIMPIEZA DE CELDAS: Reemplazar saltos de línea para evitar romper el CSV ---
+        Object.keys(worksheet).forEach(cellId => {
+            if (cellId[0] === '!') return; // Ignorar metadatos
+            const cell = worksheet[cellId];
+            if (cell.v && typeof cell.v === 'string') {
+                cell.v = cell.v.replace(/[\r\n]+/g, ' ');
+                // Actualizar el valor formateado si existe
+                if (cell.w) {
+                    cell.w = cell.w.replace(/[\r\n]+/g, ' ');
+                }
+            }
+        });
+
         const csv = XLSX.utils.sheet_to_csv(worksheet, { FS: ',' });
 
         fs.writeFileSync(outputPath, csv, 'utf8');
