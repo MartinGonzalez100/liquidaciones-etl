@@ -98,6 +98,8 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
 - **Submenú: Control GC Liquidacion a Eps:**
   - **Lógica:** Combina la base mensual de *GC Para Control* con los datos de *Novedades GC Para Control*. Realiza un cruce por el campo `CLAVE_AGRUPACION` (DNI + Efector) contra la `clave` de Novedades.
   - **Columnas añadidas:** Muestra `Importes_Eps` con la suma de los montos cargados en Novedades, y `Control`, que calcula la diferencia exacta (`SUMA - Importes_Eps`). Si un agente en liquidación no posee novedades cargadas, su valor en `Importes_Eps` asume un 0.
+- **Submenú: Control GC No Liquidados:**
+  - **Lógica:** Identifica aquellas Novedades que NO fueron procesadas o liquidadas en el sistema contable final. Compara la `clave` de "Novedades GC Para Control" con las claves liquidadas `CLAVE_AGRUPACION` de "GC Para Control", y visualiza exclusivamente aquellas novedades huérfanas (sin contrapartida en las liquidaciones mensuales).
 
 ### 2.8 Novedades Mensuales
 - **Función:** Es un módulo dedicado exclusivamente a la visualización y control de las novedades cargadas al sistema (Guardias Críticas, Residentes, etc.), listándolas por categoría.

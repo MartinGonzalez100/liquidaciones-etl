@@ -1838,6 +1838,69 @@ app.get('/api/gc-liquidacion-eps', async (req, res) => {
     }
 });
 
+app.get('/api/gc-no-liquidados', async (req, res) => {
+    try {
+        // 1. Asegurar que AuxGCLiquidacion y AuxGcNovedades existen
+        await generateAuxGCLiquidacion();
+        const auxNovedadesPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxGcNovedades.csv');
+        if (!fs.existsSync(auxNovedadesPath)) {
+            await generateAuxGcNovedades();
+        }
+
+        // 2. Leer "GC Para Control" y guardar sus CLAVEs
+        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
+        if (!fs.existsSync(auxLiqPath)) return res.status(404).json({ error: 'Archivo auxiliar de liquidacion no encontrado' });
+
+        const clavesLiquidadas = new Set();
+        await new Promise((resolve, reject) => {
+            fs.createReadStream(auxLiqPath)
+                .pipe(csv())
+                .on('data', (row) => {
+                    const pImp = (row.PERIODO_IMPUTADO || '').trim();
+                    const pLiq = (row.PERIODO_LIQUIDADO || '').trim();
+                    if (pImp === pLiq) {
+                        clavesLiquidadas.add(row.CLAVE_AGRUPACION);
+                    }
+                })
+                .on('end', resolve)
+                .on('error', reject);
+        });
+
+        // 3. Leer Novedades y filtrar las que NO están en clavesLiquidadas
+        if (!fs.existsSync(auxNovedadesPath)) {
+            return res.json([]);
+        }
+
+        const groupings = new Map();
+        fs.createReadStream(auxNovedadesPath)
+            .pipe(csv())
+            .on('data', (row) => {
+                const clave = row.clave;
+                if (!clavesLiquidadas.has(clave)) {
+                    const importe = parseFloat(row.importe_guardia) || 0;
+                    if (!groupings.has(clave)) {
+                        groupings.set(clave, {
+                            ...row,
+                            importe_guardia: importe
+                        });
+                    } else {
+                        const existing = groupings.get(clave);
+                        existing.importe_guardia += importe;
+                    }
+                }
+            })
+            .on('end', () => {
+                const results = Array.from(groupings.values());
+                res.json(results);
+            })
+            .on('error', (err) => res.status(500).json({ error: err.message }));
+
+    } catch (error) {
+        console.error('[SERVER] ❌ Error en /api/gc-no-liquidados:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/api/novedades/:tipo', (req, res) => {
     const { tipo } = req.params;
     const csvPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, `${tipo}.csv`);

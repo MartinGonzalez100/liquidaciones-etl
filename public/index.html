@@ -965,6 +965,7 @@
                 <a href="#" id="menu-observar-importes">└─ Observar por Importes</a>
                 <a href="#" id="menu-observar-planta">└─ Observar por Planta</a>
                 <a href="#" id="menu-gc-liquidacion-eps">└─ Control GC Liquidacion a Eps</a>
+                <a href="#" id="menu-gc-no-liquidados" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Control GC No Liquidados</a>
                 <a href="#" id="menu-reemplazos">└─ Reemplazos</a>
                 <a href="#" id="menu-ld-liquidacion">└─ LD Liquidación</a>
                 <a href="#" id="menu-gc-liquidacion">└─ GC Liquidación</a>
@@ -2529,6 +2530,17 @@
                     e.preventDefault();
                     resetHelpIcon();
                     loadDataAndRenderTable('/api/gc-liquidacion-eps', 'Control GC Liquidacion a Eps');
+                    closeNav();
+                });
+            }
+
+            // --- CONTROL GC NO LIQUIDADOS ---
+            const menuGCNoLiquidados = document.getElementById('menu-gc-no-liquidados');
+            if (menuGCNoLiquidados) {
+                menuGCNoLiquidados.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    loadDataAndRenderTable('/api/gc-no-liquidados', 'Control GC No Liquidados');
                     closeNav();
                 });
             }
