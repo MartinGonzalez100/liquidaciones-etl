@@ -31,7 +31,7 @@ Esta es la pantalla inicial del sistema, encargada de procesar archivos Excel en
 Aquí se encuentra la navegación principal hacia los reportes analíticos de los datos unificados. La interfaz utiliza un sistema de **acordeones interactivos** que agrupan los submenús por categorías lógicas (Informes, Liquidación Completa, Ley 100%, Acumulado Aporte Jub., Novedades Mensuales y Configuración de Parámetros). Al pasar el ratón sobre cada categoría, se desplegarán suavemente sus respectivas opciones.
 
 ### 2.1 Liquidación Completa
-- Muestra una tabla masiva utilizando *DataTables* con todos los registros encontrados en `liquidaciones_unificadas.csv`.
+- Muestra una tabla masiva utilizando *DataTables* con **todos** los registros encontrados en `liquidaciones_unificadas.csv`, permitiendo visualizar el padrón completo sin exclusiones (incluyendo aquellos registros donde el `PERIODO_IMPUTADO` es distinto al `PERIODO_LIQUIDADO`).
 - **Filtros UI (Buscador universal):** Permite filtrar cualquier palabra clave (nombre, DNI, área, planta) en tiempo real.
 - **Filtros de Período (Botones Superiores):**
   - **Todos:** Muestra el universo de datos completo, sin aplicar ninguna exclusión.

@@ -99,21 +99,16 @@ app.get('/api/liquidacion-completa', (req, res) => {
         .pipe(csv())
         .on('data', (row) => {
             // [MODIFICACIÓN DE OPTIMIZACIÓN PENDIENTE]
-            const periodoImputadoLimpio = row.PERIODO_IMPUTADO ? row.PERIODO_IMPUTADO.trim() : '';
-            const periodoLiquidadoLimpio = row.PERIODO_LIQUIDADO ? row.PERIODO_LIQUIDADO.trim() : '';
-            // 1. APLICAR FILTRO: PERIODO_IMPUTADO = PERIODO_LIQUIDADO
-            if (periodoImputadoLimpio === periodoLiquidadoLimpio) {
+            // Ya no se filtra por PERIODO_IMPUTADO === PERIODO_LIQUIDADO
+            // 2. PROYECCIÓN DE COLUMNAS: Crear un nuevo objeto solo con los campos deseados
+            const projectedRow = {};
+            CAMPOS_LIQUIDACION.forEach(field => {
+                // Usamos el operador nullish ?? para manejar casos donde el campo podría no existir.
+                projectedRow[field] = row[field] ?? '';
+            });
 
-                // 2. PROYECCIÓN DE COLUMNAS: Crear un nuevo objeto solo con los campos deseados
-                const projectedRow = {};
-                CAMPOS_LIQUIDACION.forEach(field => {
-                    // Usamos el operador nullish ?? para manejar casos donde el campo podría no existir.
-                    projectedRow[field] = row[field] ?? '';
-                });
-
-                results.push(projectedRow);
-                filteredCount++;
-            }
+            results.push(projectedRow);
+            filteredCount++;
         })
         .on('end', () => {
             console.log(`[SERVER] ✅ Lectura y Conversión completa. Registros totales en el CSV: ${results.length}.`);
