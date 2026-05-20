@@ -1980,6 +1980,183 @@ app.delete('/api/borrar-novedad', (req, res) => {
 });
 
 // ==========================================
+// SISTEMA DE LOGINS Y PERMISOS
+// ==========================================
+const USUARIOS_FILE = path.join(CONFIG_DIR, 'usuarios.json');
+
+// Inicializar archivo de usuarios si no existe
+if (!fs.existsSync(USUARIOS_FILE)) {
+    const defaultUsers = [
+        {
+            username: 'progra',
+            password: '1234',
+            role: 'programador',
+            permissions: ['all']
+        },
+        {
+            username: 'Admin',
+            password: '1234',
+            role: 'Administrador',
+            permissions: [
+                'conversion-form',
+                'menu-controles-manuales',
+                'menu-dashboard-informe',
+                'menu-liquidacion-completa'
+            ]
+        },
+        {
+            username: 'Perso',
+            password: '1234',
+            role: 'Personal',
+            permissions: [
+                'conversion-form',
+                'menu-dashboard-informe'
+            ]
+        }
+    ];
+    fs.writeFileSync(USUARIOS_FILE, JSON.stringify(defaultUsers, null, 2), 'utf8');
+}
+
+// Función auxiliar para leer usuarios
+function leerUsuarios() {
+    try {
+        if (fs.existsSync(USUARIOS_FILE)) {
+            const data = fs.readFileSync(USUARIOS_FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error("Error al leer usuarios.json:", e);
+    }
+    return [];
+}
+
+// Función auxiliar para escribir usuarios
+function guardarUsuarios(usuarios) {
+    try {
+        fs.writeFileSync(USUARIOS_FILE, JSON.stringify(usuarios, null, 2), 'utf8');
+        return true;
+    } catch (e) {
+        console.error("Error al guardar usuarios.json:", e);
+        return false;
+    }
+}
+
+// 1. Endpoint de Login
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
+    }
+
+    const usuarios = leerUsuarios();
+    const usuario = usuarios.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+
+    if (!usuario) {
+        return res.status(401).json({ error: 'Credenciales incorrectas' });
+    }
+
+    // Retornamos la sesión sin la contraseña por seguridad
+    res.json({
+        success: true,
+        username: usuario.username,
+        role: usuario.role,
+        permissions: usuario.permissions
+    });
+});
+
+// Middleware simple para requerir rol 'programador' en endpoints de gestión
+function requireProgramador(req, res, next) {
+    const userRole = req.headers['x-user-role'];
+    if (userRole === 'programador') {
+        return next();
+    }
+    res.status(403).json({ error: 'Acceso denegado. Se requieren permisos de programador.' });
+}
+
+// 2. Obtener lista de usuarios (solo programador)
+app.get('/api/users', requireProgramador, (req, res) => {
+    const usuarios = leerUsuarios();
+    res.json(usuarios);
+});
+
+// 3. Crear nuevo usuario (solo programador)
+app.post('/api/users', requireProgramador, (req, res) => {
+    const { username, password, role, permissions } = req.body;
+    if (!username || !password || !role || !permissions) {
+        return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    }
+
+    const usuarios = leerUsuarios();
+    if (usuarios.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+        return res.status(400).json({ error: 'El nombre de usuario ya está registrado' });
+    }
+
+    const nuevoUsuario = {
+        username,
+        password,
+        role,
+        permissions
+    };
+
+    usuarios.push(nuevoUsuario);
+    if (guardarUsuarios(usuarios)) {
+        res.json({ success: true, user: nuevoUsuario });
+    } else {
+        res.status(500).json({ error: 'Error al escribir en la base de datos' });
+    }
+});
+
+// 4. Editar usuario existente (solo programador)
+app.put('/api/users/:username', requireProgramador, (req, res) => {
+    const targetUsername = req.params.username;
+    const { password, role, permissions } = req.body;
+
+    const usuarios = leerUsuarios();
+    const index = usuarios.findIndex(u => u.username.toLowerCase() === targetUsername.toLowerCase());
+
+    if (index === -1) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Si editan a progra, prevenimos quitarle el rol de programador o sus accesos para no dejar huérfano el sistema
+    if (targetUsername.toLowerCase() === 'progra') {
+        usuarios[index].password = password || usuarios[index].password;
+    } else {
+        usuarios[index].password = password || usuarios[index].password;
+        usuarios[index].role = role || usuarios[index].role;
+        usuarios[index].permissions = permissions || usuarios[index].permissions;
+    }
+
+    if (guardarUsuarios(usuarios)) {
+        res.json({ success: true, user: usuarios[index] });
+    } else {
+        res.status(500).json({ error: 'Error al guardar los cambios' });
+    }
+});
+
+// 5. Eliminar usuario (solo programador)
+app.delete('/api/users/:username', requireProgramador, (req, res) => {
+    const targetUsername = req.params.username;
+
+    if (targetUsername.toLowerCase() === 'progra') {
+        return res.status(400).json({ error: 'No es posible eliminar el usuario administrador principal (progra)' });
+    }
+
+    const usuarios = leerUsuarios();
+    const filtrados = usuarios.filter(u => u.username.toLowerCase() !== targetUsername.toLowerCase());
+
+    if (usuarios.length === filtrados.length) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (guardarUsuarios(filtrados)) {
+        res.json({ success: true, message: 'Usuario eliminado correctamente' });
+    } else {
+        res.status(500).json({ error: 'Error al escribir en la base de datos' });
+    }
+});
+
+// ==========================================
 // CONFIGURACIÓN DE RED DEL SERVIDOR
 // ==========================================
 

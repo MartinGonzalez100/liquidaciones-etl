@@ -906,6 +906,324 @@
         .theme-btn-card.active-pro { border-color: #4e73df; border-width: 3px; background: #eaecf4; }
         .theme-btn-card.active-dark { border-color: #4f46e5; border-width: 3px; background: #111827; color: white !important; }
         .theme-btn-card.active-siprosa { border-color: #00b0ff; border-width: 3px; background: #e3f2fd; }
+
+        /* ==========================================
+           PANTALLAS DE LOGIN Y SISTEMA DE PERMISOS
+           ========================================== */
+        
+        /* Overlay del Login */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1);
+        }
+        
+        .login-overlay.slide-up {
+            transform: translateY(-100%);
+        }
+        
+        .login-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            color: #f8fafc;
+            box-sizing: border-box;
+            animation: loginFadeIn 0.6s ease-out;
+        }
+        
+        @keyframes loginFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .login-logo {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+        }
+        
+        .login-logo i {
+            font-size: 32px;
+            color: white;
+        }
+        
+        .login-card h2 {
+            margin: 0 0 8px;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #ffffff !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+        
+        .login-card p {
+            margin: 0 0 30px;
+            font-size: 14px;
+            color: #94a3b8 !important;
+        }
+        
+        .login-input-group {
+            position: relative;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .login-input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+        
+        .login-input-group input {
+            width: 100%;
+            padding: 14px 15px 14px 45px !important;
+            background: rgba(15, 23, 42, 0.6) !important;
+            border: 1px solid #334155 !important;
+            border-radius: 12px !important;
+            color: #ffffff !important;
+            font-size: 15px !important;
+            outline: none !important;
+            box-sizing: border-box;
+            transition: all 0.3s !important;
+        }
+        
+        .login-input-group input::placeholder {
+            color: #64748b;
+        }
+        
+        .login-input-group input:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+            background: rgba(15, 23, 42, 0.8) !important;
+        }
+        
+        .login-input-group input:focus + i {
+            color: #3b82f6;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 14px !important;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            border: none !important;
+            border-radius: 12px !important;
+            color: white !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-sizing: border-box;
+            transition: all 0.3s !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35) !important;
+            filter: brightness(1.1);
+        }
+        
+        .login-error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            margin-bottom: 20px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Tarjeta de estado de usuario en sidebar */
+        .user-status-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .sidebar-user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sidebar-user-avatar {
+            font-size: 32px;
+            color: #94a3b8;
+        }
+        
+        .sidebar-user-details {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+        
+        .sidebar-user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #ffffff !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
+        
+        .sidebar-user-role {
+            font-size: 11px;
+            color: #94a3b8 !important;
+            text-transform: capitalize;
+        }
+        
+        .btn-logout {
+            background: transparent !important;
+            border: none !important;
+            color: #ef4444 !important;
+            font-size: 18px !important;
+            cursor: pointer !important;
+            padding: 5px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.2s !important;
+            margin: 0 !important;
+            width: auto !important;
+        }
+        
+        .btn-logout:hover {
+            color: #f87171 !important;
+            transform: scale(1.1);
+            background: transparent !important;
+        }
+
+        /* Estilos de gestión de usuarios */
+        .user-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(0,0,0,0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        
+        body.theme-dark .user-row {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .user-row:hover {
+            background: rgba(0,0,0,0.04);
+        }
+        
+        .user-row-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+        }
+
+        .user-row-name {
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .user-row-role {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-row-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .user-row-actions button {
+            padding: 6px 10px !important;
+            font-size: 12px !important;
+            border-radius: 6px !important;
+            border: none !important;
+            color: white !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            margin: 0 !important;
+            width: auto !important;
+        }
+
+        .btn-edit-user {
+            background-color: #3b82f6 !important;
+        }
+
+        .btn-delete-user {
+            background-color: #ef4444 !important;
+        }
+
+        .permissions-group-title {
+            font-weight: bold;
+            font-size: 13px;
+            color: var(--primary);
+            margin: 12px 0 6px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 3px;
+        }
+
+        .permissions-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .permissions-checkbox-label input {
+            cursor: pointer;
+            width: 15px;
+            height: 15px;
+            margin: 0;
+        }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -926,6 +1244,36 @@
 </head>
 
 <body>
+    <!-- PANTALLA DE ACCESO (LOGIN OVERLAY) -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h2>Acceso al Sistema</h2>
+            <p>Procesamiento de Liquidaciones & Novedades</p>
+            
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="login-input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="login-username" placeholder="Usuario" required autocomplete="username">
+                </div>
+                <div class="login-input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="login-password" placeholder="Contraseña" required autocomplete="current-password">
+                </div>
+                <div id="login-error-container" class="login-error-msg" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="login-error-text">Credenciales incorrectas</span>
+                </div>
+                <button type="submit" class="btn-login" id="btn-login-submit">
+                    <span>Ingresar</span>
+                    <i class="fas fa-sign-in-alt"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <div id="formatToolbar" class="rich-text-toolbar">
         <button onclick="applyFormat('bold')" title="Negrita"><b>B</b></button>
         <button onclick="applyFormat('italic')" title="Cursiva"><i>I</i></button>
@@ -946,7 +1294,21 @@
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
         <h2>Menú de Procesos</h2>
         
-        <a href="#" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
+        <!-- Tarjeta de Perfil en Sidebar -->
+        <div class="user-status-card" id="user-status-card" style="display: none;">
+            <div class="sidebar-user-info">
+                <i class="fas fa-user-circle sidebar-user-avatar"></i>
+                <div class="sidebar-user-details">
+                    <span class="sidebar-user-name" id="sidebar-user-name">Usuario</span>
+                    <span class="sidebar-user-role" id="sidebar-user-role">Rol</span>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="logout()" title="Cerrar Sesión">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+        
+        <a href="#" id="menu-inicio" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
         <a href="#" id="menu-controles-manuales">Controles Manuales</a>
         <a href="#" id="menu-detalle-vs-detalle" style="padding-left: 50px; font-size: 16px; color: #a29bfe;">└─ Detalle vs Detalle</a>
 
@@ -1018,6 +1380,10 @@
                 <!-- Por ahora sin submenús directos en el sidebar, pero preparado -->
             </div>
         </div>
+
+        <a href="#" id="menu-gestion-usuarios" style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px; color: #2ecc71 !important; display: none;">
+            <span><i class="fas fa-users-cog"></i> Gestión de Usuarios</span>
+        </a>
 
         <a href="#" onclick="alert('Funcionalidad: Pago Familiar Discapacitado')" style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px;">Pago Familiar Discapacitado</a>
     </div>
@@ -1498,6 +1864,62 @@
             </div>
         </div>
 
+        <!-- VISTA GESTIÓN DE USUARIOS (EXCLUSIVA PROGRAMADOR) -->
+        <div id="gestion-usuarios-view" class="container" style="display: none; background: transparent; box-shadow: none; padding: 0;">
+            <h1 style="background: var(--bg-container); padding: 20px; border-radius: var(--border-radius); box-shadow: var(--shadow-sm); margin-bottom: 20px; display: flex; align-items: center; gap: 12px; color: var(--text-main);">
+                <i class="fas fa-users-cog" style="color: var(--primary);"></i> Gestión de Usuarios y Accesos
+            </h1>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; align-items: start;" id="user-management-grid">
+                <!-- LISTADO DE USUARIOS -->
+                <div style="background: var(--bg-container); border: 1px solid var(--border-color); padding: 20px; border-radius: var(--border-radius); box-shadow: var(--shadow-sm);">
+                    <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px; color: var(--primary);"><i class="fas fa-list"></i> Cuentas Registradas</h3>
+                    <div id="users-list-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                        <!-- Cargado dinámicamente -->
+                        <p style="color: var(--text-muted);">Cargando usuarios...</p>
+                    </div>
+                </div>
+
+                <!-- FORMULARIO ALTA/EDICIÓN -->
+                <div style="background: var(--bg-container); border: 1px solid var(--border-color); padding: 20px; border-radius: var(--border-radius); box-shadow: var(--shadow-sm);">
+                    <h3 id="form-user-title" style="margin-top: 0; display: flex; align-items: center; gap: 10px; color: var(--primary);"><i class="fas fa-user-plus"></i> Crear Nuevo Usuario</h3>
+                    <form id="user-mgmt-form" onsubmit="saveUser(event)">
+                        <input type="hidden" id="edit-user-mode" value="create">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-weight: bold; margin-bottom: 6px; font-size: 13px;">Nombre de Usuario</label>
+                            <input type="text" id="mgmt-username" required style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; background: var(--bg-body); color: var(--text-main);" placeholder="Ej: JuanPerez">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-weight: bold; margin-bottom: 6px; font-size: 13px;">Contraseña</label>
+                            <input type="password" id="mgmt-password" required style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; background: var(--bg-body); color: var(--text-main);" placeholder="Min. 4 caracteres">
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-weight: bold; margin-bottom: 6px; font-size: 13px;">Rol de Usuario</label>
+                            <select id="mgmt-role" onchange="togglePermissionsByRole()" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; background: var(--bg-body); color: var(--text-main);">
+                                <option value="Administrador">Administrador</option>
+                                <option value="Personal">Personal</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-weight: bold; margin-bottom: 10px; font-size: 13px;">Permisos de Pantallas</label>
+                            
+                            <div style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; background: rgba(0,0,0,0.01);" id="permissions-groups-container">
+                                <!-- Permisos agrupados por categoría. Cargados por JS -->
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button type="button" id="btn-cancel-edit" onclick="resetUserForm()" style="display: none; background: #95a5a6; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer;">Cancelar</button>
+                            <button type="submit" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-save"></i> <span id="btn-save-user-text">Guardar Usuario</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- VISTA CONFIGURACIÓN -->
         <div id="configuracion-view" class="container" style="display: none; background: transparent; box-shadow: none; padding: 0;">
             <h1 style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin-bottom: 20px;">Configuración de Parámetros</h1>
@@ -1877,6 +2299,12 @@
 
         // --- Funciones de navegación (modificar showSection) ---
         function showSection(sectionId) {
+            // Validar si el usuario tiene permiso para ver esta sección
+            if (sectionId !== 'none' && !isSectionAllowed(sectionId)) {
+                console.warn("Acceso denegado a la sección: " + sectionId);
+                return;
+            }
+
             // Ocultar todos los contenedores principales
             conversionForm.style.display = 'none';
             document.getElementById('conversion-novedades-form').style.display = 'none';
@@ -1896,6 +2324,8 @@
             if (informeModeloView) informeModeloView.style.display = 'none';
             const detalleVsDetalleView = document.getElementById('detalle-vs-detalle-view');
             if (detalleVsDetalleView) detalleVsDetalleView.style.display = 'none';
+            const gestionUsuariosView = document.getElementById('gestion-usuarios-view');
+            if (gestionUsuariosView) gestionUsuariosView.style.display = 'none';
 
             // Mostrar solo el solicitado
             if (sectionId === 'conversion-form') {
@@ -1922,6 +2352,9 @@
             }
             else if (sectionId === 'detalle-vs-detalle-view') {
                 if (detalleVsDetalleView) detalleVsDetalleView.style.display = 'block';
+            }
+            else if (sectionId === 'gestion-usuarios-view') {
+                if (gestionUsuariosView) gestionUsuariosView.style.display = 'block';
             }
         }
 
@@ -4358,6 +4791,602 @@
             }
         }
 
+        // ==========================================
+        // SISTEMA DE SEGURIDAD, USUARIOS Y PERMISOS
+        // ==========================================
+
+        const SYSTEM_SCREENS = {
+            "General": [
+                { id: "conversion-form", label: "Inicio (Procesador Lotes)", elementId: "menu-inicio" },
+                { id: "menu-controles-manuales", label: "Controles Manuales", elementId: "menu-controles-manuales" },
+                { id: "menu-detalle-vs-detalle", label: "Detalle vs Detalle", elementId: "menu-detalle-vs-detalle" }
+            ],
+            "Informes": [
+                { id: "menu-dashboard-informe", label: "Informe de Liquidación", elementId: "menu-dashboard-informe" },
+                { id: "menu-informe-modelo", label: "Informe de Gestión", elementId: "menu-informe-modelo" }
+            ],
+            "Liquidación Completa": [
+                { id: "menu-unicos-planta", label: "Únicos de Planta", elementId: "menu-unicos-planta" },
+                { id: "menu-observar-importes", label: "Observar por Importes", elementId: "menu-observar-importes" },
+                { id: "menu-observar-planta", label: "Observar por Planta", elementId: "menu-observar-planta" },
+                { id: "menu-gc-liquidacion-eps", label: "Control GC Liquidacion a Eps", elementId: "menu-gc-liquidacion-eps" },
+                { id: "menu-gc-no-liquidados", label: "Control GC No Liquidados", elementId: "menu-gc-no-liquidados" },
+                { id: "menu-reemplazos", label: "Reemplazos", elementId: "menu-reemplazos" },
+                { id: "menu-ld-liquidacion", label: "LD Liquidación", elementId: "menu-ld-liquidacion" },
+                { id: "menu-gc-liquidacion", label: "GC Liquidación", elementId: "menu-gc-liquidacion" },
+                { id: "menu-gc-control", label: "GC Para Control", elementId: "menu-gc-control" },
+                { id: "menu-gc-control-retro", label: "GC Para Control Retro", elementId: "menu-gc-control-retro" },
+                { id: "menu-residentes", label: "Residentes", elementId: "menu-residentes" }
+            ],
+            "Ley 100%": [
+                { id: "menu-calculo-ley100", label: "Cálculo de ley 100%", elementId: "menu-calculo-ley100" }
+            ],
+            "Asignaciones": [
+                { id: "menu-asignaciones-familiares", label: "Asignaciones Familiares", elementId: "menu-asignaciones-familiares" },
+                { id: "menu-asignaciones-familiares-reemp", label: "Asignaciones Familiares - Reemp", elementId: "menu-asignaciones-familiares-reemp" }
+            ],
+            "Acumulado": [
+                { id: "menu-topes-jubilatorios", label: "Topes de Ap. Jubilatorios", elementId: "menu-topes-jubilatorios" }
+            ],
+            "Novedades Mensuales": [
+                { id: "menu-novedades-gc", label: "Novedades GC", elementId: "menu-novedades-gc" },
+                { id: "menu-novedades-gc-control", label: "Novedades GC Para Control", elementId: "menu-novedades-gc-control" },
+                { id: "menu-novedades-residentes", label: "Novedades Residentes", elementId: "menu-novedades-residentes" },
+                { id: "menu-novedades-criticidad", label: "Criticidad", elementId: "menu-novedades-criticidad" },
+                { id: "menu-novedades-fortalecimiento", label: "Fortalecimiento", elementId: "menu-novedades-fortalecimiento" }
+            ],
+            "Configuración": [
+                { id: "menu-configuracion", label: "Configuración de Parámetros", elementId: "menu-configuracion" }
+            ]
+        };
+
+        let loadedUsers = [];
+
+        function getCurrentUser() {
+            try {
+                const userStr = sessionStorage.getItem('currentUser');
+                return userStr ? JSON.parse(userStr) : null;
+            } catch(e) {
+                return null;
+            }
+        }
+
+        function hasPermission(userPermissions, screenId, accordionId) {
+            if (!userPermissions) return false;
+            if (userPermissions.includes('all')) return true;
+            if (userPermissions.includes(screenId)) return true;
+            if (accordionId && userPermissions.includes(accordionId)) return true;
+            return false;
+        }
+
+        function isSectionAllowed(sectionId) {
+            const user = getCurrentUser();
+            if (!user) return false;
+            if (user.role === 'programador') return true;
+
+            // Map standard section IDs to permission keys
+            if (sectionId === 'conversion-form') return hasPermission(user.permissions, 'conversion-form', null);
+            if (sectionId === 'gestion-usuarios-view') return user.role === 'programador';
+            if (sectionId === 'configuracion-view') return hasPermission(user.permissions, 'menu-configuracion', null);
+            if (sectionId === 'novedades-resumen-view') return hasPermission(user.permissions, 'menu-novedades-gc', 'menu-novedades-mensuales');
+            if (sectionId === 'informe-modelo-view') return hasPermission(user.permissions, 'menu-informe-modelo', 'menu-informes');
+            if (sectionId === 'detalle-vs-detalle-view') return hasPermission(user.permissions, 'menu-detalle-vs-detalle', null);
+            if (sectionId === 'liquidacion-completa-view') return hasPermission(user.permissions, 'menu-unicos-planta', 'menu-liquidacion-completa');
+
+            return true; // Permitir otras vistas secundarias
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const usernameInput = document.getElementById('login-username');
+            const passwordInput = document.getElementById('login-password');
+            const errorContainer = document.getElementById('login-error-container');
+            const errorText = document.getElementById('login-error-text');
+            const btnSubmit = document.getElementById('btn-login-submit');
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!username || !password) return;
+
+            // Mostrar estado de carga en el botón
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span>Verificando...</span> <i class="fas fa-spinner fa-spin"></i>';
+            errorContainer.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al iniciar sesión');
+                }
+
+                // Guardar la sesión del usuario
+                sessionStorage.setItem('currentUser', JSON.stringify(data));
+
+                // Configurar elementos del sidebar
+                document.getElementById('sidebar-user-name').innerText = data.username;
+                document.getElementById('sidebar-user-role').innerText = data.role;
+                document.getElementById('user-status-card').style.display = 'flex';
+
+                // Aplicar permisos visuales e inicializar
+                applyUserPermissions(data);
+
+                // Iniciar animación elegante de deslizamiento de la pantalla de login
+                const overlay = document.getElementById('login-overlay');
+                overlay.classList.add('slide-up');
+
+                // Redirigir a la pantalla permitida
+                redirectToFirstAvailableSection(data);
+
+                // Limpiar campos del form de login
+                passwordInput.value = '';
+
+            } catch (err) {
+                errorText.innerText = err.message;
+                errorContainer.style.display = 'flex';
+                passwordInput.value = '';
+                passwordInput.focus();
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<span>Ingresar</span> <i class="fas fa-sign-in-alt"></i>';
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('currentUser');
+
+            // Resetear tarjeta de usuario
+            document.getElementById('user-status-card').style.display = 'none';
+            document.getElementById('sidebar-user-name').innerText = '';
+            document.getElementById('sidebar-user-role').innerText = '';
+
+            // Mostrar el login con la animación slide-down (removiendo slide-up)
+            const overlay = document.getElementById('login-overlay');
+            overlay.classList.remove('slide-up');
+
+            // Ocultar sección de gestión de usuarios si estaba abierta para evitar fugas de información
+            showSection('conversion-form');
+
+            // Limpiar inputs
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-username').focus();
+        }
+
+        function applyUserPermissions(user) {
+            if (!user) return;
+
+            // 1. Mostrar/ocultar enlaces directos y submenús según permisos
+            const allLinks = document.querySelectorAll('#mySidebar a');
+            allLinks.forEach(link => {
+                if (link.classList.contains('closebtn')) return;
+                
+                const id = link.id;
+                if (!id) return;
+
+                // Caso especial: Gestión de Usuarios
+                if (id === 'menu-gestion-usuarios') {
+                    link.style.display = (user.role === 'programador') ? 'block' : 'none';
+                    return;
+                }
+
+                // Mapear menu-inicio a la clave de permiso 'conversion-form'
+                const permissionKey = (id === 'menu-inicio') ? 'conversion-form' : id;
+
+                // Comprobar si el link tiene permiso individual o heredado de un acordeón
+                const accordionParent = link.closest('.menu-accordion');
+                const accordionHeader = accordionParent ? accordionParent.querySelector('.menu-accordion-header') : null;
+                const accordionId = accordionHeader ? accordionHeader.id : null;
+
+                if (hasPermission(user.permissions, permissionKey, accordionId)) {
+                    link.style.display = 'block';
+                } else {
+                    link.style.display = 'none';
+                }
+            });
+
+            // 2. Colapsar y ocultar acordeones que no tengan hijos visibles
+            const accordions = document.querySelectorAll('#mySidebar .menu-accordion');
+            accordions.forEach(accordion => {
+                const header = accordion.querySelector('.menu-accordion-header');
+                const content = accordion.querySelector('.menu-accordion-content');
+                if (!content) return;
+
+                const subLinks = content.querySelectorAll('a');
+
+                // Si es un acordeón vacío (como Configuración, que es un header funcional)
+                if (subLinks.length === 0) {
+                    if (header && hasPermission(user.permissions, header.id, null)) {
+                        accordion.style.display = 'block';
+                        if (header) header.style.display = 'flex';
+                    } else {
+                        accordion.style.display = 'none';
+                    }
+                    return;
+                }
+
+                let hasVisibleChild = false;
+                subLinks.forEach(link => {
+                    if (link.style.display !== 'none') {
+                        hasVisibleChild = true;
+                    }
+                });
+
+                if (hasVisibleChild) {
+                    accordion.style.display = 'block';
+                    if (header) header.style.display = 'flex';
+                } else {
+                    accordion.style.display = 'none';
+                }
+            });
+        }
+
+        function redirectToFirstAvailableSection(user) {
+            if (hasPermission(user.permissions, 'conversion-form', null)) {
+                showSection('conversion-form');
+                return;
+            }
+
+            const links = document.querySelectorAll('#mySidebar a');
+            for (let link of links) {
+                if (link.classList.contains('closebtn')) continue;
+                if (link.id === 'menu-gestion-usuarios') continue;
+
+                if (link.style.display === 'none') continue;
+
+                const isHeader = link.classList.contains('menu-accordion-header');
+                if (isHeader && link.id !== 'menu-configuracion') continue;
+
+                const accordionParent = link.closest('.menu-accordion');
+                if (accordionParent && accordionParent.style.display === 'none') continue;
+
+                console.log("Redirigiendo automáticamente a sección autorizada:", link.id || link.innerText);
+                link.click();
+                return;
+            }
+
+            showSection('none');
+        }
+
+        function renderPermissionsCheckboxes() {
+            const container = document.getElementById('permissions-groups-container');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            for (const [category, screens] of Object.entries(SYSTEM_SCREENS)) {
+                const catDiv = document.createElement('div');
+                catDiv.style.marginBottom = '18px';
+
+                const catTitle = document.createElement('div');
+                catTitle.style.fontWeight = '700';
+                catTitle.style.fontSize = '11px';
+                catTitle.style.color = '#7f8c8d';
+                catTitle.style.textTransform = 'uppercase';
+                catTitle.style.letterSpacing = '0.7px';
+                catTitle.style.marginBottom = '8px';
+                catTitle.style.borderBottom = '1px solid var(--border-color)';
+                catTitle.style.paddingBottom = '4px';
+                catTitle.innerText = category;
+                catDiv.appendChild(catTitle);
+
+                const gridDiv = document.createElement('div');
+                gridDiv.style.display = 'grid';
+                gridDiv.style.gridTemplateColumns = '1fr';
+                gridDiv.style.gap = '8px';
+
+                screens.forEach(screen => {
+                    const label = document.createElement('label');
+                    label.style.display = 'flex';
+                    label.style.alignItems = 'center';
+                    label.style.gap = '8px';
+                    label.style.fontSize = '13px';
+                    label.style.cursor = 'pointer';
+                    label.style.color = 'var(--text-main)';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = screen.id;
+                    checkbox.className = 'permission-checkbox';
+                    checkbox.style.cursor = 'pointer';
+
+                    const span = document.createElement('span');
+                    span.innerText = screen.label;
+
+                    label.appendChild(checkbox);
+                    label.appendChild(span);
+                    gridDiv.appendChild(label);
+                });
+
+                catDiv.appendChild(gridDiv);
+                container.appendChild(catDiv);
+            }
+        }
+
+        function togglePermissionsByRole() {
+            const role = document.getElementById('mgmt-role').value;
+            const checkboxes = document.querySelectorAll('.permission-checkbox');
+
+            const adminDefaults = [
+                'conversion-form',
+                'menu-controles-manuales',
+                'menu-dashboard-informe',
+                'menu-unicos-planta',
+                'menu-observar-importes',
+                'menu-observar-planta',
+                'menu-reemplazos',
+                'menu-ld-liquidacion',
+                'menu-gc-liquidacion',
+                'menu-residentes',
+                'menu-novedades-gc',
+                'menu-novedades-residentes'
+            ];
+
+            const personalDefaults = [
+                'conversion-form',
+                'menu-dashboard-informe',
+                'menu-novedades-gc'
+            ];
+
+            const defaults = (role === 'Administrador') ? adminDefaults : personalDefaults;
+
+            checkboxes.forEach(cb => {
+                cb.checked = defaults.includes(cb.value);
+            });
+        }
+
+        async function loadUsers() {
+            const container = document.getElementById('users-list-container');
+            if (!container) return;
+
+            const currentUser = getCurrentUser();
+            if (!currentUser) return;
+
+            container.innerHTML = '<p style="color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Cargando usuarios...</p>';
+
+            try {
+                const response = await fetch('/api/users', {
+                    method: 'GET',
+                    headers: {
+                        'x-user-role': currentUser.role
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Error al obtener usuarios');
+
+                loadedUsers = data;
+                container.innerHTML = '';
+
+                if (loadedUsers.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted);">No hay usuarios registrados.</p>';
+                    return;
+                }
+
+                loadedUsers.forEach(user => {
+                    const row = document.createElement('div');
+                    row.className = 'user-row';
+                    row.style.background = 'rgba(0,0,0,0.02)';
+                    row.style.border = '1px solid var(--border-color)';
+                    row.style.borderRadius = '10px';
+                    row.style.padding = '12px 15px';
+                    row.style.display = 'flex';
+                    row.style.alignItems = 'center';
+                    row.style.justifyContent = 'space-between';
+                    row.style.gap = '10px';
+                    row.style.marginBottom = '8px';
+
+                    // Determinar badge de rol
+                    let roleBadgeColor = '#9b59b6'; // programador (púrpura)
+                    if (user.role === 'Administrador') roleBadgeColor = '#e67e22'; // naranja
+                    if (user.role === 'Personal') roleBadgeColor = '#3498db'; // azul
+
+                    const isProgra = user.username.toLowerCase() === 'progra';
+
+                    let permissionsSummary = '';
+                    if (user.permissions.includes('all')) {
+                        permissionsSummary = 'Todos los accesos';
+                    } else {
+                        permissionsSummary = user.permissions.length + ' pantalla(s)';
+                    }
+
+                    row.innerHTML = `
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <strong style="font-size: 15px; color: var(--text-main);">${user.username}</strong>
+                                <span style="background: ${roleBadgeColor}; color: white; font-size: 10px; padding: 2px 6px; border-radius: 20px; font-weight: bold; text-transform: uppercase;">${user.role}</span>
+                            </div>
+                            <span style="font-size: 12px; color: var(--text-muted);"><i class="fas fa-key"></i> Permisos: ${permissionsSummary}</span>
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" onclick="editUser('${user.username}')" style="background: #3498db; color: white; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Editar">
+                                <i class="fas fa-edit" style="font-size: 13px;"></i>
+                            </button>
+                            <button type="button" onclick="deleteUser('${user.username}')" ${isProgra ? 'disabled style="background: #bdc3c7; cursor: not-allowed;"' : 'style="background: #e74c3c; color: white; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;"'} title="Eliminar">
+                                <i class="fas fa-trash-alt" style="font-size: 13px;"></i>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+
+            } catch (err) {
+                container.innerHTML = `<p style="color: var(--primary);">Error: ${err.message}</p>`;
+            }
+        }
+
+        async function saveUser(event) {
+            event.preventDefault();
+            const currentUser = getCurrentUser();
+            if (!currentUser) return;
+
+            const mode = document.getElementById('edit-user-mode').value;
+            const usernameInput = document.getElementById('mgmt-username');
+            const passwordInput = document.getElementById('mgmt-password');
+            const roleSelect = document.getElementById('mgmt-role');
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            const role = roleSelect.value;
+
+            // Recopilar checkboxes de permisos
+            const checkedBoxes = document.querySelectorAll('.permission-checkbox:checked');
+            const permissions = Array.from(checkedBoxes).map(cb => cb.value);
+
+            if (!username) return;
+
+            try {
+                let response;
+                if (mode === 'create') {
+                    if (!password) {
+                        alert("La contraseña es requerida al crear un nuevo usuario.");
+                        return;
+                    }
+                    response = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-user-role': currentUser.role
+                        },
+                        body: JSON.stringify({ username, password, role, permissions })
+                    });
+                } else {
+                    // Editar
+                    response = await fetch(`/api/users/${username}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-user-role': currentUser.role
+                        },
+                        body: JSON.stringify({ password: password || undefined, role, permissions })
+                    });
+                }
+
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error || 'Error al guardar usuario');
+
+                alert(mode === 'create' ? "Usuario creado con éxito." : "Cambios guardados correctamente.");
+                resetUserForm();
+                loadUsers();
+
+                // Si el programador se editó a sí mismo, actualizar su sesión
+                if (username.toLowerCase() === currentUser.username.toLowerCase()) {
+                    const updatedUser = {
+                        ...currentUser,
+                        role: result.user.role,
+                        permissions: result.user.permissions
+                    };
+                    sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                    document.getElementById('sidebar-user-role').innerText = updatedUser.role;
+                    applyUserPermissions(updatedUser);
+                }
+
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+
+        function editUser(username) {
+            const user = loadedUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+            if (!user) return;
+
+            document.getElementById('edit-user-mode').value = 'edit';
+            document.getElementById('form-user-title').innerHTML = `<i class="fas fa-user-edit"></i> Editar Usuario: <strong>${user.username}</strong>`;
+            document.getElementById('btn-save-user-text').innerText = "Guardar Cambios";
+            document.getElementById('btn-cancel-edit').style.display = 'inline-block';
+
+            const usernameInput = document.getElementById('mgmt-username');
+            usernameInput.value = user.username;
+            usernameInput.disabled = true;
+
+            const passwordInput = document.getElementById('mgmt-password');
+            passwordInput.value = user.password; // Prefil stored password since we are on local test db
+            passwordInput.required = false;
+
+            const roleSelect = document.getElementById('mgmt-role');
+            roleSelect.value = user.role;
+
+            const isProgra = user.username.toLowerCase() === 'progra';
+            roleSelect.disabled = isProgra;
+
+            // Rellenar checkboxes
+            const checkboxes = document.querySelectorAll('.permission-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = user.permissions.includes('all') || user.permissions.includes(cb.value);
+                cb.disabled = isProgra; // No cambiar permisos al programador master para no perder acceso
+            });
+        }
+
+        async function deleteUser(username) {
+            if (username.toLowerCase() === 'progra') {
+                alert("No es posible eliminar al programador principal.");
+                return;
+            }
+
+            const currentUser = getCurrentUser();
+            if (!currentUser) return;
+
+            if (!confirm(`¿Está seguro de que desea eliminar permanentemente al usuario "${username}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/users/${username}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'x-user-role': currentUser.role
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error || 'Error al eliminar usuario');
+
+                alert("Usuario eliminado correctamente.");
+                resetUserForm();
+                loadUsers();
+
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+
+        function resetUserForm() {
+            document.getElementById('edit-user-mode').value = 'create';
+            document.getElementById('form-user-title').innerHTML = '<i class="fas fa-user-plus"></i> Crear Nuevo Usuario';
+            document.getElementById('btn-save-user-text').innerText = "Crear Usuario";
+            document.getElementById('btn-cancel-edit').style.display = 'none';
+
+            const usernameInput = document.getElementById('mgmt-username');
+            usernameInput.value = '';
+            usernameInput.disabled = false;
+
+            const passwordInput = document.getElementById('mgmt-password');
+            passwordInput.value = '';
+            passwordInput.required = true;
+
+            const roleSelect = document.getElementById('mgmt-role');
+            roleSelect.value = 'Administrador';
+            roleSelect.disabled = false;
+
+            // Habilitar y marcar por defecto
+            const checkboxes = document.querySelectorAll('.permission-checkbox');
+            checkboxes.forEach(cb => {
+                cb.disabled = false;
+            });
+
+            togglePermissionsByRole();
+        }
+
         function initTheme() {
             // Leer desde la memoria del navegador y setear el color. Default: normal.
             const savedTheme = localStorage.getItem('appTheme') || 'normal';
@@ -4366,6 +5395,49 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             initTheme();
+
+            // Inicializar checkboxes de gestión de usuarios
+            renderPermissionsCheckboxes();
+            togglePermissionsByRole();
+
+            // Asignar evento al menú de Gestión de Usuarios
+            const menuGestion = document.getElementById('menu-gestion-usuarios');
+            if (menuGestion) {
+                menuGestion.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    
+                    // Ocultar iconos de ayuda y barra de búsqueda
+                    const helpIcon = document.getElementById('help-icon');
+                    if (helpIcon) helpIcon.style.display = 'none';
+                    const searchContainer = document.getElementById('floating-search-container');
+                    if (searchContainer) searchContainer.style.display = 'none';
+
+                    showSection('gestion-usuarios-view');
+                    loadUsers();
+                    closeNav();
+                });
+            }
+
+            // Verificar si hay una sesión activa guardada
+            const savedUser = getCurrentUser();
+            if (savedUser) {
+                console.log("Restaurando sesión activa de:", savedUser.username);
+                // Configurar tarjeta de perfil
+                document.getElementById('sidebar-user-name').innerText = savedUser.username;
+                document.getElementById('sidebar-user-role').innerText = savedUser.role;
+                document.getElementById('user-status-card').style.display = 'flex';
+
+                // Aplicar permisos
+                applyUserPermissions(savedUser);
+
+                // Deslizar login hacia arriba inmediatamente
+                const overlay = document.getElementById('login-overlay');
+                if (overlay) overlay.classList.add('slide-up');
+
+                // Redirigir a sección autorizada
+                redirectToFirstAvailableSection(savedUser);
+            }
+
             loadLotesTrabajados();
             loadLotesNovedadesTrabajados();
         });
