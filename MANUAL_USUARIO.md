@@ -3,7 +3,7 @@
 Este documento describe la funcionalidad completa del sistema de gestión, procesamiento y visualización de Liquidaciones y Novedades. Se detallan exhaustivamente las reglas y condiciones lógicas (filtros) aplicadas en cada una de las pantallas.
 
 ## 1. Módulo de Inicio (Conversión ETL)
-Esta es la pantalla inicial del sistema, encargada de procesar archivos Excel en bruto y unificarlos en formato CSV para su consumo rápido por parte del sistema.
+Esta pantalla se encarga de procesar archivos Excel en bruto y unificarlos en formato CSV para su consumo rápido por parte del sistema. Es el punto de partida del flujo operativo tras haberse autenticado en la plataforma.
 
 ### 1.1 Conversión de Liquidaciones
 - **Función:** Permite procesar los archivos de Liquidación.
@@ -189,3 +189,35 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
   - `ASIG_FAM`: Monto de la asignación familiar.
   - `PLANTA`: Categoría o régimen de contratación (Ej. Reemplazante no permanente).
   - `ORGANISMO`: Efector o entidad de prestación de servicio.
+
+---
+
+## 4. Control de Acceso y Sistema de Permisos
+El sistema cuenta con un esquema de seguridad basado en roles y control de accesos para garantizar que cada tipo de usuario visualice y opere exclusivamente sobre las secciones y funciones autorizadas.
+
+### 4.1 Pantalla de Acceso (Login)
+Al ingresar a la plataforma, se presenta un panel de autenticación que requiere un nombre de usuario y contraseña válidos. 
+- **Persistencia de Sesión:** La sesión activa del usuario se almacena en el almacenamiento de sesión (`sessionStorage`) y expira automáticamente al cerrar la pestaña o el navegador.
+- **Cierre de Sesión (Logout):** El usuario puede cerrar su sesión de forma manual mediante el botón de logout provisto en la barra lateral superior. Esto limpia los datos cargados y retorna inmediatamente a la pantalla de acceso para evitar fugas de información.
+
+### 4.2 Roles y Perfiles Preconfigurados
+El sistema define tres roles principales basados en el perfil del usuario:
+1. **Programador (Usuario: `progra`):** 
+   - Es el rol de superadministrador técnico.
+   - Posee privilegios globales (`all`) que le permiten visualizar todas las pantallas y realizar cualquier operación.
+   - Tiene acceso exclusivo a la sección de **Gestión de Usuarios** para administrar los accesos del sistema.
+   - Posee una protección especial: el usuario principal `progra` no puede ser eliminado ni se le pueden despojar sus permisos de administrador/programador.
+2. **Administrador (Usuario: `Admin`):**
+   - Diseñado para personal de auditoría e informes.
+   - De forma predeterminada, accede a las pantallas de conversión (Inicio), Controles Manuales, Informe de Liquidación (Dashboard) y Configuración de Parámetros.
+3. **Personal (Usuario: `Perso`):**
+   - Orientado a operadores que necesitan un espectro completo de visualización y control sobre las liquidaciones y novedades mensuales.
+   - Tiene acceso de manera predeterminada al Procesador de Lotes, Informe de Liquidación, Liquidación Completa (incluyendo Controles Auxiliares, Reemplazos, Residentes, Ley 100%, Asignaciones) y el módulo completo de visualización de Novedades.
+
+### 4.3 Gestión de Usuarios (Exclusivo de Programador)
+El usuario con rol de **Programador** dispone de una sección dedicada accesible desde el menú lateral. Las funciones habilitadas son:
+- **Listar Usuarios:** Visualización consolidada de todas las cuentas creadas en el sistema, mostrando el nombre de usuario, su rol y un resumen simplificado de sus permisos de acceso.
+- **Registrar Nuevo Usuario:** Formulario interactivo que permite añadir un nuevo usuario ingresando su nombre, contraseña, rol y seleccionando mediante casillas de verificación las pantallas específicas del sistema a las que tendrá autorización.
+- **Editar Usuario Existente:** Permite modificar la contraseña, cambiar el rol asignado y reconfigurar en tiempo real las pantallas autorizadas.
+- **Eliminar Usuario:** Permite remover definitivamente una cuenta de usuario del sistema (a excepción de la cuenta raíz `progra`).
+- **Persistencia de Datos:** Todos los usuarios, credenciales y permisos se guardan y persisten de manera estructurada en el archivo `usuarios.json` en la carpeta `configuracion_parametros/`.
