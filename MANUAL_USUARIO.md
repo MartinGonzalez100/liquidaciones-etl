@@ -198,7 +198,7 @@ El sistema cuenta con un esquema de seguridad basado en roles y control de acces
 ### 4.1 Pantalla de Acceso (Login)
 Al ingresar a la plataforma, se presenta un panel de autenticación que requiere un nombre de usuario y contraseña válidos. 
 - **Persistencia de Sesión:** La sesión activa del usuario se almacena en el almacenamiento de sesión (`sessionStorage`) y expira automáticamente al cerrar la pestaña o el navegador.
-- **Cierre de Sesión (Logout):** El usuario puede cerrar su sesión de forma manual mediante el botón de logout provisto en la barra lateral superior. Esto limpia los datos cargados y retorna inmediatamente a la pantalla de acceso para evitar fugas de información.
+- **Cierre de Sesión (Logout):** El usuario puede cerrar su sesión de forma manual mediante el botón de cierre de sesión provisto en la tarjeta de perfil de la barra lateral, ubicado de manera elegante directamente debajo del nombre de usuario y su rol. Este botón premium de ancho completo incluye un icono descriptivo y texto de acción. Al hacer clic, limpia de forma segura todos los datos cargados en la sesión activa y retorna inmediatamente a la pantalla de acceso para evitar fugas de información.
 
 ### 4.2 Roles y Perfiles Preconfigurados
 El sistema define tres roles principales basados en el perfil del usuario:
