@@ -78,11 +78,16 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
 - **Reemplazos:** Utiliza el filtro que extrae aquellos empleados cuya `PLANTA` corresponda a reemplazos (ej: `Reemplazante no permanente` o `Reemplazante no permanente-LD`), agrupándolos por Nivel Educativo y Organismo/Efector.
 - **Residentes:** Utiliza un filtro exacto donde la columna `PLANTA` debe ser `Residentes` o `Residente Nacionales`.
 - **GC Liquidación / LD:** Utilizan combinaciones configurables. El sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Guardias Críticas" o "Libre Disponibilidad" durante la pestaña de Configuración (ej: mapear `H00902` e integrarla al cálculo final).
-- **Ley 100%:** Aplica los siguientes filtros concurrentes (lógica `AND`) en la simulación predictiva de jubilaciones:
+- **Ley 100%:** Extrae a los agentes que ya se encuentran percibiendo el beneficio. Aplica el siguiente filtro estricto:
+  1. El valor de la columna `AP100_090_54` debe ser un número mayor a cero (`> 0`).
+- **Cálculo de Ley 100%:** Realiza una simulación predictiva de jubilaciones para aquellos agentes que están en condiciones de percibir la Ley 100% pero que aún no la tienen liquidada. Aplica los siguientes filtros concurrentes (lógica `AND`):
   1. El empleado corresponde a las zonas contables `A1`, `A26` o `A27` (`Area2`).
-  2. Si su sexo contable extraído del CUIL denota ser mujer, debe tener una edad superior al parámetro `Edad F` provisto en el calendario del frontend (típicamente 60).
-  3. Si denota ser hombre, debe superar el parámetro `Edad M` (típicamente 65).
-  4. Su antigüedad calculada (generalmente leída desde columnas nativas como `ANTIGUEDAD`) debe superar el parámetro numérico base (ej. 30 años).
+  2. El periodo imputado debe coincidir exactamente con el periodo liquidado (`PERIODO_IMPUTADO == PERIODO_LIQUIDADO`).
+  3. No debe pertenecer a plantas precarias de reemplazos (`PLANTA` distinta de `Reemplazante no permanente` y `Reemplazante no permanente-LD`).
+  4. **No** debe estar cobrando la Ley 100% actualmente (el importe en `AP100_090_54` debe ser igual a cero o nulo/vacío).
+  5. Su antigüedad calculada (`ANTIGUEDAD`) debe ser mayor o igual al parámetro numérico de Antigüedad mínima (ej. 30 años).
+  6. La edad se calcula dinámicamente frente a la "Fecha de Cálculo" seleccionada. Si es mujer (`Sexo = F`), debe alcanzar o superar la `Edad F` ingresada (típicamente 60). Si es hombre (`Sexo = M`), debe alcanzar o superar la `Edad M` ingresada (típicamente 65).
+  7. Se aplica una deduplicación, de forma que si un agente tiene múltiples cargos, solo se proyecta el de mayor `NUMERO_CARGO`.
 
 ### 2.7 Reportes de Control GC (Guardias Críticas)
 - **Función:** Permite realizar un control detallado de los montos de Guardias Críticas agrupados por agente y organismo, facilitando la auditoría de liquidaciones mensuales y retroactivas.
