@@ -91,6 +91,7 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
 
 ### 2.7 Reportes de Control GC (Guardias Críticas)
 - **Función:** Permite realizar un control detallado de los montos de Guardias Críticas agrupados por agente y organismo, facilitando la auditoría de liquidaciones mensuales y retroactivas.
+- **Generación Dinámica de Archivos Auxiliares:** Antes de cargar los datos de los controles cruzados ("Control GC Liquidacion a Eps" y "Control GC No Liquidados"), el sistema verifica automáticamente si los archivos `AuxGCLiquidacion.csv` y `AuxGcNovedades.csv` existen. Solo si no han sido generados previamente, los crea en ese instante aplicando sus respectivas reglas de negocio, evitando procesamientos redundantes.
 - **Generación de Datos (`AuxGCLiquidacion.csv`):** El sistema crea automáticamente una tabla auxiliar para el cálculo:
   - **CLAVE_AGRUPACION:** Unión de `NRO_DOCUMENTO` + `ORGANISMO` (sin espacios a la derecha).
   - **SUMA_GC:** Suma horizontal de todos los montos de las columnas configuradas como GC en ese registro.
