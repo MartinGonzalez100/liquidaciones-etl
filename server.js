@@ -1753,7 +1753,10 @@ app.get('/api/novedades/gc-para-control', async (req, res) => {
 app.get('/api/gc-liquidacion-eps', async (req, res) => {
     try {
         // 1. Asegurar que AuxGCLiquidacion y AuxGcNovedades existen
-        await generateAuxGCLiquidacion();
+        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
+        if (!fs.existsSync(auxLiqPath)) {
+            await generateAuxGCLiquidacion();
+        }
         const auxNovedadesPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxGcNovedades.csv');
         if (!fs.existsSync(auxNovedadesPath)) {
             await generateAuxGcNovedades();
@@ -1776,7 +1779,6 @@ app.get('/api/gc-liquidacion-eps', async (req, res) => {
         }
 
         // 3. Procesar Liquidacion (similar a processGCControl) y hacer el cruce
-        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
         if (!fs.existsSync(auxLiqPath)) return res.status(404).json({ error: 'Archivo auxiliar de liquidacion no encontrado' });
 
         const groupings = new Map();
@@ -1836,14 +1838,16 @@ app.get('/api/gc-liquidacion-eps', async (req, res) => {
 app.get('/api/gc-no-liquidados', async (req, res) => {
     try {
         // 1. Asegurar que AuxGCLiquidacion y AuxGcNovedades existen
-        await generateAuxGCLiquidacion();
+        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
+        if (!fs.existsSync(auxLiqPath)) {
+            await generateAuxGCLiquidacion();
+        }
         const auxNovedadesPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxGcNovedades.csv');
         if (!fs.existsSync(auxNovedadesPath)) {
             await generateAuxGcNovedades();
         }
 
         // 2. Leer "GC Para Control" y guardar sus CLAVEs
-        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
         if (!fs.existsSync(auxLiqPath)) return res.status(404).json({ error: 'Archivo auxiliar de liquidacion no encontrado' });
 
         const clavesLiquidadas = new Set();
