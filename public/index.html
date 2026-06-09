@@ -2611,6 +2611,14 @@
 
         async function iniciarProceso() {
             startLoadingAnimation();
+
+            // Borrado automático de liquidación para una conversión limpia
+            try {
+                await fetch('/api/borrar-liquidacion', { method: 'DELETE' });
+            } catch (e) {
+                console.error('Error al limpiar datos anteriores:', e);
+            }
+
             const selectedMode = document.querySelector('input[name="processMode"]:checked').value;
             const formData = new FormData();
             formData.append('processMode', selectedMode);
