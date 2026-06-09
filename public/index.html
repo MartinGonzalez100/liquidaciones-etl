@@ -941,6 +941,16 @@
             transform: translateY(-100%);
         }
         
+        .login-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
         .login-card {
             background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(16px);
@@ -952,6 +962,8 @@
             max-width: 420px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
             text-align: center;
+            position: relative;
+            z-index: 1;
             color: #f8fafc;
             box-sizing: border-box;
             animation: loginFadeIn 0.6s ease-out;
@@ -1273,6 +1285,7 @@
 <body>
     <!-- PANTALLA DE ACCESO (LOGIN OVERLAY) -->
     <div id="login-overlay" class="login-overlay">
+        <canvas id="login-particles" class="login-particles"></canvas>
         <div class="login-card">
             <div class="login-logo">
                 <i class="fas fa-shield-alt"></i>
@@ -5468,6 +5481,108 @@
 
             loadLotesTrabajados();
             loadLotesNovedadesTrabajados();
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('login-particles');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const particles = [];
+            const particleCount = 150;
+            
+            // Colores similares al efecto deseado: azules, púrpuras, blancos
+            const colors = ['#3b82f6', '#8b5cf6', '#ffffff', '#60a5fa'];
+            
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 2 + 0.5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    originalVx: (Math.random() - 0.5) * 0.5,
+                    originalVy: (Math.random() - 0.5) * 0.5
+                });
+            }
+            
+            let mouse = { x: null, y: null };
+            const overlay = document.getElementById('login-overlay');
+            overlay.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+            overlay.addEventListener('mouseleave', () => {
+                mouse.x = null;
+                mouse.y = null;
+            });
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                
+                for (let i = 0; i < particles.length; i++) {
+                    let p = particles[i];
+                    
+                    if (mouse.x !== null && mouse.y !== null) {
+                        let dx = mouse.x - p.x;
+                        let dy = mouse.y - p.y;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 200) {
+                            let forceDirectionX = dx / distance;
+                            let forceDirectionY = dy / distance;
+                            // Atracción hacia el mouse
+                            let force = (200 - distance) / 200;
+                            p.vx += forceDirectionX * force * 0.05;
+                            p.vy += forceDirectionY * force * 0.05;
+                        } else {
+                            // Retornar a la velocidad original
+                            p.vx += (p.originalVx - p.vx) * 0.02;
+                            p.vy += (p.originalVy - p.vy) * 0.02;
+                        }
+                    } else {
+                        p.vx += (p.originalVx - p.vx) * 0.02;
+                        p.vy += (p.originalVy - p.vy) * 0.02;
+                    }
+                    
+                    // Limitar la velocidad máxima
+                    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                    if(speed > 2) {
+                        p.vx = (p.vx / speed) * 2;
+                        p.vy = (p.vy / speed) * 2;
+                    }
+                    
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    
+                    // Reaparecer al salir de la pantalla
+                    if (p.x < 0) p.x = width;
+                    if (p.x > width) p.x = 0;
+                    if (p.y < 0) p.y = height;
+                    if (p.y > height) p.y = 0;
+                    
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
         });
     </script>
 </body>
