@@ -15,7 +15,7 @@ Esta pantalla se encarga de procesar archivos Excel en bruto y unificarlos en fo
     - `csv-convertido/` (Versiones transformadas).
     - `csv-unidos/` (Archivos consolidados finales como `liquidaciones_unificadas.csv`).
   - **Lotes de Liquidaciones Trabajados:** Muestra un listado histórico de los nombres de archivos procesados exitosamente. Este listado se actualiza automáticamente tras cada proceso de conversión y se limpia de forma sincronizada al ejecutar el **Borrado de Liquidación**, eliminando el archivo de registro `excel-convertidos.csv`.
-- **Proceso (ETL):** Los archivos leídos son transformados a CSV. Luego son unificados en un único gran archivo llamado `liquidaciones_unificadas.csv`.
+- **Proceso (ETL) y Limpieza Automática:** Al hacer clic en "Iniciar Conversión y Unificación", el sistema ejecuta de forma silenciosa un **borrado automático** de liquidaciones anteriores antes de procesar los nuevos archivos. Esto garantiza una conversión completamente limpia y previene la duplicación de datos sin requerir intervención manual previa. Los archivos leídos son luego transformados a CSV y unificados en un único archivo llamado `liquidaciones_unificadas.csv`.
 
 ### 1.2 Conversión de Novedades
 - **Validación:** El sistema verifica que el nombre del archivo comience con ciertos prefijos válidos (`ld`, `reem`, `gc`, `residentes`, `criticidad`, `fortalecimiento`).
@@ -29,6 +29,8 @@ Esta pantalla se encarga de procesar archivos Excel en bruto y unificarlos en fo
 
 ## 2. Menú de Procesos (Barra Lateral)
 Aquí se encuentra la navegación principal hacia los reportes analíticos de los datos unificados. La interfaz utiliza un sistema de **acordeones interactivos** que agrupan los submenús por categorías lógicas (Informes, Liquidación Completa, Ley 100%, Acumulado Aporte Jub., Novedades Mensuales y Configuración de Parámetros). Al pasar el ratón sobre cada categoría, se desplegarán suavemente sus respectivas opciones.
+
+- **Botón de Menú Flotante:** La aplicación cuenta con un botón de menú anclado de forma fija en la esquina superior izquierda de la pantalla. Este control sigue dinámicamente al usuario mientras realiza "scroll" hacia abajo o a la derecha, garantizando el acceso permanente a la barra de navegación desde cualquier área de lectura sin necesidad de regresar al tope de la página.
 
 ### 2.1 Liquidación Completa
 - Muestra una tabla masiva utilizando *DataTables* con **todos** los registros encontrados en `liquidaciones_unificadas.csv`, permitiendo visualizar el padrón completo sin exclusiones (incluyendo aquellos registros donde el `PERIODO_IMPUTADO` es distinto al `PERIODO_LIQUIDADO`).
@@ -202,7 +204,7 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
 El sistema cuenta con un esquema de seguridad basado en roles y control de accesos para garantizar que cada tipo de usuario visualice y opere exclusivamente sobre las secciones y funciones autorizadas.
 
 ### 4.1 Pantalla de Acceso (Login)
-Al ingresar a la plataforma, se presenta un panel de autenticación que requiere un nombre de usuario y contraseña válidos. 
+Al ingresar a la plataforma, se presenta un panel de autenticación que requiere un nombre de usuario y contraseña válidos. Esta pantalla cuenta con un fondo interactivo y dinámico, adornado con partículas de colores que siguen de forma reactiva los movimientos del cursor del mouse, proporcionando una interfaz moderna y fluida de bienvenida.
 - **Persistencia de Sesión:** La sesión activa del usuario se almacena en el almacenamiento de sesión (`sessionStorage`) y expira automáticamente al cerrar la pestaña o el navegador.
 - **Cierre de Sesión (Logout):** El usuario puede cerrar su sesión de forma manual mediante el botón de cierre de sesión provisto en la tarjeta de perfil de la barra lateral, ubicado de manera elegante directamente debajo del nombre de usuario y su rol. Este botón premium de ancho completo incluye un icono descriptivo y texto de acción. Al hacer clic, limpia de forma segura todos los datos cargados en la sesión activa y retorna inmediatamente a la pantalla de acceso para evitar fugas de información.
 
