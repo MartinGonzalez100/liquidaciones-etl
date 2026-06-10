@@ -1922,11 +1922,15 @@ app.get('/api/novedades/:tipo', (req, res) => {
 // ENDPOINTS PARA BORRADO DE ARCHIVOS
 app.delete('/api/borrar-liquidacion', (req, res) => {
     try {
+        const keepExcel = req.query.keepExcel === 'true';
         const dirs = [
             path.join(__dirname, 'csv-convertido'),
-            path.join(__dirname, 'csv-unidos'),
-            path.join(__dirname, 'excel-a-convertir')
+            path.join(__dirname, 'csv-unidos')
         ];
+        
+        if (!keepExcel) {
+            dirs.push(path.join(__dirname, 'excel-a-convertir'));
+        }
         dirs.forEach(dir => {
             if (fs.existsSync(dir)) {
                 const files = fs.readdirSync(dir);

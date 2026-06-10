@@ -2614,7 +2614,7 @@
 
             // Borrado automático de liquidación para una conversión limpia
             try {
-                await fetch('/api/borrar-liquidacion', { method: 'DELETE' });
+                await fetch('/api/borrar-liquidacion?keepExcel=true', { method: 'DELETE' });
             } catch (e) {
                 console.error('Error al limpiar datos anteriores:', e);
             }
