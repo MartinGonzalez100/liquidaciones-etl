@@ -28,23 +28,16 @@ Esta pantalla se encarga de procesar archivos Excel en bruto y unificarlos en fo
 ---
 
 ## 2. Menú de Procesos (Barra Lateral)
-Aquí se encuentra la navegación principal hacia los reportes analíticos de los datos unificados. La interfaz utiliza un sistema de **acordeones interactivos** que agrupan los submenús por categorías lógicas (Informes, Liquidación Completa, Ley 100%, Acumulado Aporte Jub., Novedades Mensuales y Configuración de Parámetros). Al pasar el ratón sobre cada categoría, se desplegarán suavemente sus respectivas opciones.
+Aquí se encuentra la navegación principal hacia los reportes analíticos de los datos unificados. La interfaz utiliza un sistema de **acordeones interactivos** que agrupan los submenús por categorías lógicas. Al pasar el ratón sobre cada categoría, se desplegarán suavemente sus respectivas opciones.
 
 - **Botón de Menú Flotante:** La aplicación cuenta con un botón de menú anclado de forma fija en la esquina superior izquierda de la pantalla. Este control sigue dinámicamente al usuario mientras realiza "scroll" hacia abajo o a la derecha, garantizando el acceso permanente a la barra de navegación desde cualquier área de lectura sin necesidad de regresar al tope de la página.
 
-### 2.1 Liquidación Completa
-- Muestra una tabla masiva utilizando *DataTables* con **todos** los registros encontrados en `liquidaciones_unificadas.csv`, permitiendo visualizar el padrón completo sin exclusiones (incluyendo aquellos registros donde el `PERIODO_IMPUTADO` es distinto al `PERIODO_LIQUIDADO`).
-- **Filtros UI (Buscador universal):** Permite filtrar cualquier palabra clave (nombre, DNI, área, planta) en tiempo real.
-- **Filtros de Período (Botones Superiores):**
-  - **Todos:** Muestra el universo de datos completo, sin aplicar ninguna exclusión.
-  - **Mensual:** Filtra la tabla mostrando **únicamente** los registros en los que el campo `PERIODO_IMPUTADO` coincide de forma exacta con el `PERIODO_LIQUIDADO` (ej. Imputado '202603' y Liquidado '202603'). Se excluyen las diferencias.
-  - **Retroactivo:** Filtra la tabla mostrando **únicamente** los registros en los que el campo `PERIODO_IMPUTADO` es **diferente** al `PERIODO_LIQUIDADO` (ej. liquidando meses pasados en el mes actual).
-- **Submenú: Unicos de Planta:**
-  - Extrae de manera deduplicada los registros de personal de planta, mostrando únicamente el cargo más alto por cada agente (DNI).
-  - **Filtro de Planta:** Solo procesa los registros de `Permanente Interino`, `Permanente Titular`, `Transitorios`, `Residentes`, `Residentes Nacionales`, `RetVol2024-Permanente Titular` y `RetVol2024-Permanente Interino`.
-  - **Filtro Lógico:** Exige que los días trabajados sean mayores a cero (`D_TRAB > 0`) y que corresponda a liquidaciones del mes actual (`PERIODO_IMPUTADO == PERIODO_LIQUIDADO`).
+### 2.1 Controles Manuales
+#### Detalle vs Detalle
+- Módulo en desarrollo para visualización y comparación de detalles.
 
-### 2.2 Informe de Liquidación (Dashboard)
+### 2.2 Informes
+#### Informe de Liquidación (Dashboard)
 - Es el cuadro de mando principal basado en gráficos y tablas agregadas por diferentes categorías: Planta, Área, Organismo, Reemplazos y configuraciones combinadas (LD, GC).
 - **Filtros de Período (Botones Superiores - Aplica a todos los gráficos):**
   - **Todos:** Los gráficos y sumas procesan el 100% de la base.
@@ -53,7 +46,7 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
 - **Modo Editor:** Haciendo clic en "Editar Informe" se habilita un panel lateral derecho para arrastrar, redimensionar e inyectar texto a la impresión en PDF.
 - **Reporte Especial Interno (Distribución de Area 1):** Un listado particular que extrae exclusivamente a los empleados donde `Area2 = 'A1'`, agrupando el costo laboral total y el conteo por componente de `PLANTA`.
 
-### 2.3 Informe de Gestión (Actualmente oculto)
+#### Informe de Gestión (Actualmente oculto)
 - Muestra un reporte tabulado diseñado para emular el PDF modelo "Informe de Gestión Interna".
 - **Filtros Fijos:**
   - Hoja Área 1: Filtra registros con `Area2 = 'A1'`.
@@ -62,7 +55,20 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
   - Hoja Área 3: Filtra registros con `Area2 = 'A3'`.
   - Hoja Retroactivos: Filtra registros donde `PERIODO_IMPUTADO != PERIODO_LIQUIDADO`.
 
-### 2.4 Control de Auditoría: Observar por Importes
+### 2.3 Liquidación Completa
+Muestra una tabla masiva utilizando *DataTables* con **todos** los registros encontrados en `liquidaciones_unificadas.csv`, permitiendo visualizar el padrón completo sin exclusiones.
+- **Filtros UI (Buscador universal):** Permite filtrar cualquier palabra clave en tiempo real.
+- **Filtros de Período (Botones Superiores):**
+  - **Todos:** Muestra el universo de datos completo, sin aplicar ninguna exclusión.
+  - **Mensual:** Filtra la tabla mostrando **únicamente** los registros en los que el campo `PERIODO_IMPUTADO` coincide de forma exacta con el `PERIODO_LIQUIDADO`.
+  - **Retroactivo:** Filtra la tabla mostrando **únicamente** los registros en los que el campo `PERIODO_IMPUTADO` es **diferente** al `PERIODO_LIQUIDADO`.
+
+#### Unicos de Planta
+- Extrae de manera deduplicada los registros de personal de planta, mostrando únicamente el cargo más alto por cada agente (DNI).
+- **Filtro de Planta:** Solo procesa los registros de `Permanente Interino`, `Permanente Titular`, `Transitorios`, `Residentes`, `Residentes Nacionales`, `RetVol2024-Permanente Titular` y `RetVol2024-Permanente Interino`.
+- **Filtro Lógico:** Exige que los días trabajados sean mayores a cero (`D_TRAB > 0`) y que corresponda a liquidaciones del mes actual (`PERIODO_IMPUTADO == PERIODO_LIQUIDADO`).
+
+#### Observar por Importes
 - Filtra directamente de la base de datos casos que requieren auditoría humana por posibles anomalías e incoherencias financieras.
 - **Filtros Lógicos de Consulta (Un agente aparece si cumple AL MENOS UNA de estas alertas):**
   1. Sueldo Neto Anómalo: `SUELDO_MANO` (o líquido) es negativo/muy bajo (`< 50000.00`) **O BIEN** desproporcionado (`> 5000000.00`).
@@ -70,19 +76,47 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
   3. Aportes Jubilatorios en negativo: El importe base (`ApjLabelPer`) es negativo (`< 0.00`).
   4. Obra Social en negativo: El importe base (`ObSocPer`) resulta negativo (`< 0.00`).
 
-### 2.5 Control de Auditoría: Observar por Planta
+#### Observar por Planta
 - Detecta incoherencias entre la designación en el nomenclador de origen (`PLANTA`) y el área final del empleado (`Area2`).
 - **Filtros Lógicos de Consulta (Un agente aparece si cumple alguna inconsistencia):**
   1. **Inconsistencia de Reemplazos en A1:** Se lista al empleado si su columna `Area2` indica **A1**, pero su tipo de `PLANTA` indica que es un reemplazo precario: `Reemplazante no permanente` o `Reemplazante no permanente-LD`.
   2. **Inconsistencia de Personal Estable/Hospitalario en A3:** Se lista al empleado si su columna `Area2` indica **A3**, pero su designación (`PLANTA`) es netamente de carrera u hospitalaria: `Transitorios`, `Permanente Interino`, `Permanente Titular`, `Residentes`, o `Residentes Nacionales`.
 
-### 2.6 Reportes Auxiliares (Reemplazos, Residentes, GC, Ley 100%)
-- **Reemplazos:** Utiliza el filtro que extrae aquellos empleados cuya `PLANTA` corresponda a reemplazos (ej: `Reemplazante no permanente` o `Reemplazante no permanente-LD`), agrupándolos por Nivel Educativo y Organismo/Efector.
-- **Residentes:** Utiliza un filtro exacto donde la columna `PLANTA` debe ser `Residentes` o `Residente Nacionales`.
-- **GC Liquidación / LD:** Utilizan combinaciones configurables. El sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Guardias Críticas" o "Libre Disponibilidad" durante la pestaña de Configuración (ej: mapear `H00902` e integrarla al cálculo final).
-- **Ley 100%:** Extrae a los agentes que ya se encuentran percibiendo el beneficio. Aplica el siguiente filtro estricto:
-  1. El valor de la columna `AP100_090_54` debe ser un número mayor a cero (`> 0`).
-- **Cálculo de Ley 100%:** Realiza una simulación predictiva de jubilaciones para aquellos agentes que están en condiciones de percibir la Ley 100% pero que aún no la tienen liquidada. Aplica los siguientes filtros concurrentes (lógica `AND`):
+#### Control GC Liquidacion a Eps
+- **Lógica:** Combina la base mensual de *GC Para Control* con los datos de *Novedades GC Para Control*. Realiza un cruce por el campo `CLAVE_AGRUPACION` (DNI + Efector) contra la `clave` de Novedades.
+- **Columnas añadidas:** Muestra `Importes_Eps` con la suma de los montos cargados en Novedades, y `Control`, que calcula la diferencia exacta (`SUMA - Importes_Eps`). Si un agente en liquidación no posee novedades cargadas, su valor en `Importes_Eps` asume un 0.
+
+#### Control GC No Liquidados
+- **Lógica:** Identifica aquellas Novedades que NO fueron procesadas o liquidadas en el sistema contable final. Compara la `clave` de "Novedades GC Para Control" con las claves liquidadas `CLAVE_AGRUPACION` de "GC Para Control", y visualiza exclusivamente aquellas novedades huérfanas (sin contrapartida en las liquidaciones mensuales).
+
+#### Reemplazos
+- Utiliza el filtro que extrae aquellos empleados cuya `PLANTA` corresponda a reemplazos (ej: `Reemplazante no permanente` o `Reemplazante no permanente-LD`), agrupándolos por Nivel Educativo y Organismo/Efector.
+
+#### LD Liquidación
+- Utiliza combinaciones configurables. El sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Libre Disponibilidad" durante la pestaña de Configuración e integrarla al cálculo final.
+
+#### GC Liquidación
+- Similar a LD, el sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Guardias Críticas" durante la pestaña de Configuración e integrarla al cálculo final.
+
+#### GC Para Control
+- **Filtro:** Registros donde `PERIODO_IMPUTADO` == `PERIODO_LIQUIDADO`.
+- **Lógica:** Agrupa por `CLAVE_AGRUPACION` y muestra la suma total de `SUMA_GC` como la columna **SUMA**.
+
+#### GC Para Control Retro
+- **Filtro:** Registros donde `PERIODO_IMPUTADO` < `PERIODO_LIQUIDADO`.
+- **Lógica:** Agrupa por `CLAVE_AGRUPACION` y suma los montos retroactivos de GC.
+
+#### Residentes
+- **Filtro:** Utiliza un filtro exacto donde la columna `PLANTA` debe ser `Residentes` o `Residentes Nacionales`.
+- **Generación de la Tabla:** Esta tabla es procesada dinámicamente por la API del sistema (`/api/residentes`). El proceso consiste en:
+  1. Leer el archivo unificado de liquidaciones (`liquidaciones_unificadas.csv`).
+  2. Filtrar todos los registros asegurando que la columna `PLANTA` sea estrictamente igual a `Residentes` o `Residentes Nacionales`.
+  3. Realizar una **proyección de columnas**, donde solo se envían al panel de visualización frontal (frontend) los campos esenciales estandarizados del sistema (por ejemplo, identificación, labor, periodos y totales financieros).
+  4. Los datos son expuestos finalmente a través de DataTables para su correcta exploración visual.
+
+### 2.4 Ley 100%
+#### Calculo de ley 100%
+- Realiza una simulación predictiva de jubilaciones para aquellos agentes que están en condiciones de percibir la Ley 100% pero que aún no la tienen liquidada. Aplica los siguientes filtros concurrentes (lógica `AND`):
   1. El empleado corresponde a las zonas contables `A1`, `A26` o `A27` (`Area2`).
   2. El periodo imputado debe coincidir exactamente con el periodo liquidado (`PERIODO_IMPUTADO == PERIODO_LIQUIDADO`).
   3. No debe pertenecer a plantas precarias de reemplazos (`PLANTA` distinta de `Reemplazante no permanente` y `Reemplazante no permanente-LD`).
@@ -91,68 +125,48 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
   6. La edad se calcula dinámicamente frente a la "Fecha de Cálculo" seleccionada. Si es mujer (`Sexo = F`), debe alcanzar o superar la `Edad F` ingresada (típicamente 60). Si es hombre (`Sexo = M`), debe alcanzar o superar la `Edad M` ingresada (típicamente 65).
   7. Se aplica una deduplicación, de forma que si un agente tiene múltiples cargos, solo se proyecta el de mayor `NUMERO_CARGO`.
 
-### 2.7 Reportes de Control GC (Guardias Críticas)
-- **Función:** Permite realizar un control detallado de los montos de Guardias Críticas agrupados por agente y organismo, facilitando la auditoría de liquidaciones mensuales y retroactivas.
-- **Generación Dinámica de Archivos Auxiliares:** Antes de cargar los datos de los controles cruzados ("Control GC Liquidacion a Eps" y "Control GC No Liquidados"), el sistema verifica automáticamente si los archivos `AuxGCLiquidacion.csv` y `AuxGcNovedades.csv` existen. Solo si no han sido generados previamente, los crea en ese instante aplicando sus respectivas reglas de negocio, evitando procesamientos redundantes.
-- **Generación de Datos (`AuxGCLiquidacion.csv`):** El sistema crea automáticamente una tabla auxiliar para el cálculo:
-  - **CLAVE_AGRUPACION:** Unión de `NRO_DOCUMENTO` + `ORGANISMO` (sin espacios a la derecha).
-  - **SUMA_GC:** Suma horizontal de todos los montos de las columnas configuradas como GC en ese registro.
-- **Submenú: GC Para Control:**
-  - **Filtro:** Registros donde `PERIODO_IMPUTADO` == `PERIODO_LIQUIDADO`.
-  - **Lógica:** Agrupa por `CLAVE_AGRUPACION` y muestra la suma total de `SUMA_GC` como la columna **SUMA**. 
-- **Submenú: GC Para Control Retro:**
-  - **Filtro:** Registros donde `PERIODO_IMPUTADO` < `PERIODO_LIQUIDADO`.
-  - **Lógica:** Agrupa por `CLAVE_AGRUPACION` y suma los montos retroactivos de GC.
-- **Submenú: Control GC Liquidacion a Eps:**
-  - **Lógica:** Combina la base mensual de *GC Para Control* con los datos de *Novedades GC Para Control*. Realiza un cruce por el campo `CLAVE_AGRUPACION` (DNI + Efector) contra la `clave` de Novedades.
-  - **Columnas añadidas:** Muestra `Importes_Eps` con la suma de los montos cargados en Novedades, y `Control`, que calcula la diferencia exacta (`SUMA - Importes_Eps`). Si un agente en liquidación no posee novedades cargadas, su valor en `Importes_Eps` asume un 0.
-- **Submenú: Control GC No Liquidados:**
-  - **Lógica:** Identifica aquellas Novedades que NO fueron procesadas o liquidadas en el sistema contable final. Compara la `clave` de "Novedades GC Para Control" con las claves liquidadas `CLAVE_AGRUPACION` de "GC Para Control", y visualiza exclusivamente aquellas novedades huérfanas (sin contrapartida en las liquidaciones mensuales).
-
-### 2.8 Novedades Mensuales
-- **Función:** Es un módulo dedicado exclusivamente a la visualización y control de las novedades cargadas al sistema (Guardias Críticas, Residentes, etc.), listándolas por categoría.
-- **Novedades Mensuales (Resumen):** Haciendo clic en el menú principal "Novedades Mensuales", se despliega una vista de resumen mostrando un listado de todos los archivos (lotes generados) a partir de los documentos Excel de novedades que fueron previamente subidos y procesados.
-- **Submenús de Visualización de Datos (Tablas):**
-  - **Novedades GC:** Despliega una tabla consolidada con toda la información pertinente a Guardias Críticas subida por novedad.
-  - **Novedades GC Para Control:** Muestra los datos del archivo auxiliar `AuxGcNovedades.csv`, pero de forma **agrupada por la columna `clave`** (Documento + EfectorTransformado). La columna de `importe_guardia` representa la sumatoria total calculada para dicha clave, facilitando el cruce visual y algorítmico contra el sistema de Liquidaciones.
-  - **Novedades Residentes:** Despliega el listado completo de los registros contenidos en el archivo `residentes.csv`. Este reporte es dinámico y muestra toda la información biográfica, administrativa y de haberes de la planta de Residentes procesada.
-  - **Residentes - Criticidad:** Muestra específicamente el detalle de los datos correspondientes a la categoría de Criticidad, extrayendo los datos del archivo `criticidad.csv`.
-  - **Residentes - Fortalecimiento:** Muestra el detalle de los complementos de Fortalecimiento a partir del archivo `fortalecimiento.csv`.
-
-#### 2.8.1 Funcionamiento y Limpieza de Datos (Fix de Visualización)
-Para garantizar la integridad de las tablas y evitar errores de visualización (como filas rotas o datos desplazados), el sistema aplica un proceso de **Limpieza Celular Automática** durante la conversión de Excel a CSV:
-- **Remoción de Saltos de Línea:** El sistema detecta automáticamente si existen saltos de línea (`Enter`) dentro de una celda (común en campos de nombres o resoluciones largas) y los reemplaza por espacios. Esto garantiza que cada agente ocupe exactamente una fila en la tabla y que el parser de CSV no interprete erróneamente el fin de un registro.
-- **Normalización de Texto:** Se eliminan espacios en blanco accidentales (trim) y se asegura la codificación correcta de caracteres especiales.
-
-#### 2.8.2 Campos Detallados en Novedades Residentes
-La tabla de Residentes incluye los siguientes campos clave para el control de la auditoría:
-- **DNI / Apellido y Nombre:** Identificación unívoca del agente.
-- **ORGANISMO:** Efector asignado.
-- **RESIDENCIA / MODALIDAD:** Especialidad en formación y tipo de beca/residencia.
-- **Resolución / DescrpResol:** Datos del acto administrativo (altas, promociones, reasignaciones).
-- **Importe Escala Criticidad 003-31:** Monto asignado por criticidad.
-- **Importe Escala Forta. 003-91:** Monto asignado por fortalecimiento.
-
-### 2.8.3 Proceso de Generación y Cálculos de AuxGcNovedades
-El archivo `AuxGcNovedades.csv` es un pilar fundamental para el control cruzado. Se genera y calcula en tiempo real a partir del archivo base de novedades (`gc.csv`), aplicando las siguientes reglas de negocio (ETL):
-- **EfectorTransformado:** Analiza la columna original `Efector` y la cruza contra la base de datos de homologación (`GC_config_efectores.csv`), devolviendo el nombre estandarizado que coincide con las liquidaciones.
-- **clave:** Es la concatenación estricta de la columna `Documento` más el texto calculado en `EfectorTransformado`. Identifica de manera única a cada agente y su cargo hospitalario, permitiendo el "Match" directo contra la `CLAVE_AGRUPACION` del sistema de liquidaciones.
-- **SDYF (Sábado, Domingo y Feriado):** Evalúa la columna `Fecha` contra el calendario oficial del sistema (`GC_config_sdyf.csv`). Si la fecha figura y está marcada como "SI", el sistema inyecta la etiqueta `SI`.
-- **clave_importe:** Es el código maestro tarifario. Se construye dinámicamente uniendo 3 partes:
-  1. *Prefijo:* `S,DYF` (si la columna SDYF indica "SI") o `LAV` (Laborable normal).
-  2. *Tipo Guardia:* El string original, por ejemplo `CRÍTICA MÉDICOS`.
-  3. *Nivel:* El primer carácter del `Tipo Nivel` reportado (ej. "A.1" se convierte en "A").
-  Ejemplo de resultado: `LAVCRÍTICA MÉDICOSA`.
-- **importe_guardia:** Realiza una búsqueda algorítmica de la `clave_importe` (normalizando tildes y espacios) dentro de la tarifa oficial de códigos (`GC_config_codigos_importes.csv`). Una vez extraído el importe base, aplica la fórmula: `Importe Base * Horas`. En caso de que el código tarifario no exista o esté en cero, el sistema asigna el valor excepcional de `1` como alerta visual.
-
-### 2.9 Asignaciones
-- **Función:** Módulo dedicado a mostrar reportes de los agentes que perciben Asignaciones Familiares, extrayendo los datos de la liquidación unificada basándose en reglas estrictas de periodo y tipo de planta.
+### 2.5 Asignaciones
+- Módulo dedicado a mostrar reportes de los agentes que perciben Asignaciones Familiares, extrayendo los datos de la liquidación unificada basándose en reglas estrictas de periodo y tipo de planta.
 - **Filtros Base Universales:** Solo se toman en cuenta aquellos registros donde el monto liquidado de la asignación sea distinto de cero (`ASIG_FAM <> 0`), que además reporten días trabajados (`D_TRAB > 0`), y cuya planta de origen no sea explícitamente `Reemplazante no permanente-LD`.
-- **Submenú: Asignaciones Familiares:**
-  - Aplica los filtros base.
-  - **Lógica de Periodos:** Para todos los agentes, se requiere que el periodo imputado y el liquidado sean exactamente iguales. La única excepción a esta regla aplica a la planta de `Reemplazante no permanente`, donde el sistema también autoriza mostrar registros cuyo periodo imputado pertenezca a exactamente un mes anterior al periodo liquidado.
-- **Submenú: Asignaciones Familiares - Reemp:**
-  - Replica exactamente las lógicas del submenú principal, pero añade un filtro forzoso donde la planta del agente debe ser estrictamente `Reemplazante no permanente`.
+
+#### Asignaciones Familiares
+- Aplica los filtros base.
+- **Lógica de Periodos:** Para todos los agentes, se requiere que el periodo imputado y el liquidado sean exactamente iguales. La única excepción a esta regla aplica a la planta de `Reemplazante no permanente`, donde el sistema también autoriza mostrar registros cuyo periodo imputado pertenezca a exactamente un mes anterior al periodo liquidado.
+
+#### Asignaciones Familiares - Reemp
+- Replica exactamente las lógicas del submenú principal, pero añade un filtro forzoso donde la planta del agente debe ser estrictamente `Reemplazante no permanente`.
+
+### 2.6 Acumulado Aporte Jub.
+#### Topes de Ap. Jubilatorios
+- Visualización y filtrado sobre los aportes jubilatorios y sus límites respectivos establecidos por normativa.
+
+### 2.7 Novedades Mensuales
+- **Función:** Es un módulo dedicado exclusivamente a la visualización y control de las novedades cargadas al sistema (Guardias Críticas, Residentes, etc.), listándolas por categoría.
+- **Resumen:** Haciendo clic en el menú principal "Novedades Mensuales", se despliega una vista de resumen mostrando un listado de todos los archivos (lotes generados) a partir de los documentos Excel de novedades que fueron previamente subidos y procesados.
+
+#### Novedades GC
+- Despliega una tabla consolidada con toda la información pertinente a Guardias Críticas subida por novedad.
+
+#### Novedades GC Para Control
+- Muestra los datos del archivo auxiliar `AuxGcNovedades.csv`, pero de forma **agrupada por la columna `clave`** (Documento + EfectorTransformado). La columna de `importe_guardia` representa la sumatoria total calculada para dicha clave, facilitando el cruce visual y algorítmico contra el sistema de Liquidaciones.
+- **Funcionamiento y Limpieza de Datos:** Para evitar errores de visualización, el sistema detecta saltos de línea (`Enter`) en celdas y los reemplaza por espacios. Además, normaliza textos para prevenir errores de parsing.
+- **Proceso de Generación y Cálculos de AuxGcNovedades:** Se genera a partir de `gc.csv`. Normaliza `EfectorTransformado` y calcula `clave_importe` usando indicadores como SDYF. Luego aplica tarifas desde `GC_config_codigos_importes.csv`.
+
+#### Novedades Residentes
+- Despliega el listado completo de los registros contenidos en el archivo `residentes.csv`. Este reporte es dinámico y muestra toda la información biográfica, administrativa y de haberes de la planta de Residentes procesada.
+- **Campos Detallados Clave:**
+  - **DNI / Apellido y Nombre:** Identificación unívoca del agente.
+  - **ORGANISMO:** Efector asignado.
+  - **RESIDENCIA / MODALIDAD:** Especialidad en formación y tipo de beca/residencia.
+  - **Resolución / DescrpResol:** Datos del acto administrativo (altas, promociones, reasignaciones).
+  - **Importe Escala Criticidad 003-31:** Monto asignado por criticidad.
+  - **Importe Escala Forta. 003-91:** Monto asignado por fortalecimiento.
+
+#### Residentes - Criticidad
+- Muestra específicamente el detalle de los datos correspondientes a la categoría de Criticidad, extrayendo los datos del archivo `criticidad.csv`.
+
+#### Residentes - Fortalecimiento
+- Muestra el detalle de los complementos de Fortalecimiento a partir del archivo `fortalecimiento.csv`.
 
 ---
 
