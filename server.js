@@ -221,6 +221,8 @@ app.get('/api/residentes', (req, res) => {
                 CAMPOS_LIQUIDACION.forEach(field => {
                     projectedRow[field] = row[field] ?? '';
                 });
+                projectedRow['LIB_003_31'] = row['LIB_003_31'] ?? '';
+                projectedRow['LIB_003_91'] = row['LIB_003_91'] ?? '';
 
                 results.push(projectedRow);
                 filteredCount++;
@@ -1896,6 +1898,205 @@ app.get('/api/gc-no-liquidados', async (req, res) => {
 
     } catch (error) {
         console.error('[SERVER] ❌ Error en /api/gc-no-liquidados:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Helper to read CSV file as Promise
+function readCsvFile(filePath) {
+    return new Promise((resolve, reject) => {
+        if (!fs.existsSync(filePath)) {
+            return resolve([]);
+        }
+        const results = [];
+        fs.createReadStream(filePath)
+            .pipe(csv())
+            .on('data', (data) => results.push(data))
+            .on('end', () => resolve(results))
+            .on('error', (err) => reject(err));
+    });
+}
+
+// Helper to parse floats safely from CSV cells
+function parseCsvFloat(val) {
+    if (!val) return 0;
+    const cleaned = val.toString().replace(/"/g, '').replace(/,/g, '').trim();
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? 0 : parsed;
+}
+
+// Generate AuxResidentesLiquidacion.csv
+async function generateAuxResidentesLiquidacion() {
+    const unificadasPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+    const novedadesPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'residentes.csv');
+    const auxPath = path.join(CSV_UNIDOS_DIR, 'AuxResidentesLiquidacion.csv');
+
+    if (!fs.existsSync(unificadasPath)) throw new Error('Archivo liquidaciones_unificadas.csv no encontrado.');
+
+    // 1. Load Novedades Residentes mapping: DNI -> row
+    const novedadesMap = new Map();
+    if (fs.existsSync(novedadesPath)) {
+        const novedadesList = await readCsvFile(novedadesPath);
+        novedadesList.forEach(row => {
+            const dni = (row.DNI || '').toString().trim();
+            if (dni) novedadesMap.set(dni, row);
+        });
+    }
+
+    // 2. Load existing observations if any
+    const existingObservations = new Map();
+    if (fs.existsSync(auxPath)) {
+        const existingRows = await readCsvFile(auxPath);
+        existingRows.forEach(row => {
+            const doc = (row.NRO_DOCUMENTO || '').toString().trim();
+            const cargo = (row.NUMERO_CARGO || '').toString().trim();
+            if (doc) {
+                existingObservations.set(doc + '_' + cargo, row.OBSERVACION || '');
+            }
+        });
+    }
+
+    // 3. Read liquidaciones_unificadas.csv and build output
+    const unificadasRows = await readCsvFile(unificadasPath);
+    const results = [];
+
+    unificadasRows.forEach(row => {
+        const esResidente = row.PLANTA === 'Residentes' || row.PLANTA === 'Residentes Nacionales';
+        if (esResidente) {
+            const doc = (row.NRO_DOCUMENTO || '').toString().trim();
+            const cargo = (row.NUMERO_CARGO || '').toString().trim();
+            const key = doc + '_' + cargo;
+
+            const novedad = novedadesMap.get(doc);
+            const bruto31 = parseCsvFloat(novedad ? novedad.ImporteEscalaCriticidad003_31 : 0);
+            const bruto91 = parseCsvFloat(novedad ? novedad.ImporteEscalaForta003_91 : 0);
+
+            const lib31 = parseCsvFloat(row.LIB_003_31);
+            const lib91 = parseCsvFloat(row.LIB_003_91);
+
+            const dTrab = parseCsvFloat(row.D_TRAB);
+            const diasInasist = parseCsvFloat(row.DIAS_INASIST);
+
+            const dif31 = lib31 - ((bruto31 / 30) * (dTrab - diasInasist));
+            const dif91 = lib91 - ((bruto91 / 30) * (dTrab - diasInasist));
+
+            const newRow = {};
+            newRow['OBSERVACION'] = existingObservations.get(key) || '';
+            newRow['BRUTO 003-31'] = bruto31.toFixed(2);
+            newRow['DIFERENCIAS 003-31'] = dif31.toFixed(2);
+            newRow['BRUTO 003-91'] = bruto91.toFixed(2);
+            newRow['DIFERENCIAS 003-91'] = dif91.toFixed(2);
+
+            const cols = [
+                'NIVEL', 'DESCAGENTE', 'NRO_DOCUMENTO', 'DIAS_INASIST', 'D_TRAB',
+                'PLANTA', 'ORGANISMO', 'FUNCION', 'PERIODO_IMPUTADO', 'PERIODO_LIQUIDADO',
+                'NUMERO_CARGO', 'Area2', 'LIB_003_31', 'LIB_003_91'
+            ];
+
+            cols.forEach(col => {
+                newRow[col] = row[col] ?? '';
+            });
+
+            results.push(newRow);
+        }
+    });
+
+    const headers = [
+        'OBSERVACION', 'BRUTO 003-31', 'DIFERENCIAS 003-31', 'BRUTO 003-91', 'DIFERENCIAS 003-91',
+        'NIVEL', 'DESCAGENTE', 'NRO_DOCUMENTO', 'DIAS_INASIST', 'D_TRAB',
+        'PLANTA', 'ORGANISMO', 'FUNCION', 'PERIODO_IMPUTADO', 'PERIODO_LIQUIDADO',
+        'NUMERO_CARGO', 'Area2', 'LIB_003_31', 'LIB_003_91'
+    ];
+
+    const csvContent = [
+        headers.join(','),
+        ...results.map(r => headers.map(h => {
+            let val = (r[h] !== undefined && r[h] !== null) ? r[h].toString() : '';
+            if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+                val = `"${val.replace(/"/g, '""')}"`;
+            }
+            return val;
+        }).join(','))
+    ].join('\n');
+
+    fs.writeFileSync(auxPath, csvContent, 'utf8');
+    console.log(`[SERVER] ✅ AuxResidentesLiquidacion.csv generado con ${results.length} registros.`);
+    return true;
+}
+
+app.get('/api/residentes/control', async (req, res) => {
+    try {
+        const auxPath = path.join(CSV_UNIDOS_DIR, 'AuxResidentesLiquidacion.csv');
+        if (!fs.existsSync(auxPath)) {
+            await generateAuxResidentesLiquidacion();
+        }
+
+        if (!fs.existsSync(auxPath)) {
+            return res.json([]);
+        }
+
+        const data = await readCsvFile(auxPath);
+        res.json(data);
+    } catch (error) {
+        console.error('[SERVER] ❌ Error en /api/residentes/control:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/residentes/save-observaciones', async (req, res) => {
+    try {
+        const { changes } = req.body;
+        if (!changes || !Array.isArray(changes)) {
+            return res.status(400).json({ success: false, error: 'Cambios no válidos.' });
+        }
+
+        const auxPath = path.join(CSV_UNIDOS_DIR, 'AuxResidentesLiquidacion.csv');
+        if (!fs.existsSync(auxPath)) {
+            return res.status(404).json({ success: false, error: 'El archivo AuxResidentesLiquidacion.csv no existe.' });
+        }
+
+        const rows = await readCsvFile(auxPath);
+        const changeMap = new Map();
+        changes.forEach(c => {
+            const doc = (c.nro_documento || '').toString().trim();
+            const cargo = (c.numero_cargo || '').toString().trim();
+            const key = doc + '_' + cargo;
+            changeMap.set(key, c.observacion);
+        });
+
+        const updatedRows = rows.map(row => {
+            const doc = (row.NRO_DOCUMENTO || '').toString().trim();
+            const cargo = (row.NUMERO_CARGO || '').toString().trim();
+            const key = doc + '_' + cargo;
+
+            if (changeMap.has(key)) {
+                row.OBSERVACION = changeMap.get(key);
+            }
+            return row;
+        });
+
+        const headers = [
+            'OBSERVACION', 'BRUTO 003-31', 'DIFERENCIAS 003-31', 'BRUTO 003-91', 'DIFERENCIAS 003-91',
+            'NIVEL', 'DESCAGENTE', 'NRO_DOCUMENTO', 'DIAS_INASIST', 'D_TRAB',
+            'PLANTA', 'ORGANISMO', 'FUNCION', 'PERIODO_IMPUTADO', 'PERIODO_LIQUIDADO',
+            'NUMERO_CARGO', 'Area2', 'LIB_003_31', 'LIB_003_91'
+        ];
+
+        const csvContent = [
+            headers.join(','),
+            ...updatedRows.map(r => headers.map(h => {
+                let val = (r[h] !== undefined && r[h] !== null) ? r[h].toString() : '';
+                if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+                    val = `"${val.replace(/"/g, '""')}"`;
+                }
+                return val;
+            }).join(','))
+        ].join('\n');
+
+        fs.writeFileSync(auxPath, csvContent, 'utf8');
+        res.json({ success: true });
+    } catch (error) {
+        console.error('[SERVER] ❌ Error en /api/residentes/save-observaciones:', error.message);
         res.status(500).json({ error: error.message });
     }
 });

@@ -114,6 +114,21 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
   3. Realizar una **proyección de columnas**, donde solo se envían al panel de visualización frontal (frontend) los campos esenciales estandarizados del sistema (por ejemplo, identificación, labor, periodos y totales financieros).
   4. Los datos son expuestos finalmente a través de DataTables para su correcta exploración visual.
 
+#### Control Residentes de Liquidacion a Novedades
+- **Filtro:** Procesa y cruza los registros de planta `Residentes` y `Residentes Nacionales` con los datos mensuales de novedades de Residentes.
+- **Generación y Lógica Auxiliar:**
+  - El sistema verifica la existencia del archivo `AuxResidentesLiquidacion.csv` en la carpeta `csv-unidos`. Si no existe, lo crea de forma dinámica.
+  - Cruza el `NRO_DOCUMENTO` de la liquidación con el `DNI` del archivo de novedades (`residentes.csv`).
+  - Calcula las columnas:
+    - **BRUTO 003-31:** Importe obtenido de la columna `ImporteEscalaCriticidad003_31` de novedades de Residentes.
+    - **DIFERENCIAS 003-31:** Calculado como `LIB_003_31 - ((BRUTO 003-31 / 30) * (D_TRAB - DIAS_INASIST))`.
+    - **BRUTO 003-91:** Importe obtenido de la columna `ImporteEscalaForta003_91` de novedades de Residentes.
+    - **DIFERENCIAS 003-91:** Calculado como `LIB_003_91 - ((BRUTO 003-91 / 30) * (D_TRAB - DIAS_INASIST))`.
+    - **OBSERVACION:** Un campo de entrada de texto editable que permite cargar y guardar observaciones de forma manual.
+  - Las nuevas columnas se sitúan al inicio de la tabla (antes de `NIVEL`).
+  - **Persistencia:** Al presionar el botón "Guardar Observaciones" situado en la barra de título, los cambios ingresados en la columna `OBSERVACION` se guardan directamente en el archivo `AuxResidentesLiquidacion.csv` en el servidor, manteniéndose para futuras cargas de la vista.
+
+
 ### 2.4 Ley 100%
 #### Calculo de ley 100%
 - Realiza una simulación predictiva de jubilaciones para aquellos agentes que están en condiciones de percibir la Ley 100% pero que aún no la tienen liquidada. Aplica los siguientes filtros concurrentes (lógica `AND`):

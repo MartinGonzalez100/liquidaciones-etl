@@ -1375,6 +1375,7 @@
                 <a href="#" id="menu-gc-control" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ GC Para Control</a>
                 <a href="#" id="menu-gc-control-retro" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ GC Para Control Retro</a>
                 <a href="#" id="menu-residentes">└─ Residentes</a>
+                <a href="#" id="menu-residentes-control" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Control Residentes de Liquidacion a Novedades</a>
             </div>
         </div>
 
@@ -1566,6 +1567,9 @@
         <div id="liquidacion-completa-view" class="container" style="display: none;">
             <div style="display: flex; align-items: center;">
                 <h1 id="table-title">Cargando...</h1>
+                <button id="btn-save-residentes-control" class="btn-convertir" style="display: none; margin-left: 20px; background-color: #27ae60; color: white; height: 36px; padding: 0 15px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; align-items: center; gap: 8px;">
+                    <i class="fas fa-save"></i> Guardar Observaciones
+                </button>
                 <div id="help-icon" class="tooltip" style="display: none;"><span
                         style="border: 1px solid #5c67f2; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold;">?</span><span
                         class="tooltiptext">se esta utilizando valores negativos o valores fuera de rango para
@@ -2183,6 +2187,7 @@
     </div>
     </div>
     <script> // --- CONSTANTES Y ELEMENTOS ---
+        let modifiedObservations = new Map();
         const statusMessage = document.getElementById('status-message');
         const statusText = document.getElementById('status-text');
         const uploadArea = document.getElementById('upload-area');
@@ -2739,10 +2744,20 @@
         let dataTableInitialized = false;
 
         function loadDataAndRenderTable(url, title) {
-
-
-
             console.log("📥 Iniciando carga desde:", url);
+
+            // Limpiar el mapa de observaciones modificadas
+            modifiedObservations.clear();
+
+            // Mostrar u ocultar el botón de guardar según corresponda
+            const saveBtn = document.getElementById('btn-save-residentes-control');
+            if (saveBtn) {
+                if (title === 'Control Residentes de Liquidacion a Novedades') {
+                    saveBtn.style.display = 'inline-flex';
+                } else {
+                    saveBtn.style.display = 'none';
+                }
+            }
 
             // 1. Mostrar la vista y el título
             showSection('liquidacion-completa-view');
@@ -2772,10 +2787,18 @@
                 }
 
                 // 3. DETECCIÓN DINÁMICA DE COLUMNAS
-                const columns = Object.keys(data[0]).map(key => ({
-                    title: key.replace(/_/g, ' '),
-                    data: key
-                }));
+                const columns = Object.keys(data[0]).map(key => {
+                    const colDef = {
+                        title: key.replace(/_/g, ' '),
+                        data: key
+                    };
+                    if (key === 'OBSERVACION') {
+                        colDef.render = function (val, type, row) {
+                            return `<input type="text" class="obs-input" data-doc="${row.NRO_DOCUMENTO}" data-cargo="${row.NUMERO_CARGO}" value="${val || ''}" style="width: 100%; min-width: 200px; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; background: transparent; color: inherit;" />`;
+                        };
+                    }
+                    return colDef;
+                });
 
                 // 4. INICIALIZACIÓN
                 $('#tabla-datos').DataTable({
@@ -3062,10 +3085,19 @@
                     loadDataAndRenderTable('/api/residentes', 'Residentes Filtrados');
                     closeNav();
                 });
+            } else {
+                console.error("Elemento 'menu-residentes' no encontrado.");
             }
 
-            else {
-                console.error("Elemento 'menu-residentes' no encontrado.");
+            // Conexión del menú Control Residentes de Liquidacion a Novedades
+            const menuResidentesControl = document.getElementById('menu-residentes-control');
+            if (menuResidentesControl) {
+                menuResidentesControl.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    loadDataAndRenderTable('/api/residentes/control', 'Control Residentes de Liquidacion a Novedades');
+                    closeNav();
+                });
             }
 
             // Conexión del menú Ley 100%
@@ -3141,6 +3173,62 @@
                     loadDataAndRenderTable(url, 'Resultado: Cálculo de Ley 100%');
                 });
             }
+
+            // Botón Guardar Control Residentes
+            const btnSaveResidentesControl = document.getElementById('btn-save-residentes-control');
+            if (btnSaveResidentesControl) {
+                btnSaveResidentesControl.addEventListener('click', function () {
+                    const changes = [];
+                    modifiedObservations.forEach((value, key) => {
+                        const [doc, cargo] = key.split('_');
+                        changes.push({ nro_documento: doc, numero_cargo: cargo, observacion: value });
+                    });
+
+                    if (changes.length === 0) {
+                        alert("No hay observaciones modificadas para guardar.");
+                        return;
+                    }
+
+                    btnSaveResidentesControl.disabled = true;
+                    const originalHTML = btnSaveResidentesControl.innerHTML;
+                    btnSaveResidentesControl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+                    fetch('/api/residentes/save-observaciones', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ changes })
+                    })
+                    .then(res => res.json())
+                    .then(result => {
+                        if (result.success) {
+                            alert("¡Observaciones guardadas correctamente!");
+                            modifiedObservations.clear();
+                            const title = document.getElementById('table-title').innerText;
+                            loadDataAndRenderTable('/api/residentes/control', title);
+                        } else {
+                            alert("Error al guardar observaciones: " + (result.error || 'Error desconocido'));
+                        }
+                    })
+                    .catch(err => {
+                        alert("Error de red al guardar: " + err.message);
+                    })
+                    .finally(() => {
+                        btnSaveResidentesControl.disabled = false;
+                        btnSaveResidentesControl.innerHTML = originalHTML;
+                    });
+                });
+            }
+
+            // Capturar cambios en inputs de observaciones (event delegation)
+            $(document).on('change', '.obs-input', function () {
+                const doc = $(this).attr('data-doc');
+                const cargo = $(this).attr('data-cargo');
+                const key = doc + '_' + cargo;
+                const val = $(this).val();
+                modifiedObservations.set(key, val);
+            });
 
             // Conexión del menú Dashboard Informe
             const menuDashboard = document.getElementById('menu-dashboard-informe');
@@ -4865,7 +4953,8 @@
                 { id: "menu-gc-liquidacion", label: "GC Liquidación", elementId: "menu-gc-liquidacion" },
                 { id: "menu-gc-control", label: "GC Para Control", elementId: "menu-gc-control" },
                 { id: "menu-gc-control-retro", label: "GC Para Control Retro", elementId: "menu-gc-control-retro" },
-                { id: "menu-residentes", label: "Residentes", elementId: "menu-residentes" }
+                { id: "menu-residentes", label: "Residentes", elementId: "menu-residentes" },
+                { id: "menu-residentes-control", label: "Control Residentes de Liquidacion a Novedades", elementId: "menu-residentes-control" }
             ],
             "Ley 100%": [
                 { id: "menu-calculo-ley100", label: "Cálculo de ley 100%", elementId: "menu-calculo-ley100" }
