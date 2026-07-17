@@ -1981,7 +1981,7 @@ async function generateAuxResidentesLiquidacion() {
             const dif91 = lib91 - ((bruto91 / 30) * (dTrab - diasInasist));
 
             const newRow = {};
-            newRow['OBSERVACION'] = existingObservations.get(key) || '';
+            newRow['OBSERVACION'] = existingObservations.has(key) ? existingObservations.get(key) : 'Obs-';
             newRow['BRUTO 003-31'] = bruto31.toFixed(2);
             newRow['DIFERENCIAS 003-31'] = dif31.toFixed(2);
             newRow['BRUTO 003-91'] = bruto91.toFixed(2);
@@ -2372,13 +2372,13 @@ app.delete('/api/users/:username', requireProgramador, (req, res) => {
 // OPCIÓN 1: Ejecutar solo localmente (Más seguro, nadie en tu red puede entrar)
 // Descomenta las siguientes 4 líneas para usar esta opción, y comenta la Opción 2.
 app.listen(PORT, '127.0.0.1', () => {
-    console.log(`Servidor de la Interfaz Simple ejecutándose en modo LOCAL (Solo esta PC) en el puerto ${PORT}`);
-    console.log(`Accede desde tu navegador en: http://localhost:${PORT}`);
+   console.log(`Servidor de la Interfaz Simple ejecutándose en modo LOCAL (Solo esta PC) en el puerto ${PORT}`);
+   console.log(`Accede desde tu navegador en: http://localhost:${PORT}`);
 });
 
 // OPCIÓN 2: Ejecutar en la red local (Para ver muestras desde otros dispositivos)
 // Descomenta las siguientes 4 líneas para usar esta opción, y comenta la Opción 1.
 //app.listen(PORT, '0.0.0.0', () => {
-//    console.log(`Servidor de la Interfaz Simple ejecutándose en modo RED (Accesible por otros) en el puerto ${PORT}`);
-//    console.log(`Para acceder desde otro dispositivo, ingresa la IP de esta PC seguida de :${PORT}`);
+  //  console.log(`Servidor de la Interfaz Simple ejecutándose en modo RED (Accesible por otros) en el puerto ${PORT}`);
+  //  console.log(`Para acceder desde otro dispositivo, ingresa la IP de esta PC seguida de :${PORT}`);
 //});

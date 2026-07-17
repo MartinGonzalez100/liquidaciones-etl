@@ -124,7 +124,7 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
     - **DIFERENCIAS 003-31:** Calculado como `LIB_003_31 - ((BRUTO 003-31 / 30) * (D_TRAB - DIAS_INASIST))`.
     - **BRUTO 003-91:** Importe obtenido de la columna `ImporteEscalaForta003_91` de novedades de Residentes.
     - **DIFERENCIAS 003-91:** Calculado como `LIB_003_91 - ((BRUTO 003-91 / 30) * (D_TRAB - DIAS_INASIST))`.
-    - **OBSERVACION:** Un campo de entrada de texto editable que permite cargar y guardar observaciones de forma manual.
+    - **OBSERVACION:** Un campo de entrada de texto editable que inicializa por defecto con el valor `"Obs-"` al crearse y permite cargar y guardar observaciones de forma manual.
   - Las nuevas columnas se sitúan al inicio de la tabla (antes de `NIVEL`).
   - **Persistencia:** Al presionar el botón "Guardar Observaciones" situado en la barra de título, los cambios ingresados en la columna `OBSERVACION` se guardan directamente en el archivo `AuxResidentesLiquidacion.csv` en el servidor, manteniéndose para futuras cargas de la vista.
 
@@ -186,7 +186,7 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
 ---
 
 ## 3. Configuración del Sistema
-Esta sección es el "cerebro" del sistema, donde se definen las reglas de negocio que transforman los datos crudos en información analítica.
+Esta sección es el "cerebro" del sistema, donde se definen las reglas de negocio que transforman los datos crudos en información analítica. El acceso a cada uno de sus submenús (acordeones) está regulado de manera individual a través del sistema de permisos de usuario.
 
 ### 3.1 Temas Visuales y Paletas de Colores
 - **Función:** Permite al usuario personalizar la experiencia visual de toda la plataforma web. Esta configuración afecta a tablas, dashboards, barra de navegación y fondos, guardando la preferencia de manera persistente en la memoria local del navegador.
@@ -257,4 +257,5 @@ El usuario con rol de **Programador** dispone de una sección dedicada accesible
 - **Registrar Nuevo Usuario:** Formulario interactivo que permite añadir un nuevo usuario ingresando su nombre, contraseña, rol y seleccionando mediante casillas de verificación las pantallas específicas del sistema a las que tendrá autorización.
 - **Editar Usuario Existente:** Permite modificar la contraseña, cambiar el rol asignado y reconfigurar en tiempo real las pantallas autorizadas.
 - **Eliminar Usuario:** Permite remover definitivamente una cuenta de usuario del sistema (a excepción de la cuenta raíz `progra`).
+- **Control Granular de Configuración:** Permite habilitar o deshabilitar de forma independiente cada uno de los 7 submenús (acordeones) de la sección de Configuración de Parámetros. Si el usuario cuenta con el permiso general de Configuración o es una cuenta antigua (sin sub-permisos definidos en su registro), dispondrá de acceso completo por defecto hasta que se restrinja selectivamente.
 - **Persistencia de Datos:** Todos los usuarios, credenciales y permisos se guardan y persisten de manera estructurada en el archivo `usuarios.json` en la carpeta `configuracion_parametros/`.

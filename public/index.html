@@ -4974,7 +4974,14 @@
                 { id: "menu-novedades-fortalecimiento", label: "Fortalecimiento", elementId: "menu-novedades-fortalecimiento" }
             ],
             "Configuración": [
-                { id: "menu-configuracion", label: "Configuración de Parámetros", elementId: "menu-configuracion" }
+                { id: "menu-configuracion", label: "Configuración de Parámetros (General)", elementId: "menu-configuracion" },
+                { id: "config-theme", label: "Sub-Menú: Paletas de Colores", elementId: "accordion-theme" },
+                { id: "config-ld", label: "Sub-Menú: Libres Disponibilidad", elementId: "accordion-ld" },
+                { id: "config-gc", label: "Sub-Menú: Guardias Críticas", elementId: "accordion-gc" },
+                { id: "config-gc-efectores", label: "Sub-Menú: GC Efectores", elementId: "accordion-gc-efectores" },
+                { id: "config-gc-codigos-efectores", label: "Sub-Menú: GC Códigos Importes", elementId: "accordion-gc-codigos-efectores" },
+                { id: "config-gc-sdyf", label: "Sub-Menú: GC SDYF (Feriados/Findes)", elementId: "accordion-gc-sdyf" },
+                { id: "config-asig-a3", label: "Sub-Menú: Asignaciones A3", elementId: "accordion-asig-a3" }
             ]
         };
 
@@ -4997,6 +5004,25 @@
             return false;
         }
 
+        function hasConfigPermission(userPermissions, specificPermission) {
+            if (!userPermissions) return false;
+            if (userPermissions.includes('all')) return true;
+            
+            // 1. Si tiene el permiso específico habilitado directamente
+            if (userPermissions.includes(specificPermission)) return true;
+            
+            // 2. Fallback para usuarios existentes: Si el usuario tiene 'menu-configuracion'
+            // pero no cuenta con NINGUNO de los 7 sub-permisos en su array de permisos,
+            // se asume que es un usuario previo a este cambio y se le habilitan todos los submenús por defecto.
+            const subConfigPerms = ['config-theme', 'config-ld', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'];
+            const hasAnySpecific = subConfigPerms.some(p => userPermissions.includes(p));
+            if (userPermissions.includes('menu-configuracion') && !hasAnySpecific) {
+                return true;
+            }
+            
+            return false;
+        }
+
         function isSectionAllowed(sectionId) {
             const user = getCurrentUser();
             if (!user) return false;
@@ -5005,7 +5031,11 @@
             // Map standard section IDs to permission keys
             if (sectionId === 'conversion-form') return hasPermission(user.permissions, 'conversion-form', null);
             if (sectionId === 'gestion-usuarios-view') return user.role === 'programador';
-            if (sectionId === 'configuracion-view') return hasPermission(user.permissions, 'menu-configuracion', null);
+            if (sectionId === 'configuracion-view') {
+                const subConfigPerms = ['config-theme', 'config-ld', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'];
+                const hasAnySubPerm = subConfigPerms.some(p => hasConfigPermission(user.permissions, p));
+                return hasPermission(user.permissions, 'menu-configuracion', null) || hasAnySubPerm;
+            }
             if (sectionId === 'novedades-resumen-view') return hasPermission(user.permissions, 'menu-novedades-gc', 'menu-novedades-mensuales');
             if (sectionId === 'informe-modelo-view') return hasPermission(user.permissions, 'menu-informe-modelo', 'menu-informes');
             if (sectionId === 'detalle-vs-detalle-view') return hasPermission(user.permissions, 'menu-detalle-vs-detalle', null);
@@ -5141,9 +5171,19 @@
 
                 // Si es un acordeón vacío (como Configuración, que es un header funcional)
                 if (subLinks.length === 0) {
-                    if (header && hasPermission(user.permissions, header.id, null)) {
+                    let allowed = false;
+                    if (header) {
+                        if (header.id === 'menu-configuracion') {
+                            const subConfigPerms = ['config-theme', 'config-ld', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'];
+                            const hasAnySubPerm = subConfigPerms.some(p => hasConfigPermission(user.permissions, p));
+                            allowed = hasPermission(user.permissions, header.id, null) || hasAnySubPerm;
+                        } else {
+                            allowed = hasPermission(user.permissions, header.id, null);
+                        }
+                    }
+                    if (header && allowed) {
                         accordion.style.display = 'block';
-                        if (header) header.style.display = 'flex';
+                        header.style.display = 'flex';
                     } else {
                         accordion.style.display = 'none';
                     }
@@ -5162,6 +5202,28 @@
                     if (header) header.style.display = 'flex';
                 } else {
                     accordion.style.display = 'none';
+                }
+            });
+
+            // 3. Mostrar/ocultar sub-menús (acordeones) en Configuración de Parámetros
+            const configAccordions = [
+                { permission: 'config-theme', elementId: 'accordion-theme' },
+                { permission: 'config-ld', elementId: 'accordion-ld' },
+                { permission: 'config-gc', elementId: 'accordion-gc' },
+                { permission: 'config-gc-efectores', elementId: 'accordion-gc-efectores' },
+                { permission: 'config-gc-codigos-efectores', elementId: 'accordion-gc-codigos-efectores' },
+                { permission: 'config-gc-sdyf', elementId: 'accordion-gc-sdyf' },
+                { permission: 'config-asig-a3', elementId: 'accordion-asig-a3' }
+            ];
+
+            configAccordions.forEach(item => {
+                const el = document.getElementById(item.elementId);
+                if (el) {
+                    if (hasConfigPermission(user.permissions, item.permission)) {
+                        el.style.display = 'block';
+                    } else {
+                        el.style.display = 'none';
+                    }
                 }
             });
         }
@@ -5459,7 +5521,12 @@
             // Rellenar checkboxes
             const checkboxes = document.querySelectorAll('.permission-checkbox');
             checkboxes.forEach(cb => {
-                cb.checked = user.permissions.includes('all') || user.permissions.includes(cb.value);
+                const isConfigSubmenu = ['config-theme', 'config-ld', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'].includes(cb.value);
+                if (isConfigSubmenu) {
+                    cb.checked = user.permissions.includes('all') || hasConfigPermission(user.permissions, cb.value);
+                } else {
+                    cb.checked = user.permissions.includes('all') || user.permissions.includes(cb.value);
+                }
                 cb.disabled = isProgra; // No cambiar permisos al programador master para no perder acceso
             });
         }

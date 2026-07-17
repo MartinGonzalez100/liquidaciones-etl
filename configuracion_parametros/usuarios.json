@@ -36,30 +36,24 @@
     "role": "Personal",
     "permissions": [
       "conversion-form",
-      "menu-controles-manuales",
       "menu-dashboard-informe",
       "menu-unicos-planta",
       "menu-observar-importes",
       "menu-observar-planta",
       "menu-gc-liquidacion-eps",
       "menu-gc-no-liquidados",
-      "menu-reemplazos",
       "menu-ld-liquidacion",
       "menu-gc-liquidacion",
       "menu-gc-control",
       "menu-gc-control-retro",
-      "menu-residentes",
-      "menu-residentes-control",
-      "menu-calculo-ley100",
-      "menu-asignaciones-familiares",
-      "menu-asignaciones-familiares-reemp",
-      "menu-topes-jubilatorios",
       "menu-novedades-gc",
       "menu-novedades-gc-control",
-      "menu-novedades-residentes",
-      "menu-novedades-criticidad",
-      "menu-novedades-fortalecimiento",
-      "menu-configuracion"
+      "menu-configuracion",
+      "config-theme",
+      "config-gc",
+      "config-gc-efectores",
+      "config-gc-codigos-efectores",
+      "config-gc-sdyf"
     ]
   }
 ]
