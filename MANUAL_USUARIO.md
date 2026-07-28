@@ -267,3 +267,40 @@ El sistema implementa un control de accesos granular a nivel de submenús. Cuand
 Esta lógica garantiza que el usuario pueda interactuar al 100% con la información autorizada, cargar las tablas de datos y ejecutar los procesos correspondientes, sin requerir el permiso general del acordeón ni generar advertencias de acceso restringido en la consola.
 De igual manera, al cerrar la sesión (`logout`), el sistema realiza una desconexión segura limpiando la vista mediante la desactivación de secciones activas, evitando forzar la carga de la pantalla de inicio si el usuario no tiene permisos para ella, previniendo advertencias de denegación de acceso en el navegador.
 
+---
+
+## 5. Agregado: Dependencia de Archivos y Origen de Datos en Vistas
+Para el correcto funcionamiento de las pantallas y reportes de la aplicación, es necesario comprender el origen de los datos que consume cada vista:
+
+### 5.1 Vistas y Reportes que dependen del archivo de Liquidación Unificada (`liquidaciones_unificadas.csv`)
+Estas pantallas requieren que se haya subido y procesado al menos un lote de Liquidaciones en el Módulo de Inicio:
+- **Inicio (Conversión)**: El panel de "Lotes de Liquidaciones Trabajados" lee el archivo de control `excel-convertidos.csv`.
+- **Informe de Liquidación (Dashboard)**: Los gráficos analíticos y cálculos agregados de costo laboral se computan desde la liquidación consolidada.
+- **Liquidación Completa (Padre)**: Carga y expone la grilla general con todos los registros.
+- **Submenús de Liquidación Completa**:
+  - **Únicos de Planta**: Realiza filtros por tipo de planta y días trabajados.
+  - **Observar por Importes** y **Observar por Planta**: Ejecutan cruces y validaciones sobre los importes y áreas/planta de la liquidación.
+  - **Reemplazos**, **LD Liquidación** y **GC Liquidación**: Consumen directamente la liquidación parametrizada.
+  - **GC Para Control** y **GC Para Control Retro**: Agrupan los haberes de guardias críticas de la liquidación mensual y retroactiva.
+  - **Residentes**: Filtra agentes de residencias del padrón unificado.
+- **Ley 100% (Cálculo de ley 100%)**: Simula la proyección de jubilaciones a partir de los datos de la liquidación.
+- **Asignaciones (Asignaciones Familiares y Asignaciones Familiares - Reemp)**: Filtra y expone los montos cobrados en las liquidaciones.
+- **Acumulado (Topes de Ap. Jubilatorios)**: Lee e identifica agentes al límite de sus aportes en la liquidación.
+- **Configuración de Parámetros -> Libres Disponibilidad (LD) y Guardias Críticas (GC)**: Estos dos paneles de mapeo extraen los encabezados del archivo unificado (`liquidaciones_unificadas.csv`). **Nota:** Si no se ha procesado ninguna liquidación en el sistema, ambos paneles mostrarán el mensaje *"No se encontraron columnas de configuración en el archivo unificado."* (este comportamiento es normal e independiente del resto de configuraciones).
+
+### 5.2 Vistas y Reportes que dependen de los archivos de Novedades consolidados
+Estas pantallas muestran datos provenientes del procesamiento de archivos Excel de novedades en el Módulo de Inicio:
+- **Inicio (Conversión)**: El panel de "Lotes de Novedades Trabajadas" lee el archivo de control `excel-convertidos-novedades.csv`.
+- **Resumen de Novedades Mensuales**: Carga el listado consolidado de lotes en la carpeta de novedades.
+- **Novedades GC**: Consume el archivo unificado de novedades de guardias críticas (`gc.csv`).
+- **Novedades GC Para Control**: Muestra el consolidado agrupado desde el archivo auxiliar de novedades (`AuxGcNovedades.csv`).
+- **Novedades Residentes**: Lee y expone los datos de `residentes.csv`.
+- **Residentes - Criticidad**: Consume el archivo `criticidad.csv`.
+- **Residentes - Fortalecimiento**: Consume el archivo `fortalecimiento.csv`.
+
+### 5.3 Vistas y Reportes que dependen del Cruce de Ambos Orígenes (Liquidaciones y Novedades)
+Estas vistas requieren la coexistencia de ambos tipos de archivos para su correcto análisis:
+- **Control GC Liquidacion a Eps**: Cruza la liquidación mensual contra las novedades de guardias críticas.
+- **Control GC No Liquidados**: Identifica novedades huérfanas sin contrapartida en la liquidación mensual.
+- **Control Residentes de Liquidacion a Novedades**: Realiza cálculos y cruces entre los agentes de planta residentes y sus novedades correspondientes, permitiendo guardar observaciones en `AuxResidentesLiquidacion.csv`.
+
