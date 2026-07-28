@@ -3913,30 +3913,29 @@
                     const msg = '<p style="color: #e74c3c;">No se encontraron columnas de configuración en el archivo unificado.</p>';
                     ldContainer.innerHTML = msg;
                     gcContainer.innerHTML = msg;
-                    return;
-                }
-
-                // 3. Renderizar Libres Disponibilidad (Solo LIB_0 y GC_0)
-                const ldAvailable = allColumns.filter(col => col.startsWith('LIB_0') || col.startsWith('GC_0'));
-                ldContainer.innerHTML = ldAvailable.map(col => `
-                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;" >
-                    <input type="checkbox" name="ld-col" value="${col}" ${selectedLD.includes(col) ? 'checked' : ''}>
-                        <span style="font-family: monospace;">${col}</span>
-                    </label>
-                `).join('');
-
-                // 4. Renderizar Guardias Críticas (Todas las disponibles en allColumns menos las guardadas en LD)
-                const gcAvailable = allColumns.filter(col => !selectedLD.includes(col));
-
-                if (gcAvailable.length === 0) {
-                    gcContainer.innerHTML = '<p style="color: #999;">No hay columnas disponibles para Guardias Críticas.</p>';
                 } else {
-                    gcContainer.innerHTML = gcAvailable.map(col => `
-                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;" >
-                    <input type="checkbox" name="gc-col" value="${col}" ${selectedGC.includes(col) ? 'checked' : ''}>
-                        <span style="font-family: monospace;">${col}</span>
-                    </label>
+                    // 3. Renderizar Libres Disponibilidad (Solo LIB_0 y GC_0)
+                    const ldAvailable = allColumns.filter(col => col.startsWith('LIB_0') || col.startsWith('GC_0'));
+                    ldContainer.innerHTML = ldAvailable.map(col => `
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;" >
+                        <input type="checkbox" name="ld-col" value="${col}" ${selectedLD.includes(col) ? 'checked' : ''}>
+                            <span style="font-family: monospace;">${col}</span>
+                        </label>
                     `).join('');
+
+                    // 4. Renderizar Guardias Críticas (Todas las disponibles en allColumns menos las guardadas en LD)
+                    const gcAvailable = allColumns.filter(col => !selectedLD.includes(col));
+
+                    if (gcAvailable.length === 0) {
+                        gcContainer.innerHTML = '<p style="color: #999;">No hay columnas disponibles para Guardias Críticas.</p>';
+                    } else {
+                        gcContainer.innerHTML = gcAvailable.map(col => `
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;" >
+                        <input type="checkbox" name="gc-col" value="${col}" ${selectedGC.includes(col) ? 'checked' : ''}>
+                            <span style="font-family: monospace;">${col}</span>
+                        </label>
+                        `).join('');
+                    }
                 }
 
                 // 5. Configurar botones

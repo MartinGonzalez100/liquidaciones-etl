@@ -227,6 +227,8 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
   - `PLANTA`: Categoría o régimen de contratación (Ej. Reemplazante no permanente).
   - `ORGANISMO`: Efector o entidad de prestación de servicio.
 
+*Nota:* Los paneles de configuración que son independientes del archivo de liquidaciones unificadas (como Paletas de Colores, Efectores, Códigos de Guardias Críticas, SDYF y Asignaciones A3) cargan y son totalmente editables incluso si no se ha realizado ninguna conversión o importación de archivos de liquidación en el sistema.
+
 ---
 
 ## 4. Control de Acceso y Sistema de Permisos
