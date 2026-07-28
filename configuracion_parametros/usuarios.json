@@ -55,5 +55,26 @@
       "config-gc-codigos-efectores",
       "config-gc-sdyf"
     ]
+  },
+  {
+    "username": "guardias",
+    "password": "1234",
+    "role": "Personal",
+    "permissions": [
+      "conversion-form",
+      "menu-gc-liquidacion-eps",
+      "menu-gc-no-liquidados",
+      "menu-gc-liquidacion",
+      "menu-gc-control",
+      "menu-gc-control-retro",
+      "menu-novedades-gc",
+      "menu-novedades-gc-control",
+      "menu-configuracion",
+      "config-theme",
+      "config-gc",
+      "config-gc-efectores",
+      "config-gc-codigos-efectores",
+      "config-gc-sdyf"
+    ]
   }
 ]

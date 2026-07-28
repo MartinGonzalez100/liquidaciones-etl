@@ -259,3 +259,9 @@ El usuario con rol de **Programador** dispone de una sección dedicada accesible
 - **Eliminar Usuario:** Permite remover definitivamente una cuenta de usuario del sistema (a excepción de la cuenta raíz `progra`).
 - **Control Granular de Configuración:** Permite habilitar o deshabilitar de forma independiente cada uno de los 7 submenús (acordeones) de la sección de Configuración de Parámetros. Si el usuario cuenta con el permiso general de Configuración o es una cuenta antigua (sin sub-permisos definidos en su registro), dispondrá de acceso completo por defecto hasta que se restrinja selectivamente.
 - **Persistencia de Datos:** Todos los usuarios, credenciales y permisos se guardan y persisten de manera estructurada en el archivo `usuarios.json` en la carpeta `configuracion_parametros/`.
+
+### 4.4 Lógica de Permisos Dinámicos y Granularidad de Submenús
+El sistema implementa un control de accesos granular a nivel de submenús. Cuando a un usuario se le asigna de manera específica uno o varios submenús dentro de categorías como **Novedades Mensuales**, **Liquidación Completa**, **Ley 100%**, **Asignaciones** o **Acumulado**, el sistema habilita de forma automática y transparente el acceso a la vista interna de grillas y reportes compartida (`liquidacion-completa-view`). 
+Esta lógica garantiza que el usuario pueda interactuar al 100% con la información autorizada, cargar las tablas de datos y ejecutar los procesos correspondientes, sin requerir el permiso general del acordeón ni generar advertencias de acceso restringido en la consola.
+De igual manera, al cerrar la sesión (`logout`), el sistema realiza una desconexión segura limpiando la vista mediante la desactivación de secciones activas, evitando forzar la carga de la pantalla de inicio si el usuario no tiene permisos para ella, previniendo advertencias de denegación de acceso en el navegador.
+
