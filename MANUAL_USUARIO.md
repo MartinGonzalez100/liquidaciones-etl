@@ -186,7 +186,15 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
 ---
 
 ## 3. Configuración del Sistema
-Esta sección es el "cerebro" del sistema, donde se definen las reglas de negocio que transforman los datos crudos en información analítica. El acceso a cada uno de sus submenús (acordeones) está regulado de manera individual a través del sistema de permisos de usuario.
+Esta sección es el "cerebro" del sistema, donde se definen las reglas de negocio que transforman los datos crudos en información analítica. El acceso a cada uno de sus submenús está regulado de manera individual a través del sistema de permisos de usuario.
+
+Toda la vista de esta sección posee un diseño centrado con un ancho máximo de `1000px` para optimizar su legibilidad en pantallas de gran tamaño. Visualmente, el sistema se organiza en la siguiente estructura:
+- **Configuración de Paletas de Colores:** Situada en el nivel superior de manera independiente.
+- **Grupo Libre Disponibilidad:** Agrupa las configuraciones que tienen relación con esta área contable (como "Configuración de Libres Disponibilidad").
+- **Grupo Guardias Críticas:** Agrupa todas las configuraciones específicas del módulo ("Configuración de Guardias Críticas", "Efectores Guardias Críticas", "Códigos Guardias Críticas Importes" y "Fines de Semana y Feriados"). Para facilitar la gestión del calendario de fines de semana y feriados (SDYF), el contenido interno de este sub-acordeón se visualiza en una sección compacta con un ancho máximo del `30%` y centrada en pantalla.
+- **Grupo Asignaciones:** Agrupa las configuraciones vinculadas a este rubro (como "Asignaciones A3").
+
+Los acordeones principales agrupan a las configuraciones individuales mediante una jerarquía de doble acordeón (acordeón dentro de acordeón). Por defecto, todos los grupos principales y sub-acordeones se cargan colapsados para una experiencia visual limpia.
 
 ### 3.1 Temas Visuales y Paletas de Colores
 - **Función:** Permite al usuario personalizar la experiencia visual de toda la plataforma web. Esta configuración afecta a tablas, dashboards, barra de navegación y fondos, guardando la preferencia de manera persistente en la memoria local del navegador.

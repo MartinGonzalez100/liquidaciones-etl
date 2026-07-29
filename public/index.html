@@ -748,12 +748,12 @@
             color: #5c67f2;
         }
 
-        .config-accordion-item.active .config-accordion-header {
+        .config-accordion-item.active > .config-accordion-header {
             background-color: #edf2ff;
             border-bottom: 1px solid #ddd;
         }
 
-        .config-accordion-item.active .config-accordion-header i {
+        .config-accordion-item.active > .config-accordion-header i {
             transform: rotate(180deg);
         }
 
@@ -764,9 +764,9 @@
             transition: max-height 0.3s ease-out, padding 0.3s ease;
         }
 
-        .config-accordion-item.active .config-accordion-content {
+        .config-accordion-item.active > .config-accordion-content {
             padding: 20px;
-            max-height: 2000px;
+            max-height: 4000px;
             transition: max-height 0.5s ease-in, padding 0.3s ease;
         }
 
@@ -877,7 +877,7 @@
         
         body.theme-dark .config-accordion-header { background-color: var(--bg-sidebar) !important; border-bottom: 1px solid var(--border-color); }
         body.theme-dark .config-accordion-header:hover { background-color: var(--bg-sidebar-hover) !important; }
-        body.theme-dark .config-accordion-item.active .config-accordion-header { background-color: #1a2333 !important; }
+        body.theme-dark .config-accordion-item.active > .config-accordion-header { background-color: #1a2333 !important; }
         
         body.theme-dark [style*="color: #333"], body.theme-dark [style*="color: #666"], 
         body.theme-dark [style*="color: #999"], body.theme-dark [style*="color: #555"],
@@ -1967,7 +1967,7 @@
 
         <!-- VISTA CONFIGURACIÓN -->
         <div id="configuracion-view" class="container" style="display: none; background: transparent; box-shadow: none; padding: 0;">
-            <h1 style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin-bottom: 20px;">Configuración de Parámetros</h1>
+            <h1 style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin: 0 auto 20px auto; max-width: 1000px;">Configuración de Parámetros</h1>
 
             <!-- Acordeón: Paletas de Colores -->
             <div class="config-accordion-item" id="accordion-theme">
@@ -2002,183 +2002,212 @@
                 </div>
             </div>
 
-            <!-- Acordeón: Libres Disponibilidad -->
-            <div class="config-accordion-item" id="accordion-ld">
-                <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-ld')">
-                    <h2><i class="fas fa-hand-holding-usd" style="margin-right: 10px; color: #5c67f2;"></i> Configuración de Libres Disponibilidad</h2>
+            <!-- Grupo: Libre Disponibilidad -->
+            <div class="config-accordion-item" id="group-ld">
+                <div class="config-accordion-header" onclick="toggleConfigAccordion('group-ld')">
+                    <h2><i class="fas fa-hand-holding-usd" style="margin-right: 10px; color: #5c67f2;"></i> Libre Disponibilidad</h2>
                     <i class="fas fa-chevron-down"></i>
                 </div>
                 <div class="config-accordion-content">
-                    <p style="color: #666; margin-bottom: 20px;">Seleccione las columnas que corresponden a Libres Disponibilidad (inician con LIB_0 o CG_0):</p>
-                    <div id="ld-columns-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #eee; background: #fdfdfd; border-radius: 4px;">
-                        <!-- Se llenará dinámicamente -->
-                        <p style="color: #999;">Cargando columnas...</p>
-                    </div>
-                    <div style="margin-top: 30px;">
-                        <button id="btn-save-ld" style="background-color: #27ae60;">
-                            <i class="fas fa-save"></i> Guardar Configuración
-                        </button>
-                        <span id="save-status-ld" style="margin-left: 15px; font-size: 14px;"></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Acordeón: Guardias Críticas -->
-            <div class="config-accordion-item" id="accordion-gc">
-                <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-gc')">
-                    <h2><i class="fas fa-vial" style="margin-right: 10px; color: #e67e22;"></i> Configuración de Guardias Críticas</h2>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="config-accordion-content">
-                    <p style="color: #666; margin-bottom: 20px;">Seleccione las columnas que corresponden a Guardias Críticas (excluye las ya seleccionadas en Libres Disponibilidad):</p>
-                    <div id="gc-columns-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #eee; background: #fdfdfd; border-radius: 4px;">
-                        <!-- Se llenará dinámicamente -->
-                        <p style="color: #999;">Cargando columnas...</p>
-                    </div>
-                    <div style="margin-top: 30px;">
-                        <button id="btn-save-gc" style="background-color: #e67e22;">
-                            <i class="fas fa-save"></i> Guardar Configuración GC
-                        </button>
-                        <span id="save-status-gc" style="margin-left: 15px; font-size: 14px;"></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Acordeón: Efectores Guardias Críticas -->
-            <div class="config-accordion-item" id="accordion-gc-efectores">
-                <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-gc-efectores')">
-                    <h2><i class="fas fa-hospital" style="margin-right: 10px; color: #2ecc71;"></i> Configuración de Guardias Críticas Efectores</h2>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="config-accordion-content">
-                    <p style="color: #666; margin-bottom: 20px;">Detalle de equivalencias de efectores para Guardias Críticas. Puede agregar, editar o eliminar filas:</p>
-                    <div style="overflow-x: auto; margin-bottom: 20px; max-height: 600px;">
-                        <table id="table-gc-efectores" style="width: 100%; border-collapse: collapse;">
-                            <thead style="position: sticky; top: 0; background: white; z-index: 10;">
-                                <tr style="background: #f8f9fa; border-bottom: 2px solid #5c67f2;">
-                                    <th style="padding: 10px; text-align: left;">EFECTOR (Origen)</th>
-                                    <th style="padding: 10px; text-align: left;">NUEVO EFECTOR (Destino)</th>
-                                    <th style="padding: 10px; text-align: center; width: 50px;">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="gc-efectores-list">
+                    <!-- Acordeón: Libres Disponibilidad -->
+                    <div class="config-accordion-item" id="accordion-ld">
+                        <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-ld')">
+                            <h2><i class="fas fa-hand-holding-usd" style="margin-right: 10px; color: #5c67f2;"></i> Configuración de Libres Disponibilidad</h2>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="config-accordion-content">
+                            <p style="color: #666; margin-bottom: 20px;">Seleccione las columnas que corresponden a Libres Disponibilidad (inician con LIB_0 o CG_0):</p>
+                            <div id="ld-columns-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #eee; background: #fdfdfd; border-radius: 4px;">
                                 <!-- Se llenará dinámicamente -->
-                                <tr><td colspan="3" style="text-align: center; padding: 20px; color: #999;">Cargando efectores...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-                        <button onclick="addGCEfectorRow()" style="background-color: #5c67f2;">
-                            <i class="fas fa-plus"></i> Agregar Fila
-                        </button>
-                        <div>
-                            <button id="btn-save-gc-efectores" onclick="saveGCEfectoresConfig()" style="background-color: #27ae60;">
-                                <i class="fas fa-save"></i> Guardar Efectores
-                            </button>
-                            <span id="save-status-gc-efectores" style="margin-left: 15px; font-size: 14px;"></span>
+                                <p style="color: #999;">Cargando columnas...</p>
+                            </div>
+                            <div style="margin-top: 30px;">
+                                <button id="btn-save-ld" style="background-color: #27ae60;">
+                                    <i class="fas fa-save"></i> Guardar Configuración
+                                </button>
+                                <span id="save-status-ld" style="margin-left: 15px; font-size: 14px;"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Acordeón: Códigos Guardias Críticas Importes -->
-            <div class="config-accordion-item" id="accordion-gc-codigos-efectores">
-                <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-gc-codigos-efectores')">
-                    <h2><i class="fas fa-barcode" style="margin-right: 10px; color: #9b59b6;"></i> Configuración de Códigos Guardias Críticas Importes</h2>
+            <!-- Grupo: Guardias Críticas -->
+            <div class="config-accordion-item" id="group-gc">
+                <div class="config-accordion-header" onclick="toggleConfigAccordion('group-gc')">
+                    <h2><i class="fas fa-vial" style="margin-right: 10px; color: #e67e22;"></i> Guardias Críticas</h2>
                     <i class="fas fa-chevron-down"></i>
                 </div>
                 <div class="config-accordion-content">
-                    <p style="color: #666; margin-bottom: 20px;">Gestión de códigos de guardias críticas importes. Puede agregar, editar o eliminar filas:</p>
-                    <div style="overflow-x: auto; margin-bottom: 20px; max-height: 600px;">
-                        <table id="table-gc-codigos-efectores" style="width: 100%; border-collapse: collapse;">
-                            <thead style="position: sticky; top: 0; background: white; z-index: 10;">
-                                <tr style="background: #f8f9fa; border-bottom: 2px solid #5c67f2;">
-                                    <th style="padding: 10px; text-align: left;">CLAVEUNICA</th>
-                                    <th style="padding: 10px; text-align: left;">DIAS</th>
-                                    <th style="padding: 10px; text-align: left;">TIPO DE GUARDIA</th>
-                                    <th style="padding: 10px; text-align: left;">NIVEL</th>
-                                    <th style="padding: 10px; text-align: left;">CODIGO</th>
-                                    <th style="padding: 10px; text-align: left;">IMPORTE</th>
-                                    <th style="padding: 10px; text-align: center; width: 50px;">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="gc-codigos-efectores-list">
+                    <!-- Acordeón: Guardias Críticas -->
+                    <div class="config-accordion-item" id="accordion-gc">
+                        <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-gc')">
+                            <h2><i class="fas fa-vial" style="margin-right: 10px; color: #e67e22;"></i> Configuración de Guardias Críticas</h2>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="config-accordion-content">
+                            <p style="color: #666; margin-bottom: 20px;">Seleccione las columnas que corresponden a Guardias Críticas (excluye las ya seleccionadas en Libres Disponibilidad):</p>
+                            <div id="gc-columns-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #eee; background: #fdfdfd; border-radius: 4px;">
                                 <!-- Se llenará dinámicamente -->
-                                <tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">Cargando códigos...</td></tr>
-                            </tbody>
-                        </table>
+                                <p style="color: #999;">Cargando columnas...</p>
+                            </div>
+                            <div style="margin-top: 30px;">
+                                <button id="btn-save-gc" style="background-color: #e67e22;">
+                                    <i class="fas fa-save"></i> Guardar Configuración GC
+                                </button>
+                                <span id="save-status-gc" style="margin-left: 15px; font-size: 14px;"></span>
+                            </div>
+                        </div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-                        <button onclick="addGCCodigosEfectorRow()" style="background-color: #5c67f2;">
-                            <i class="fas fa-plus"></i> Agregar Fila
-                        </button>
-                        <div>
-                            <button id="btn-save-gc-codigos-efectores" onclick="saveGCCodigosEfectoresConfig()" style="background-color: #27ae60;">
-                                <i class="fas fa-save"></i> Guardar Códigos
-                            </button>
-                            <span id="save-status-gc-codigos-efectores" style="margin-left: 15px; font-size: 14px;"></span>
+
+                    <!-- Acordeón: Efectores Guardias Críticas -->
+                    <div class="config-accordion-item" id="accordion-gc-efectores">
+                        <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-gc-efectores')">
+                            <h2><i class="fas fa-hospital" style="margin-right: 10px; color: #2ecc71;"></i> Configuración de Guardias Críticas Efectores</h2>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="config-accordion-content">
+                            <p style="color: #666; margin-bottom: 20px;">Detalle de equivalencias de efectores para Guardias Críticas. Puede agregar, editar o eliminar filas:</p>
+                            <div style="overflow-x: auto; margin-bottom: 20px; max-height: 600px;">
+                                <table id="table-gc-efectores" style="width: 100%; border-collapse: collapse;">
+                                    <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                                        <tr style="background: #f8f9fa; border-bottom: 2px solid #5c67f2;">
+                                            <th style="padding: 10px; text-align: left;">EFECTOR (Origen)</th>
+                                            <th style="padding: 10px; text-align: left;">NUEVO EFECTOR (Destino)</th>
+                                            <th style="padding: 10px; text-align: center; width: 50px;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="gc-efectores-list">
+                                        <!-- Se llenará dinámicamente -->
+                                        <tr><td colspan="3" style="text-align: center; padding: 20px; color: #999;">Cargando efectores...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                                <button onclick="addGCEfectorRow()" style="background-color: #5c67f2;">
+                                    <i class="fas fa-plus"></i> Agregar Fila
+                                </button>
+                                <div>
+                                    <button id="btn-save-gc-efectores" onclick="saveGCEfectoresConfig()" style="background-color: #27ae60;">
+                                        <i class="fas fa-save"></i> Guardar Efectores
+                                    </button>
+                                    <span id="save-status-gc-efectores" style="margin-left: 15px; font-size: 14px;"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acordeón: Códigos Guardias Críticas Importes -->
+                    <div class="config-accordion-item" id="accordion-gc-codigos-efectores">
+                        <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-gc-codigos-efectores')">
+                            <h2><i class="fas fa-barcode" style="margin-right: 10px; color: #9b59b6;"></i> Configuración de Códigos Guardias Críticas Importes</h2>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="config-accordion-content">
+                            <p style="color: #666; margin-bottom: 20px;">Gestión de códigos de guardias críticas importes. Puede agregar, editar o eliminar filas:</p>
+                            <div style="overflow-x: auto; margin-bottom: 20px; max-height: 600px;">
+                                <table id="table-gc-codigos-efectores" style="width: 100%; border-collapse: collapse;">
+                                    <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                                        <tr style="background: #f8f9fa; border-bottom: 2px solid #5c67f2;">
+                                            <th style="padding: 10px; text-align: left;">CLAVEUNICA</th>
+                                            <th style="padding: 10px; text-align: left;">DIAS</th>
+                                            <th style="padding: 10px; text-align: left;">TIPO DE GUARDIA</th>
+                                            <th style="padding: 10px; text-align: left;">NIVEL</th>
+                                            <th style="padding: 10px; text-align: left;">CODIGO</th>
+                                            <th style="padding: 10px; text-align: left;">IMPORTE</th>
+                                            <th style="padding: 10px; text-align: center; width: 50px;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="gc-codigos-efectores-list">
+                                        <!-- Se llenará dinámicamente -->
+                                        <tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">Cargando códigos...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                                <button onclick="addGCCodigosEfectorRow()" style="background-color: #5c67f2;">
+                                    <i class="fas fa-plus"></i> Agregar Fila
+                                </button>
+                                <div>
+                                    <button id="btn-save-gc-codigos-efectores" onclick="saveGCCodigosEfectoresConfig()" style="background-color: #27ae60;">
+                                        <i class="fas fa-save"></i> Guardar Códigos
+                                    </button>
+                                    <span id="save-status-gc-codigos-efectores" style="margin-left: 15px; font-size: 14px;"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acordeón: Guardias Críticas Fines de Semanas y Feriados (SDYF) -->
+                    <div class="config-accordion-item" id="accordion-gc-sdyf">
+                        <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-gc-sdyf')">
+                            <h2><i class="fas fa-calendar-alt" style="margin-right: 10px; color: #f1c40f;"></i> Configuración de Guardias Críticas Fines de Semanas y Feriados</h2>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="config-accordion-content">
+                            <div style="max-width: 30%; min-width: 300px; margin: 0 auto; width: 100%;">
+                                <p style="color: #666; margin-bottom: 20px;">Gestión de los días considerados fines de semana y feriados (SDYF):</p>
+                                
+                                <div id="sdyf-months-container" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                                    <!-- Acordeones internos se generarán aquí -->
+                                    <p style="color: #999;">Cargando meses...</p>
+                                </div>
+
+                                <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 20px;">
+                                    <span id="save-status-gc-sdyf" style="margin-right: 15px; font-size: 14px;"></span>
+                                    <button id="btn-save-gc-sdyf" onclick="saveGCSdyfConfig()" style="background-color: #27ae60;">
+                                        <i class="fas fa-save"></i> Guardar Fines de Semanas y Feriados
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Acordeón: Guardias Críticas Fines de Semanas y Feriados (SDYF) -->
-            <div class="config-accordion-item" id="accordion-gc-sdyf">
-                <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-gc-sdyf')">
-                    <h2><i class="fas fa-calendar-alt" style="margin-right: 10px; color: #f1c40f;"></i> Configuración de Guardias Críticas Fines de Semanas y Feriados</h2>
+            <!-- Grupo: Asignaciones -->
+            <div class="config-accordion-item" id="group-asig-a3">
+                <div class="config-accordion-header" onclick="toggleConfigAccordion('group-asig-a3')">
+                    <h2><i class="fas fa-users" style="margin-right: 10px; color: #1abc9c;"></i> Asignaciones</h2>
                     <i class="fas fa-chevron-down"></i>
                 </div>
                 <div class="config-accordion-content">
-                    <p style="color: #666; margin-bottom: 20px;">Gestión de los días considerados fines de semana y feriados (SDYF):</p>
-                    
-                    <div id="sdyf-months-container" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-                        <!-- Acordeones internos se generarán aquí -->
-                        <p style="color: #999;">Cargando meses...</p>
-                    </div>
-
-                    <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 20px;">
-                        <span id="save-status-gc-sdyf" style="margin-right: 15px; font-size: 14px;"></span>
-                        <button id="btn-save-gc-sdyf" onclick="saveGCSdyfConfig()" style="background-color: #27ae60;">
-                            <i class="fas fa-save"></i> Guardar Fines de Semanas y Feriados
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Acordeón: Asignaciones A3 -->
-            <div class="config-accordion-item" id="accordion-asig-a3">
-                <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-asig-a3')">
-                    <h2><i class="fas fa-users" style="margin-right: 10px; color: #1abc9c;"></i> Configuración de Asignaciones - Base Asignaciones A3</h2>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="config-accordion-content">
-                    <p style="color: #666; margin-bottom: 20px;">Gestión de Asignaciones Familiares A3. Puede agregar, editar o eliminar filas:</p>
-                    <div style="overflow-x: auto; margin-bottom: 20px; max-height: 600px;">
-                        <table id="table-asig-a3" style="width: 100%; border-collapse: collapse;">
-                            <thead style="position: sticky; top: 0; background: white; z-index: 10;">
-                                <tr style="background: #f8f9fa; border-bottom: 2px solid #5c67f2;">
-                                    <th style="padding: 10px; text-align: left;">DESCAGENTE</th>
-                                    <th style="padding: 10px; text-align: left;">NRO_DOCUMENTO</th>
-                                    <th style="padding: 10px; text-align: left;">ASIG_FAM</th>
-                                    <th style="padding: 10px; text-align: left;">PLANTA</th>
-                                    <th style="padding: 10px; text-align: left;">ORGANISMO</th>
-                                    <th style="padding: 10px; text-align: center; width: 50px;">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="asig-a3-list">
-                                <tr><td colspan="6" style="text-align: center; padding: 20px; color: #999;">Cargando asignaciones...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-                        <button onclick="addAsigA3Row()" style="background-color: #5c67f2;">
-                            <i class="fas fa-plus"></i> Agregar Fila
-                        </button>
-                        <div>
-                            <button id="btn-save-asig-a3" onclick="saveAsigA3Config()" style="background-color: #27ae60;">
-                                <i class="fas fa-save"></i> Guardar Asignaciones A3
-                            </button>
-                            <span id="save-status-asig-a3" style="margin-left: 15px; font-size: 14px;"></span>
+                    <!-- Acordeón: Asignaciones A3 -->
+                    <div class="config-accordion-item" id="accordion-asig-a3">
+                        <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-asig-a3')">
+                            <h2><i class="fas fa-users" style="margin-right: 10px; color: #1abc9c;"></i> Configuración de Asignaciones - Base Asignaciones A3</h2>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="config-accordion-content">
+                            <p style="color: #666; margin-bottom: 20px;">Gestión de Asignaciones Familiares A3. Puede agregar, editar o eliminar filas:</p>
+                            <div style="overflow-x: auto; margin-bottom: 20px; max-height: 600px;">
+                                <table id="table-asig-a3" style="width: 100%; border-collapse: collapse;">
+                                    <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                                        <tr style="background: #f8f9fa; border-bottom: 2px solid #5c67f2;">
+                                            <th style="padding: 10px; text-align: left;">DESCAGENTE</th>
+                                            <th style="padding: 10px; text-align: left;">NRO_DOCUMENTO</th>
+                                            <th style="padding: 10px; text-align: left;">ASIG_FAM</th>
+                                            <th style="padding: 10px; text-align: left;">PLANTA</th>
+                                            <th style="padding: 10px; text-align: left;">ORGANISMO</th>
+                                            <th style="padding: 10px; text-align: center; width: 50px;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="asig-a3-list">
+                                        <tr><td colspan="6" style="text-align: center; padding: 20px; color: #999;">Cargando asignaciones...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                                <button onclick="addAsigA3Row()" style="background-color: #5c67f2;">
+                                    <i class="fas fa-plus"></i> Agregar Fila
+                                </button>
+                                <div>
+                                    <button id="btn-save-asig-a3" onclick="saveAsigA3Config()" style="background-color: #27ae60;">
+                                        <i class="fas fa-save"></i> Guardar Asignaciones A3
+                                    </button>
+                                    <span id="save-status-asig-a3" style="margin-left: 15px; font-size: 14px;"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2215,14 +2244,18 @@
 
         // --- LÓGICA ACORDEÓN CONFIGURACIÓN ---
         function toggleConfigAccordion(accordionId) {
-            const items = document.querySelectorAll('.config-accordion-item');
             const targetItem = document.getElementById(accordionId);
+            if (!targetItem) return;
             const isActive = targetItem.classList.contains('active');
 
-            // Cerrar todos los items
-            items.forEach(item => {
-                item.classList.remove('active');
-            });
+            // Cerrar solo los items que son hermanos directos del targetItem
+            const parent = targetItem.parentElement;
+            if (parent) {
+                const siblings = parent.querySelectorAll(':scope > .config-accordion-item');
+                siblings.forEach(item => {
+                    item.classList.remove('active');
+                });
+            }
 
             // Si el item clickeado no estaba activo, abrirlo
             if (!isActive) {
@@ -5241,6 +5274,25 @@
                     }
                 }
             });
+
+            // Mostrar/ocultar contenedores grupales basados en permisos de sus hijos
+            const groupLd = document.getElementById('group-ld');
+            if (groupLd) {
+                const isLdVisible = hasConfigPermission(user.permissions, 'config-ld');
+                groupLd.style.display = isLdVisible ? 'block' : 'none';
+            }
+
+            const groupGc = document.getElementById('group-gc');
+            if (groupGc) {
+                const isAnyGcVisible = ['config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf'].some(p => hasConfigPermission(user.permissions, p));
+                groupGc.style.display = isAnyGcVisible ? 'block' : 'none';
+            }
+
+            const groupAsig = document.getElementById('group-asig-a3');
+            if (groupAsig) {
+                const isAsigVisible = hasConfigPermission(user.permissions, 'config-asig-a3');
+                groupAsig.style.display = isAsigVisible ? 'block' : 'none';
+            }
         }
 
         function redirectToFirstAvailableSection(user) {
