@@ -2216,6 +2216,8 @@
     </div>
     </div>
     <script> // --- CONSTANTES Y ELEMENTOS ---
+        let hasLotesLiquidaciones = false;
+        let hasLotesNovedades = false;
         let modifiedObservations = new Map();
         const statusMessage = document.getElementById('status-message');
         const statusText = document.getElementById('status-text');
@@ -4782,13 +4784,19 @@
                 
                 if (lotes.length === 0) {
                     list.innerHTML = '<li style="color: #999;">No hay lotes trabajados recientes.</li>';
+                    hasLotesLiquidaciones = false;
                 } else {
                     list.innerHTML = lotes.map(lote => `<li style="padding: 8px 0; border-bottom: 1px solid #eee;"><i class="fas fa-check-circle" style="color: #27ae60; margin-right: 8px;"></i>${lote}</li>`).join('');
+                    hasLotesLiquidaciones = true;
                 }
             } catch (err) {
                 console.error('Error cargando lotes:', err);
                 const list = document.getElementById('lotes-trabajados-list');
                 if (list) list.innerHTML = '<li style="color: #e74c3c;">Error al cargar los lotes.</li>';
+                hasLotesLiquidaciones = false;
+            } finally {
+                const user = getCurrentUser();
+                if (user) applyUserPermissions(user);
             }
         }
 
@@ -4801,13 +4809,19 @@
                 
                 if (lotes.length === 0) {
                     list.innerHTML = '<li style="color: #999;">No hay lotes de novedades recientes.</li>';
+                    hasLotesNovedades = false;
                 } else {
                     list.innerHTML = lotes.map(lote => `<li style="padding: 8px 0; border-bottom: 1px solid #eee;"><i class="fas fa-check-circle" style="color: #e67e22; margin-right: 8px;"></i>${lote}</li>`).join('');
+                    hasLotesNovedades = true;
                 }
             } catch (err) {
                 console.error('Error cargando lotes novedades:', err);
                 const list = document.getElementById('lotes-novedades-trabajados-list');
                 if (list) list.innerHTML = '<li style="color: #e74c3c;">Error al cargar los lotes de novedades.</li>';
+                hasLotesNovedades = false;
+            } finally {
+                const user = getCurrentUser();
+                if (user) applyUserPermissions(user);
             }
         }
 
@@ -5058,6 +5072,17 @@
         function isSectionAllowed(sectionId) {
             const user = getCurrentUser();
             if (!user) return false;
+
+            // Ajuste de control: si no existen ambos lotes, solo se permite Inicio (Conversión), 'none' y 'gestion-usuarios-view' (solo programador)
+            const bothLotesExist = (hasLotesLiquidaciones && hasLotesNovedades);
+            if (!bothLotesExist && sectionId !== 'conversion-form' && sectionId !== 'none') {
+                if (sectionId === 'gestion-usuarios-view' && user.role === 'programador') {
+                    // Permitir acceso
+                } else {
+                    return false;
+                }
+            }
+
             if (user.role === 'programador') return true;
 
             // Map standard section IDs to permission keys
@@ -5179,12 +5204,25 @@
         function applyUserPermissions(user) {
             if (!user) return;
 
+            const bothLotesExist = (hasLotesLiquidaciones && hasLotesNovedades);
+
             // 1. Mostrar/ocultar enlaces directos y submenús según permisos
             const allLinks = document.querySelectorAll('#mySidebar a');
             allLinks.forEach(link => {
                 if (link.classList.contains('closebtn')) return;
                 
                 const id = link.id;
+
+                // Si no se cumple la condición de ambos lotes, ocultar todo excepto Inicio (Conversión)
+                if (!bothLotesExist) {
+                    if (id === 'menu-inicio') {
+                        link.style.display = 'block';
+                    } else {
+                        link.style.display = 'none';
+                    }
+                    return;
+                }
+
                 if (!id) return;
 
                 // Caso especial: Gestión de Usuarios
@@ -5229,7 +5267,7 @@
                             allowed = hasPermission(user.permissions, header.id, null);
                         }
                     }
-                    if (header && allowed) {
+                    if (header && allowed && bothLotesExist) {
                         accordion.style.display = 'block';
                         header.style.display = 'flex';
                     } else {
@@ -5245,7 +5283,7 @@
                     }
                 });
 
-                if (hasVisibleChild) {
+                if (hasVisibleChild && bothLotesExist) {
                     accordion.style.display = 'block';
                     if (header) header.style.display = 'flex';
                 } else {
@@ -5267,7 +5305,7 @@
             configAccordions.forEach(item => {
                 const el = document.getElementById(item.elementId);
                 if (el) {
-                    if (hasConfigPermission(user.permissions, item.permission)) {
+                    if (bothLotesExist && hasConfigPermission(user.permissions, item.permission)) {
                         el.style.display = 'block';
                     } else {
                         el.style.display = 'none';
@@ -5278,20 +5316,44 @@
             // Mostrar/ocultar contenedores grupales basados en permisos de sus hijos
             const groupLd = document.getElementById('group-ld');
             if (groupLd) {
-                const isLdVisible = hasConfigPermission(user.permissions, 'config-ld');
+                const isLdVisible = bothLotesExist && hasConfigPermission(user.permissions, 'config-ld');
                 groupLd.style.display = isLdVisible ? 'block' : 'none';
             }
 
             const groupGc = document.getElementById('group-gc');
             if (groupGc) {
-                const isAnyGcVisible = ['config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf'].some(p => hasConfigPermission(user.permissions, p));
+                const isAnyGcVisible = bothLotesExist && ['config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf'].some(p => hasConfigPermission(user.permissions, p));
                 groupGc.style.display = isAnyGcVisible ? 'block' : 'none';
             }
 
             const groupAsig = document.getElementById('group-asig-a3');
             if (groupAsig) {
-                const isAsigVisible = hasConfigPermission(user.permissions, 'config-asig-a3');
+                const isAsigVisible = bothLotesExist && hasConfigPermission(user.permissions, 'config-asig-a3');
                 groupAsig.style.display = isAsigVisible ? 'block' : 'none';
+            }
+
+            // Si no tenemos ambos lotes trabajados, nos aseguramos de no mostrar ninguna sección restringida
+            if (!bothLotesExist) {
+                const restrictedViews = [
+                    { id: 'liquidacion-completa-view', element: document.getElementById('liquidacion-completa-view') },
+                    { id: 'dashboard-view', element: document.getElementById('dashboard-view') },
+                    { id: 'configuracion-view', element: document.getElementById('configuracion-view') },
+                    { id: 'novedades-resumen-view', element: document.getElementById('novedades-resumen-view') },
+                    { id: 'informe-modelo-view', element: document.getElementById('informe-modelo-view') },
+                    { id: 'detalle-vs-detalle-view', element: document.getElementById('detalle-vs-detalle-view') },
+                    { id: 'gestion-usuarios-view', element: document.getElementById('gestion-usuarios-view') }
+                ];
+                
+                let isShowingRestricted = false;
+                restrictedViews.forEach(view => {
+                    if (view.element && (view.element.style.display === 'block' || view.element.style.display === 'flex')) {
+                        isShowingRestricted = true;
+                    }
+                });
+                
+                if (isShowingRestricted) {
+                    showSection('conversion-form');
+                }
             }
         }
 
