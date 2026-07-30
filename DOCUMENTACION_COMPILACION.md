@@ -57,6 +57,18 @@ npm run build:all
 > [!IMPORTANT]
 > **Nota de Configuración para la Consola:** Para que la **Alternativa B** funcione, la carpeta de instalación de Inno Setup (donde se encuentra el ejecutable `ISCC.exe`, por defecto `C:\Program Files (x86)\Inno Setup 6`) debe estar agregada a las Variables de Entorno del Sistema (`PATH` de Windows). Durante la instalación de Inno Setup, asegúrate de marcar la casilla que ofrece agregar el compilador de línea de comandos al PATH.
 
+#### Alternativa C: Carpeta Portable Compartida (.zip) (No requiere Inno Setup)
+Si decides distribuir el sistema como una carpeta comprimida `.zip` sin usar ningún instalador gráfico, puedes empaquetar toda la aplicación con estos comandos:
+```bash
+npm run build:exe
+npm run build:portable
+```
+**¿Qué hace este proceso?**
+1.  Compila el servidor en `dist/aud-server.exe`.
+2.  Genera una carpeta limpia llamada `dist-portable/` en la raíz del proyecto.
+3.  Copia de forma automática el ejecutable compilado, el script lanzador silencioso (`lanzador.vbs`), la interfaz HTML (`public/`), los archivos de configuración iniciales, y crea todas las carpetas vacías requeridas de entrada, salida y temporales.
+4.  **Para distribuir:** Solo debes comprimir la carpeta `dist-portable/` en un archivo `.zip` (haciendo clic derecho sobre ella en Windows -> *Enviar a -> Carpeta comprimida (en zip)*) y compartir ese archivo con los usuarios. Ellos solo tendrán que descomprimirlo y hacer doble clic en `lanzador.vbs` para comenzar a trabajar.
+
 ---
 
 ## 3. Estructura de la Aplicación Instalada

@@ -12,4 +12,6 @@ node_modules/
 
 # Compilación y Empaquetado
 dist/
+dist-portable/
 Instalador-Liquidaciones-ETL.exe
+*.zip

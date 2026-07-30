@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:exe": "pkg server.js --targets node18-win-x64 --output dist/aud-server.exe",
     "build:installer": "iscc setup.iss",
+    "build:portable": "node build-portable.js",
     "build:all": "npm run build:exe && npm run build:installer"
   },
   "pkg": {
