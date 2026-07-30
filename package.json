@@ -2,9 +2,16 @@
   "name": "excel-a-csv",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:exe": "pkg server.js --targets node18-win-x64 --output dist/aud-server.exe",
+    "build:installer": "iscc setup.iss",
+    "build:all": "npm run build:exe && npm run build:installer"
+  },
+  "pkg": {
+    "assets": [],
+    "outputPath": "dist"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +25,8 @@
     "papaparse": "^5.5.3",
     "pg": "^8.16.3",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
   }
 }

@@ -13,7 +13,7 @@ const FILAS_PARA_ANALIZAR = 10;
  * @param {string[]} columnNamesToClean - Lista de nombres de encabezados a limpiar.
  */
 function limpiarColumnasCsv(csvFileName, columnNamesToClean) {
-    const INPUT_DIR = path.join(__dirname, '..', 'csv-convertido');
+    const INPUT_DIR = path.join(process.cwd(), 'csv-convertido');
     
     // Definimos las rutas aquí para que estén disponibles en toda la función
     const inputPath = path.join(INPUT_DIR, csvFileName);

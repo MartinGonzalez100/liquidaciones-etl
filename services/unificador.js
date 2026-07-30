@@ -3,8 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const CSV_CONVERTIDO_DIR = path.join(__dirname, '..', 'csv-convertido');
-const CSV_UNIDOS_DIR = path.join(__dirname, '..', 'csv-unidos');
+const CSV_CONVERTIDO_DIR = path.join(process.cwd(), 'csv-convertido');
+const CSV_UNIDOS_DIR = path.join(process.cwd(), 'csv-unidos');
 
 /**
  * Une todos los archivos CSV de una carpeta en un único archivo, manteniendo solo el primer encabezado.

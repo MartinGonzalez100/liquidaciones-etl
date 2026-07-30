@@ -6,7 +6,7 @@ const csv = require('csv-parser');
 
 async function limpiarYNombrarNovedadesCsv(inputCsvPath, prefix) {
     return new Promise((resolve, reject) => {
-        const OUTPUT_DIR = path.join(__dirname, '..', 'csv-unidos-novedades');
+        const OUTPUT_DIR = path.join(process.cwd(), 'csv-unidos-novedades');
         if (!fs.existsSync(OUTPUT_DIR)) {
             fs.mkdirSync(OUTPUT_DIR);
         }

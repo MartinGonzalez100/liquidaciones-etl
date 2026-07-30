@@ -10,8 +10,8 @@ const fs = require('fs');
  * @returns {string} El path absoluto del archivo CSV temporal creado.
  */
 function convertirExcelACsvNovedades(excelFileName) {
-    const INPUT_DIR = path.join(__dirname, '..', 'excel-a-convertir-novedades');
-    const OUTPUT_DIR = path.join(__dirname, '..', 'csv-convertido');
+    const INPUT_DIR = path.join(process.cwd(), 'excel-a-convertir-novedades');
+    const OUTPUT_DIR = path.join(process.cwd(), 'csv-convertido');
 
     if (!fs.existsSync(OUTPUT_DIR)) {
         fs.mkdirSync(OUTPUT_DIR);

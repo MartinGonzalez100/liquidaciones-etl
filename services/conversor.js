@@ -11,8 +11,8 @@ const fs = require('fs');
  */
 function convertirExcelACsv(excelFileName) {
     // Rutas de archivos y carpetas
-    const INPUT_DIR = path.join(__dirname, '..', 'excel-a-convertir');
-    const OUTPUT_DIR = path.join(__dirname, '..', 'csv-convertido');
+    const INPUT_DIR = path.join(process.cwd(), 'excel-a-convertir');
+    const OUTPUT_DIR = path.join(process.cwd(), 'csv-convertido');
     
     // Asegurarse de que el directorio de salida exista
     if (!fs.existsSync(OUTPUT_DIR)) {

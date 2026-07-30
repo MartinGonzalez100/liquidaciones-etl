@@ -1347,6 +1347,10 @@
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Cerrar Sesión</span>
             </button>
+            <button class="btn-shutdown" onclick="shutdownServer()" title="Cerrar y Apagar Aplicación" style="background: rgba(239, 68, 68, 0.25) !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #f87171 !important; font-size: 13px !important; font-weight: 500 !important; cursor: pointer !important; padding: 8px 12px !important; border-radius: 8px !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; transition: all 0.2s ease !important; margin: 8px 0 0 0 !important; width: 100% !important;">
+                <i class="fas fa-power-off"></i>
+                <span>Cerrar Aplicación</span>
+            </button>
         </div>
         
         <a href="#" id="menu-inicio" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
@@ -5199,6 +5203,26 @@
             document.getElementById('login-password').value = '';
             document.getElementById('login-username').value = '';
             document.getElementById('login-username').focus();
+        }
+
+        async function shutdownServer() {
+            if (confirm('¿Está seguro de que desea cerrar la aplicación? Se apagará el servidor local.')) {
+                try {
+                    await fetch('/api/shutdown', { method: 'POST' });
+                } catch (e) {
+                    console.log('El servidor ya se está cerrando o no está disponible.');
+                }
+                window.close();
+                document.body.innerHTML = `
+                    <div style="background-color: #1e293b; color: #f8fafc; font-family: 'Outfit', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+                        <div style="text-align: center; padding: 40px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); backdrop-filter: blur(8px);">
+                            <div style="font-size: 56px; color: #ef4444; margin-bottom: 20px; animation: pulse 2s infinite;"><i class="fas fa-power-off"></i></div>
+                            <h1 style="font-size: 26px; font-weight: 600; margin-bottom: 12px; letter-spacing: -0.5px;">Aplicación Cerrada</h1>
+                            <p style="color: #94a3b8; font-size: 15px; max-width: 300px; line-height: 1.5; margin: 0 auto 24px auto;">El servidor local se ha detenido de forma segura. Ya puedes cerrar esta pestaña del navegador.</p>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         function applyUserPermissions(user) {

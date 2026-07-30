@@ -9,3 +9,7 @@ node_modules/
 
 # Archivos de configuración locales
 .env
+
+# Compilación y Empaquetado
+dist/
+Instalador-Liquidaciones-ETL.exe

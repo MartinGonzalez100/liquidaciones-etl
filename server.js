@@ -12,14 +12,14 @@ const { ejecutarProcesoNovedades } = require('./etl_novedades_runner');
 //-------------
 const app = express();
 const PORT = 3000;
-const EXCEL_DIR = path.join(__dirname, 'excel-a-convertir');
-const CSV_UNIDOS_DIR = path.join(__dirname, 'csv-unidos'); // Directorio del CSV final
+const EXCEL_DIR = path.join(process.cwd(), 'excel-a-convertir');
+const CSV_UNIDOS_DIR = path.join(process.cwd(), 'csv-unidos'); // Directorio del CSV final
 const FINAL_CSV_NAME = 'liquidaciones_unificadas.csv';
 
-const EXCEL_NOVEDADES_DIR = path.join(__dirname, 'excel-a-convertir-novedades');
-const CSV_UNIDOS_NOVEDADES_DIR = path.join(__dirname, 'csv-unidos-novedades');
+const EXCEL_NOVEDADES_DIR = path.join(process.cwd(), 'excel-a-convertir-novedades');
+const CSV_UNIDOS_NOVEDADES_DIR = path.join(process.cwd(), 'csv-unidos-novedades');
 
-const CONFIG_DIR = path.join(__dirname, 'configuracion_parametros');
+const CONFIG_DIR = path.join(process.cwd(), 'configuracion_parametros');
 const LD_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config.csv');
 const GC_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config.csv');
 const GC_EFECTORES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_efectores.csv');
@@ -41,7 +41,7 @@ if (!fs.existsSync(CSV_UNIDOS_NOVEDADES_DIR)) fs.mkdirSync(CSV_UNIDOS_NOVEDADES_
 const upload = multer({ dest: 'uploads/' });
 
 // Middleware para servir archivos estáticos (la interfaz HTML)
-app.use(express.static('public'));
+app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(express.json());
 
 //----------------
@@ -1433,7 +1433,7 @@ app.post('/api/process', upload.array('excelFiles'), async (req, res) => {
 
             // Mover los archivos cargados (desde 'uploads/') a la carpeta de entrada 'excel-a-convertir'
             files.forEach(file => {
-                const tempPath = path.join(__dirname, file.path);
+                const tempPath = path.join(process.cwd(), file.path);
                 const targetPath = path.join(EXCEL_DIR, file.originalname);
 
                 // Mover el archivo subido a la carpeta de entrada del conversor
@@ -1510,7 +1510,7 @@ app.post('/api/process-novedades', upload.array('excelFilesNovedades'), async (r
             }
 
             files.forEach(file => {
-                const tempPath = path.join(__dirname, file.path);
+                const tempPath = path.join(process.cwd(), file.path);
                 const targetPath = path.join(EXCEL_NOVEDADES_DIR, file.originalname);
                 fs.renameSync(tempPath, targetPath);
                 excelFilesToProcess.push(file.originalname);
@@ -2125,12 +2125,12 @@ app.delete('/api/borrar-liquidacion', (req, res) => {
     try {
         const keepExcel = req.query.keepExcel === 'true';
         const dirs = [
-            path.join(__dirname, 'csv-convertido'),
-            path.join(__dirname, 'csv-unidos')
+            path.join(process.cwd(), 'csv-convertido'),
+            path.join(process.cwd(), 'csv-unidos')
         ];
         
         if (!keepExcel) {
-            dirs.push(path.join(__dirname, 'excel-a-convertir'));
+            dirs.push(path.join(process.cwd(), 'excel-a-convertir'));
         }
         dirs.forEach(dir => {
             if (fs.existsSync(dir)) {
@@ -2160,8 +2160,8 @@ app.delete('/api/borrar-liquidacion', (req, res) => {
 app.delete('/api/borrar-novedad', (req, res) => {
     try {
         const dirs = [
-            path.join(__dirname, 'csv-unidos-novedades'),
-            path.join(__dirname, 'excel-a-convertir-novedades')
+            path.join(process.cwd(), 'csv-unidos-novedades'),
+            path.join(process.cwd(), 'excel-a-convertir-novedades')
         ];
         dirs.forEach(dir => {
             if (fs.existsSync(dir)) {
@@ -2363,6 +2363,15 @@ app.delete('/api/users/:username', requireProgramador, (req, res) => {
     } else {
         res.status(500).json({ error: 'Error al escribir en la base de datos' });
     }
+});
+
+// ENDPOINT DE APAGADO (Para cerrar el servidor cuando se cierra la aplicación de escritorio)
+app.post('/api/shutdown', (req, res) => {
+    console.log('[SERVER] 🛑 Solicitud de apagado recibida. Cerrando servidor...');
+    res.json({ success: true, message: 'Apagando el servidor local...' });
+    setTimeout(() => {
+        process.exit(0);
+    }, 1000);
 });
 
 // ==========================================
