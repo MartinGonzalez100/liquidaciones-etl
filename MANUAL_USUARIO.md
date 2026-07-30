@@ -23,7 +23,11 @@ Esta pantalla se encarga de procesar archivos Excel en bruto y unificarlos en fo
   - **Borrado de Novedad:** Elimina únicamente los archivos correspondientes a las dependencias de novedades, permitiendo reiniciar el ciclo sin afectar las liquidaciones. Vacía por completo:
     - `excel-a-convertir-novedades/` (Archivos origen de novedades).
     - `csv-unidos-novedades/` (Lotes e informes generados).
-  - **Lotes de Novedades Trabajadas:** Listado que rastrea los archivos de novedades integrados al sistema. Al igual que en liquidaciones, este panel se actualiza en tiempo real tras la carga y se vacía automáticamente al realizar el **Borrado de Novedad**, eliminando el archivo `excel-convertidos-novedades.csv`.
+  - **Borrar Novedades de Guardias (Borrado Individual):** Elimina de forma selectiva únicamente las novedades de Guardias Críticas, permitiendo reiniciar ese flujo de manera individual. Vacía de manera específica:
+    - En la carpeta `excel-a-convertir-novedades/` cualquier archivo de entrada de novedades que comience con el prefijo `gc` (ej. `gc.xlsx`, `gc_periodo.xls`).
+    - En la carpeta `csv-unidos-novedades/` los archivos unificados y auxiliares de guardias: `gc.csv` y `AuxGCNovedades.csv`.
+    - En el archivo de registro `excel-convertidos-novedades.csv` (ubicado en `configuracion_parametros/`), se filtran y eliminan las referencias a los archivos procesados de Guardias. Si no quedan elementos tras el filtrado, se remueve el archivo CSV para indicar la ausencia de lotes de novedades.
+  - **Lotes de Novedades Trabajadas:** Listado que rastrea los archivos de novedades integrados al sistema. Al igual que en liquidaciones, este panel se actualiza en tiempo real tras la carga y se vacía automáticamente al realizar el **Borrado de Novedad** (o se actualiza parcialmente al realizar el **Borrado de Novedades de Guardias**), eliminando/modificando el archivo `excel-convertidos-novedades.csv`.
 
 ---
 

@@ -2188,6 +2188,71 @@ app.delete('/api/borrar-novedad', (req, res) => {
     }
 });
 
+app.delete('/api/borrar-novedades-guardias', (req, res) => {
+    try {
+        let deletedExcelCount = 0;
+        let deletedCsvCount = 0;
+
+        // 1. Eliminar de excel-a-convertir-novedades/ el/los archivos que inicien con "gc"
+        if (fs.existsSync(EXCEL_NOVEDADES_DIR)) {
+            const files = fs.readdirSync(EXCEL_NOVEDADES_DIR);
+            for (const file of files) {
+                if (file.toLowerCase().startsWith('gc')) {
+                    const filePath = path.join(EXCEL_NOVEDADES_DIR, file);
+                    if (fs.lstatSync(filePath).isFile()) {
+                        fs.unlinkSync(filePath);
+                        deletedExcelCount++;
+                    }
+                }
+            }
+        }
+
+        // 2. Eliminar de csv-unidos-novedades/ el archivo gc.csv y el archivo AuxGCNovedades.csv
+        if (fs.existsSync(CSV_UNIDOS_NOVEDADES_DIR)) {
+            const files = fs.readdirSync(CSV_UNIDOS_NOVEDADES_DIR);
+            for (const file of files) {
+                const lowerFile = file.toLowerCase();
+                if (lowerFile === 'gc.csv' || lowerFile === 'auxgcnovedades.csv') {
+                    const filePath = path.join(CSV_UNIDOS_NOVEDADES_DIR, file);
+                    if (fs.lstatSync(filePath).isFile()) {
+                        fs.unlinkSync(filePath);
+                        deletedCsvCount++;
+                    }
+                }
+            }
+        }
+
+        // 3. Actualizar el archivo excel-convertidos-novedades.csv
+        const trackingFile = path.join(CONFIG_DIR, 'excel-convertidos-novedades.csv');
+        if (fs.existsSync(trackingFile)) {
+            const content = fs.readFileSync(trackingFile, 'utf8');
+            const lines = content.split(/\r?\n/);
+            const remainingLines = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line && !line.toLowerCase().startsWith('gc')) {
+                    remainingLines.push(line);
+                }
+            }
+            if (remainingLines.length === 0) {
+                fs.unlinkSync(trackingFile);
+            } else {
+                const newContent = 'excel-convertidos-novedades\n' + remainingLines.join('\n') + '\n';
+                fs.writeFileSync(trackingFile, newContent, 'utf8');
+            }
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'Novedades de Guardias borradas correctamente.',
+            details: { deletedExcelCount, deletedCsvCount }
+        });
+    } catch (e) {
+        console.error('Error al borrar novedades de guardias:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // ==========================================
 // SISTEMA DE LOGINS Y PERMISOS
 // ==========================================

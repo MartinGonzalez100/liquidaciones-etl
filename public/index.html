@@ -1459,9 +1459,14 @@
             <input type="text" id="custom-filter" class="floating-search-input" placeholder="🔍 Buscar en la tabla...">
         </div>
         <div id="conversion-form" class="container">
-            <div style="position: sticky; top: 10px; z-index: 1000; text-align: center; margin-bottom: 20px;">
-                <button onclick="borrarLiquidacion()" style="background-color: #e74c3c; margin-right: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Borrado de Liquidacion</button>
-                <button onclick="borrarNovedad()" style="background-color: #e74c3c; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Borrado de Novedad</button>
+            <div style="position: sticky; top: 10px; z-index: 1000; display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; align-items: flex-start;">
+                <div>
+                    <button onclick="borrarLiquidacion()" style="background-color: #e74c3c; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; white-space: nowrap;">Borrado de Liquidacion</button>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px; min-width: 220px;">
+                    <button onclick="borrarNovedad()" style="background-color: #e74c3c; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; white-space: nowrap; width: 100%;">Borrado de Novedad</button>
+                    <button onclick="borrarNovedadesGuardias()" style="background-color: #e67e22; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; white-space: nowrap; width: 100%;">Borrar Novedades de Guardias</button>
+                </div>
             </div>
             <h1>Procesador de Lotes de Liquidaciones</h1>
             <div class="mode-selection">
@@ -4770,6 +4775,23 @@
                     const result = await response.json();
                     if (response.ok) {
                         alert(result.message || 'Archivos borrados correctamente.');
+                        loadLotesNovedadesTrabajados();
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (e) {
+                    alert('Error de conexión.');
+                }
+            }
+        }
+
+        async function borrarNovedadesGuardias() {
+            if (confirm('¿Está seguro que desea borrar únicamente las novedades de Guardias? (Se eliminarán los archivos gc de entrada, gc.csv, AuxGCNovedades.csv y se actualizará el historial)')) {
+                try {
+                    const response = await fetch('/api/borrar-novedades-guardias', { method: 'DELETE' });
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.message || 'Novedades de Guardias borradas correctamente.');
                         loadLotesNovedadesTrabajados();
                     } else {
                         alert('Error: ' + result.error);
