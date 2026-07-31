@@ -73,5 +73,20 @@
       "config-gc-codigos-efectores",
       "config-gc-sdyf"
     ]
+  },
+  {
+    "username": "residentes",
+    "password": "1234",
+    "role": "Personal",
+    "permissions": [
+      "conversion-form",
+      "menu-unicos-planta",
+      "menu-residentes",
+      "menu-residentes-control",
+      "menu-novedades-residentes",
+      "menu-novedades-criticidad",
+      "menu-novedades-fortalecimiento",
+      "menu-configuracion"
+    ]
   }
 ]

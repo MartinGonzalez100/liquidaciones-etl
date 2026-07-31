@@ -123,16 +123,18 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
   4. Los datos son expuestos finalmente a través de DataTables para su correcta exploración visual.
 
 #### Control Residentes de Liquidacion a Novedades
-- **Filtro:** Procesa y cruza los registros de planta `Residentes` y `Residentes Nacionales` con los datos mensuales de novedades de Residentes.
+- **Filtro:** Procesa y cruza los registros de planta `Residentes` y `Residentes Nacionales` con los datos mensuales de novedades de Residentes. Para optimizar el control, solo se consideran los registros de planta que cumplan simultáneamente con:
+  - `PERIODO_IMPUTADO` = `PERIODO_LIQUIDADO`
+  - `D_TRAB` diferente de 0
 - **Generación y Lógica Auxiliar:**
   - El sistema verifica la existencia del archivo `AuxResidentesLiquidacion.csv` en la carpeta `csv-unidos`. Si no existe, lo crea de forma dinámica.
-  - Cruza el `NRO_DOCUMENTO` de la liquidación con el `DNI` del archivo de novedades (`residentes.csv`).
+  - Cruza el `NRO_DOCUMENTO` de la liquidación con el `DNI` del archivo de novedades (`residentes.csv`). Únicamente se realiza el cruce con aquellas novedades donde la columna `estado` sea exactamente igual a `Activo`.
   - Calcula las columnas:
     - **BRUTO 003-31:** Importe obtenido de la columna `ImporteEscalaCriticidad003_31` de novedades de Residentes.
     - **DIFERENCIAS 003-31:** Calculado como `LIB_003_31 - ((BRUTO 003-31 / 30) * (D_TRAB - DIAS_INASIST))`.
     - **BRUTO 003-91:** Importe obtenido de la columna `ImporteEscalaForta003_91` de novedades de Residentes.
     - **DIFERENCIAS 003-91:** Calculado como `LIB_003_91 - ((BRUTO 003-91 / 30) * (D_TRAB - DIAS_INASIST))`.
-    - **OBSERVACION:** Un campo de entrada de texto editable que inicializa por defecto con el valor `"Obs-"` al crearse y permite cargar y guardar observaciones de forma manual.
+    - **OBSERVACION:** Un campo de entrada de texto editable. Si no existe una coincidencia de novedad activa para el residente, se inicializa automáticamente con el valor `"01-No Encontrado en Novedades de Residentes"`. En caso de que sí exista coincidencia, se inicializa con el valor por defecto `"Obs-"`. Permite cargar y guardar observaciones de forma manual preservando modificaciones personalizadas.
   - Las nuevas columnas se sitúan al inicio de la tabla (antes de `NIVEL`).
   - **Persistencia:** Al presionar el botón "Guardar Observaciones" situado en la barra de título, los cambios ingresados en la columna `OBSERVACION` se guardan directamente en el archivo `AuxResidentesLiquidacion.csv` en el servidor, manteniéndose para futuras cargas de la vista.
 

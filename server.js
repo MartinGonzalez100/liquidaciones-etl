@@ -1939,7 +1939,10 @@ async function generateAuxResidentesLiquidacion() {
         const novedadesList = await readCsvFile(novedadesPath);
         novedadesList.forEach(row => {
             const dni = (row.DNI || '').toString().trim();
-            if (dni) novedadesMap.set(dni, row);
+            const estado = (row.estado || '').toString().trim();
+            if (dni && estado === 'Activo') {
+                novedadesMap.set(dni, row);
+            }
         });
     }
 
@@ -1962,7 +1965,12 @@ async function generateAuxResidentesLiquidacion() {
 
     unificadasRows.forEach(row => {
         const esResidente = row.PLANTA === 'Residentes' || row.PLANTA === 'Residentes Nacionales';
-        if (esResidente) {
+        const dTrab = parseCsvFloat(row.D_TRAB);
+        const pImp = (row.PERIODO_IMPUTADO || '').toString().trim();
+        const pLiq = (row.PERIODO_LIQUIDADO || '').toString().trim();
+        const cumpleCondicion = esResidente && pImp === pLiq && dTrab !== 0;
+
+        if (cumpleCondicion) {
             const doc = (row.NRO_DOCUMENTO || '').toString().trim();
             const cargo = (row.NUMERO_CARGO || '').toString().trim();
             const key = doc + '_' + cargo;
@@ -1974,14 +1982,19 @@ async function generateAuxResidentesLiquidacion() {
             const lib31 = parseCsvFloat(row.LIB_003_31);
             const lib91 = parseCsvFloat(row.LIB_003_91);
 
-            const dTrab = parseCsvFloat(row.D_TRAB);
             const diasInasist = parseCsvFloat(row.DIAS_INASIST);
 
             const dif31 = lib31 - ((bruto31 / 30) * (dTrab - diasInasist));
             const dif91 = lib91 - ((bruto91 / 30) * (dTrab - diasInasist));
 
             const newRow = {};
-            newRow['OBSERVACION'] = existingObservations.has(key) ? existingObservations.get(key) : 'Obs-';
+            if (!novedad) {
+                newRow['OBSERVACION'] = (existingObservations.has(key) && existingObservations.get(key) !== 'Obs-')
+                    ? existingObservations.get(key)
+                    : '01-No Encontrado en Novedades de Residentes';
+            } else {
+                newRow['OBSERVACION'] = existingObservations.has(key) ? existingObservations.get(key) : 'Obs-';
+            }
             newRow['BRUTO 003-31'] = bruto31.toFixed(2);
             newRow['DIFERENCIAS 003-31'] = dif31.toFixed(2);
             newRow['BRUTO 003-91'] = bruto91.toFixed(2);
@@ -2249,6 +2262,71 @@ app.delete('/api/borrar-novedades-guardias', (req, res) => {
         });
     } catch (e) {
         console.error('Error al borrar novedades de guardias:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.delete('/api/borrar-novedades-residentes', (req, res) => {
+    try {
+        let deletedExcelCount = 0;
+        let deletedCsvCount = 0;
+
+        // 1. Eliminar de excel-a-convertir-novedades/ el/los archivos que inicien con "residentes"
+        if (fs.existsSync(EXCEL_NOVEDADES_DIR)) {
+            const files = fs.readdirSync(EXCEL_NOVEDADES_DIR);
+            for (const file of files) {
+                if (file.toLowerCase().startsWith('residentes')) {
+                    const filePath = path.join(EXCEL_NOVEDADES_DIR, file);
+                    if (fs.lstatSync(filePath).isFile()) {
+                        fs.unlinkSync(filePath);
+                        deletedExcelCount++;
+                    }
+                }
+            }
+        }
+
+        // 2. Eliminar de csv-unidos-novedades/ el archivo residentes.csv y AuxResidentesNovedades.csv/AuxResidentesNovedades
+        if (fs.existsSync(CSV_UNIDOS_NOVEDADES_DIR)) {
+            const files = fs.readdirSync(CSV_UNIDOS_NOVEDADES_DIR);
+            for (const file of files) {
+                const lowerFile = file.toLowerCase();
+                if (lowerFile === 'residentes.csv' || lowerFile === 'auxresidentesnovedades.csv' || lowerFile === 'auxresidentesnovedades') {
+                    const filePath = path.join(CSV_UNIDOS_NOVEDADES_DIR, file);
+                    if (fs.lstatSync(filePath).isFile()) {
+                        fs.unlinkSync(filePath);
+                        deletedCsvCount++;
+                    }
+                }
+            }
+        }
+
+        // 3. Actualizar el archivo excel-convertidos-novedades.csv
+        const trackingFile = path.join(CONFIG_DIR, 'excel-convertidos-novedades.csv');
+        if (fs.existsSync(trackingFile)) {
+            const content = fs.readFileSync(trackingFile, 'utf8');
+            const lines = content.split(/\r?\n/);
+            const remainingLines = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line && !line.toLowerCase().startsWith('residentes')) {
+                    remainingLines.push(line);
+                }
+            }
+            if (remainingLines.length === 0) {
+                fs.unlinkSync(trackingFile);
+            } else {
+                const newContent = 'excel-convertidos-novedades\n' + remainingLines.join('\n') + '\n';
+                fs.writeFileSync(trackingFile, newContent, 'utf8');
+            }
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'Novedades de Residentes borradas correctamente.',
+            details: { deletedExcelCount, deletedCsvCount }
+        });
+    } catch (e) {
+        console.error('Error al borrar novedades de residentes:', e);
         res.status(500).json({ error: e.message });
     }
 });

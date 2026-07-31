@@ -1466,6 +1466,7 @@
                 <div style="display: flex; flex-direction: column; gap: 8px; min-width: 220px;">
                     <button onclick="borrarNovedad()" style="background-color: #e74c3c; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; white-space: nowrap; width: 100%;">Borrado de Novedad</button>
                     <button onclick="borrarNovedadesGuardias()" style="background-color: #e67e22; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; white-space: nowrap; width: 100%;">Borrar Novedades de Guardias</button>
+                    <button onclick="borrarNovedadesResidentes()" style="background-color: #e67e22; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; white-space: nowrap; width: 100%;">Borrado de Novedad de Residente</button>
                 </div>
             </div>
             <h1>Procesador de Lotes de Liquidaciones</h1>
@@ -4792,6 +4793,23 @@
                     const result = await response.json();
                     if (response.ok) {
                         alert(result.message || 'Novedades de Guardias borradas correctamente.');
+                        loadLotesNovedadesTrabajados();
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (e) {
+                    alert('Error de conexión.');
+                }
+            }
+        }
+
+        async function borrarNovedadesResidentes() {
+            if (confirm('¿Está seguro que desea borrar únicamente las novedades de Residentes? (Se eliminarán los archivos de entrada con prefijo "residentes", residentes.csv, AuxResidentesNovedades y se actualizará el historial)')) {
+                try {
+                    const response = await fetch('/api/borrar-novedades-residentes', { method: 'DELETE' });
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.message || 'Novedades de Residentes borradas correctamente.');
                         loadLotesNovedadesTrabajados();
                     } else {
                         alert('Error: ' + result.error);
