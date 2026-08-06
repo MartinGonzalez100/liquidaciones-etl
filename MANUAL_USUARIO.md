@@ -27,7 +27,12 @@ Esta pantalla se encarga de procesar archivos Excel en bruto y unificarlos en fo
     - En la carpeta `excel-a-convertir-novedades/` cualquier archivo de entrada de novedades que comience con el prefijo `gc` (ej. `gc.xlsx`, `gc_periodo.xls`).
     - En la carpeta `csv-unidos-novedades/` los archivos unificados y auxiliares de guardias: `gc.csv` y `AuxGCNovedades.csv`.
     - En el archivo de registro `excel-convertidos-novedades.csv` (ubicado en `configuracion_parametros/`), se filtran y eliminan las referencias a los archivos procesados de Guardias. Si no quedan elementos tras el filtrado, se remueve el archivo CSV para indicar la ausencia de lotes de novedades.
-  - **Lotes de Novedades Trabajadas:** Listado que rastrea los archivos de novedades integrados al sistema. Al igual que en liquidaciones, este panel se actualiza en tiempo real tras la carga y se vacía automáticamente al realizar el **Borrado de Novedad** (o se actualiza parcialmente al realizar el **Borrado de Novedades de Guardias**), eliminando/modificando el archivo `excel-convertidos-novedades.csv`.
+  - **Borrar Novedades de Residentes (Borrado Individual):** Elimina de forma selectiva únicamente las novedades de Residentes, para limpiar este flujo. Vacía:
+    - Archivos base que comiencen con `residentes` en `excel-a-convertir-novedades/`.
+    - Los archivos consolidados `residentes.csv` y `AuxResidentesNovedades.csv` de `csv-unidos-novedades/`.
+    - Elimina automáticamente el archivo de control `AuxResidentesLiquidacion.csv` de la carpeta `csv-unidos/`.
+    - Actualiza el historial `excel-convertidos-novedades.csv` quitando los lotes de residentes.
+  - **Lotes de Novedades Trabajadas:** Listado que rastrea los archivos de novedades integrados al sistema. Al igual que en liquidaciones, este panel se actualiza en tiempo real tras la carga y se vacía automáticamente al realizar el **Borrado de Novedad** (o se actualiza parcialmente al realizar el **Borrado Individual** de guardias o residentes), eliminando/modificando el archivo `excel-convertidos-novedades.csv`.
 
 ---
 
@@ -128,7 +133,7 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
   - `D_TRAB` diferente de 0
 - **Generación y Lógica Auxiliar:**
   - El sistema verifica la existencia del archivo `AuxResidentesLiquidacion.csv` en la carpeta `csv-unidos`. Si no existe, lo crea de forma dinámica.
-  - Cruza el `NRO_DOCUMENTO` de la liquidación con el `DNI` del archivo de novedades (`residentes.csv`). Únicamente se realiza el cruce con aquellas novedades donde la columna `estado` sea exactamente igual a `Activo`.
+  - Cruza la información de liquidaciones con el archivo de novedades (`residentes.csv`) utilizando una llave altamente específica. Desde las liquidaciones toma el `NRO_DOCUMENTO` y le anexa el carácter 7 (en mayúscula) y el carácter 8 de la columna `NIVEL` (creando, por ejemplo, `38023219A5`). Esta llave generada se cruza contra la concatenación del `DNI` y el `NIVEL` extraídos directamente de las novedades. Únicamente se realiza el cruce con aquellas novedades donde la columna `estado` sea exactamente igual a `Activo`.
   - Calcula las columnas:
     - **BRUTO 003-31:** Importe obtenido de la columna `ImporteEscalaCriticidad003_31` de novedades de Residentes.
     - **DIFERENCIAS 003-31:** Calculado como `LIB_003_31 - ((BRUTO 003-31 / 30) * (D_TRAB - DIAS_INASIST))`.

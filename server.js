@@ -1940,8 +1940,9 @@ async function generateAuxResidentesLiquidacion() {
         novedadesList.forEach(row => {
             const dni = (row.DNI || '').toString().trim();
             const estado = (row.estado || '').toString().trim();
+            const nivelNovedad = (row.NIVEL || '').toString().trim().toUpperCase();
             if (dni && estado === 'Activo') {
-                novedadesMap.set(dni, row);
+                novedadesMap.set(dni + nivelNovedad, row);
             }
         });
     }
@@ -1975,7 +1976,12 @@ async function generateAuxResidentesLiquidacion() {
             const cargo = (row.NUMERO_CARGO || '').toString().trim();
             const key = doc + '_' + cargo;
 
-            const novedad = novedadesMap.get(doc);
+            const nivelOriginal = (row.NIVEL || '').toString();
+            const char7 = nivelOriginal.charAt(6) ? nivelOriginal.charAt(6).toUpperCase() : '';
+            const char8 = nivelOriginal.charAt(7) || '';
+            const lookupKey = doc + char7 + char8;
+
+            const novedad = novedadesMap.get(lookupKey);
             const bruto31 = parseCsvFloat(novedad ? novedad.ImporteEscalaCriticidad003_31 : 0);
             const bruto91 = parseCsvFloat(novedad ? novedad.ImporteEscalaForta003_91 : 0);
 
