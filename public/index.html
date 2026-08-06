@@ -2839,7 +2839,10 @@
                     };
                     if (key === 'OBSERVACION') {
                         colDef.render = function (val, type, row) {
-                            return `<input type="text" class="obs-input" data-doc="${row.NRO_DOCUMENTO}" data-cargo="${row.NUMERO_CARGO}" value="${val || ''}" style="width: 100%; min-width: 200px; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; background: transparent; color: inherit;" />`;
+                            if (type === 'display') {
+                                return `<input type="text" class="obs-input" data-doc="${row.NRO_DOCUMENTO}" data-cargo="${row.NUMERO_CARGO}" value="${val || ''}" style="width: 100%; min-width: 200px; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; background: transparent; color: inherit;" />`;
+                            }
+                            return val || '';
                         };
                     }
                     return colDef;

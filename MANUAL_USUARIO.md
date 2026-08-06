@@ -139,7 +139,7 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
     - **DIFERENCIAS 003-31:** Calculado como `LIB_003_31 - ((BRUTO 003-31 / 30) * (D_TRAB - DIAS_INASIST))`.
     - **BRUTO 003-91:** Importe obtenido de la columna `ImporteEscalaForta003_91` de novedades de Residentes.
     - **DIFERENCIAS 003-91:** Calculado como `LIB_003_91 - ((BRUTO 003-91 / 30) * (D_TRAB - DIAS_INASIST))`.
-    - **OBSERVACION:** Un campo de entrada de texto editable. Si no existe una coincidencia de novedad activa para el residente, se inicializa automáticamente con el valor `"01-No Encontrado en Novedades de Residentes"`. En caso de que sí exista coincidencia, se inicializa con el valor por defecto `"Obs-"`. Permite cargar y guardar observaciones de forma manual preservando modificaciones personalizadas.
+    - **OBSERVACION:** Un campo de entrada de texto editable. Si no existe una coincidencia de novedad activa para el residente, se inicializa automáticamente con el valor `"01-No Encontrado en Novedades de Residentes"`. En caso de que sí exista coincidencia, se inicializa con el valor por defecto `"Obs-"`. Permite cargar y guardar observaciones de forma manual preservando modificaciones personalizadas. A nivel interfaz, esta columna está optimizada para permitir el **ordenamiento alfabético y filtrado** preciso, a pesar de contener elementos interactivos de texto.
   - Las nuevas columnas se sitúan al inicio de la tabla (antes de `NIVEL`).
   - **Persistencia:** Al presionar el botón "Guardar Observaciones" situado en la barra de título, los cambios ingresados en la columna `OBSERVACION` se guardan directamente en el archivo `AuxResidentesLiquidacion.csv` en el servidor, manteniéndose para futuras cargas de la vista.
 
