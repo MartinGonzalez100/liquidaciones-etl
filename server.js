@@ -2120,6 +2120,59 @@ app.post('/api/residentes/save-observaciones', async (req, res) => {
     }
 });
 
+app.get('/api/novedades/residentes-no-liquidados', async (req, res) => {
+    try {
+        const unificadasPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
+        const novedadesPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'residentes.csv');
+
+        if (!fs.existsSync(unificadasPath) || !fs.existsSync(novedadesPath)) {
+            return res.json([]);
+        }
+
+        // 1. Build Set of keys from Liquidaciones
+        const liquidacionesKeys = new Set();
+        const unificadasRows = await readCsvFile(unificadasPath);
+        
+        unificadasRows.forEach(row => {
+            const esResidente = row.PLANTA === 'Residentes' || row.PLANTA === 'Residentes Nacionales';
+            const dTrab = parseCsvFloat(row.D_TRAB);
+            const pImp = (row.PERIODO_IMPUTADO || '').toString().trim();
+            const pLiq = (row.PERIODO_LIQUIDADO || '').toString().trim();
+            
+            if (esResidente && pImp === pLiq && dTrab !== 0) {
+                const doc = (row.NRO_DOCUMENTO || '').toString().trim();
+                const nivelOriginal = (row.NIVEL || '').toString();
+                const char7 = nivelOriginal.charAt(6) ? nivelOriginal.charAt(6).toUpperCase() : '';
+                const char8 = nivelOriginal.charAt(7) || '';
+                const lookupKey = doc + char7 + char8;
+                liquidacionesKeys.add(lookupKey);
+            }
+        });
+
+        // 2. Cross with Novedades
+        const novedadesRows = await readCsvFile(novedadesPath);
+        const results = [];
+        
+        novedadesRows.forEach(row => {
+            const estado = (row.estado || '').toString().trim();
+            if (estado === 'Activo') {
+                const dni = (row.DNI || '').toString().trim();
+                const nivelNovedad = (row.NIVEL || '').toString().trim().toUpperCase();
+                const keyNovedad = dni + nivelNovedad;
+                
+                if (!liquidacionesKeys.has(keyNovedad)) {
+                    results.push(row);
+                }
+            }
+        });
+
+        res.json(results);
+    } catch (error) {
+        console.error('[SERVER] ❌ Error en /api/novedades/residentes-no-liquidados:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/api/novedades/:tipo', (req, res) => {
     const { tipo } = req.params;
     const csvPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, `${tipo}.csv`);

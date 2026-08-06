@@ -25,6 +25,7 @@
       "menu-residentes-control",
       "menu-calculo-ley100",
       "menu-novedades-residentes",
+      "menu-novedades-residentes-no-liquidados",
       "menu-novedades-criticidad",
       "menu-novedades-fortalecimiento",
       "menu-configuracion"
@@ -84,9 +85,9 @@
       "menu-residentes",
       "menu-residentes-control",
       "menu-novedades-residentes",
-      "menu-novedades-criticidad",
-      "menu-novedades-fortalecimiento",
-      "menu-configuracion"
+      "menu-novedades-residentes-no-liquidados",
+      "menu-configuracion",
+      "config-theme"
     ]
   }
 ]

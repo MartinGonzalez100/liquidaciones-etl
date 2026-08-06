@@ -143,6 +143,12 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
   - Las nuevas columnas se sitúan al inicio de la tabla (antes de `NIVEL`).
   - **Persistencia:** Al presionar el botón "Guardar Observaciones" situado en la barra de título, los cambios ingresados en la columna `OBSERVACION` se guardan directamente en el archivo `AuxResidentesLiquidacion.csv` en el servidor, manteniéndose para futuras cargas de la vista.
 
+#### Residentes No Liquidados
+Este reporte, accesible desde el submenú de Novedades Residentes, permite visualizar la discrepancia inversa del cruce: los agentes que se encuentran detallados en el archivo de Novedades de Residentes pero que **no aparecen** en el archivo unificado de liquidaciones.
+- **Filtro y Generación:**
+  - Extrae de la base de novedades (`residentes.csv`) todos los registros cuyo estado sea explícitamente `Activo`.
+  - Construye la llave de cruce idéntica al módulo de control: `DNI` anexado al `NIVEL` (en Novedades) versus `NRO_DOCUMENTO` anexado al carácter 7 (en mayúscula) y carácter 8 del `NIVEL` (en Liquidaciones).
+  - Devuelve íntegramente la fila cruda de la novedad del residente para todos aquellos agentes activos cuya llave **no** se encuentre en el listado de residentes liquidados del periodo actual (con `D_TRAB !== 0`).
 
 ### 2.4 Ley 100%
 #### Calculo de ley 100%
