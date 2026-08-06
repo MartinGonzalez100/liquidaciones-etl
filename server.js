@@ -2300,6 +2300,13 @@ app.delete('/api/borrar-novedades-residentes', (req, res) => {
             }
         }
 
+        // 2.5 Eliminar de csv-unidos/ el archivo AuxResidentesLiquidacion.csv
+        const auxLiquidacionPath = path.join(CSV_UNIDOS_DIR, 'AuxResidentesLiquidacion.csv');
+        if (fs.existsSync(auxLiquidacionPath)) {
+            fs.unlinkSync(auxLiquidacionPath);
+            deletedCsvCount++;
+        }
+
         // 3. Actualizar el archivo excel-convertidos-novedades.csv
         const trackingFile = path.join(CONFIG_DIR, 'excel-convertidos-novedades.csv');
         if (fs.existsSync(trackingFile)) {

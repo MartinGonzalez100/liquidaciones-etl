@@ -188,10 +188,22 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
   - **Importe Escala Forta. 003-91:** Monto asignado por fortalecimiento.
 
 #### Residentes - Criticidad
-- Muestra específicamente el detalle de los datos correspondientes a la categoría de Criticidad, extrayendo los datos del archivo `criticidad.csv`.
+- Muestra específicamente el detalle de los datos correspondientes a la categoría de Criticidad, extrayendo los datos del archivo `criticidad.csv`. Este reporte se enfoca en los montos y escalas de criticidad aplicados a los residentes.
+- **Campos Detallados Clave:**
+  - **DNI / Apellido y Nombre:** Identificación unívoca del agente.
+  - **ORGANISMO:** Efector asignado.
+  - **RESIDENCIA / MODALIDAD:** Especialidad en formación y tipo de beca/residencia.
+  - **Escala / Tipo Escala / Escala Criticidad:** Parámetros de categorización que determinan el nivel de criticidad.
+  - **Importe Escala Criticidad 003-31:** Monto asignado por el concepto de criticidad.
 
 #### Residentes - Fortalecimiento
-- Muestra el detalle de los complementos de Fortalecimiento a partir del archivo `fortalecimiento.csv`.
+- Muestra el detalle de los complementos de Fortalecimiento a partir del archivo `fortalecimiento.csv`. Este reporte detalla las asignaciones adicionales orientadas al fortalecimiento de las residencias.
+- **Campos Detallados Clave:**
+  - **DNI / Apellido y Nombre:** Identificación unívoca del agente.
+  - **ORGANISMO:** Efector asignado.
+  - **RESIDENCIA / MODALIDAD:** Especialidad en formación y tipo de beca/residencia.
+  - **Clave 003-91:** Código o clave identificatoria del complemento.
+  - **Importe Escala Forta. 003-91:** Monto asignado por fortalecimiento.
 
 ---
 
