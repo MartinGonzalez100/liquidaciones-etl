@@ -1143,6 +1143,7 @@ async function generateAuxGCLiquidacion() {
                     const nroDoc = (row.NRO_DOCUMENTO || '').toString().trimEnd();
                     const organismo = (row.ORGANISMO || '').toString().trimEnd();
                     newRow['CLAVE_AGRUPACION'] = nroDoc + organismo;
+                    newRow['OBSERVACION_EPS'] = '';
 
                     // SUMA_GC: Suma de las columnas de GC
                     let sumaGC = 0;
@@ -1829,11 +1830,13 @@ app.get('/api/gc-liquidacion-eps', async (req, res) => {
                             PERIODO_LIQUIDADO: row.PERIODO_LIQUIDADO,
                             SUMA: parseFloat(row.SUMA_GC) || 0,
                             GC: '',
+                            OBSERVACION_EPS: row.OBSERVACION_EPS || '',
                             CLAVE: clave
                         });
                     } else {
                         const existing = groupings.get(clave);
                         existing.SUMA += parseFloat(row.SUMA_GC) || 0;
+                        if (row.OBSERVACION_EPS) existing.OBSERVACION_EPS = row.OBSERVACION_EPS;
                     }
                 }
             })
@@ -1843,7 +1846,15 @@ app.get('/api/gc-liquidacion-eps', async (req, res) => {
                     const importeEps = novedadesMap.get(r.CLAVE) || 0;
                     const control = sumaLiq - importeEps;
                     
+                    let obs = r.OBSERVACION_EPS;
+                    if (!obs || obs.trim() === '') {
+                        if (control === 0) obs = "Verificado";
+                        else if (control > 0) obs = "Verificar Liquidado de Mas";
+                        else obs = "Verificar Liquidado de Menos";
+                    }
+                    
                     return {
+                        OBSERVACION: obs,
                         Importes_Eps: importeEps.toFixed(2),
                         Control: control.toFixed(2),
                         ...r,
@@ -1857,6 +1868,52 @@ app.get('/api/gc-liquidacion-eps', async (req, res) => {
     } catch (error) {
         console.error('[SERVER] ❌ Error en /api/gc-liquidacion-eps:', error.message);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// NUEVO ENDPOINT: Guardar Observaciones en Control GC Liquidacion a Eps
+app.post('/api/gc-liquidacion-eps/save-observaciones', async (req, res) => {
+    try {
+        const { changes } = req.body;
+        if (!changes || !Array.isArray(changes)) {
+            return res.status(400).json({ success: false, error: 'Cambios no válidos.' });
+        }
+
+        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
+        if (!fs.existsSync(auxLiqPath)) {
+            return res.status(404).json({ success: false, error: 'El archivo AuxGCLiquidacion.csv no existe.' });
+        }
+
+        const rows = await readCsvFile(auxLiqPath);
+        const changeMap = new Map();
+        changes.forEach(c => {
+            changeMap.set(c.clave, c.observacion);
+        });
+
+        const updatedRows = rows.map(row => {
+            if (changeMap.has(row.CLAVE_AGRUPACION)) {
+                row.OBSERVACION_EPS = changeMap.get(row.CLAVE_AGRUPACION);
+            }
+            return row;
+        });
+
+        if (updatedRows.length > 0) {
+            const headers = Object.keys(updatedRows[0]);
+            const csvContent = [
+                headers.join(','),
+                ...updatedRows.map(r => headers.map(h => {
+                    let val = (r[h] !== undefined && r[h] !== null) ? r[h].toString() : '';
+                    if (val.includes(',') || val.includes('"')) val = `"${val.replace(/"/g, '""')}"`;
+                    return val;
+                }).join(','))
+            ].join('\n');
+            fs.writeFileSync(auxLiqPath, csvContent, 'utf8');
+        }
+
+        res.json({ success: true, message: 'Observaciones guardadas correctamente' });
+    } catch (error) {
+        console.error('[SERVER] ❌ Error en /api/gc-liquidacion-eps/save-observaciones:', error.message);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 

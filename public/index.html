@@ -2799,7 +2799,7 @@
             // Mostrar u ocultar el botón de guardar según corresponda
             const saveBtn = document.getElementById('btn-save-residentes-control');
             if (saveBtn) {
-                if (title === 'Control Residentes de Liquidacion a Novedades') {
+                if (title === 'Control Residentes de Liquidacion a Novedades' || title === 'Control GC Liquidacion a Eps') {
                     saveBtn.style.display = 'inline-flex';
                 } else {
                     saveBtn.style.display = 'none';
@@ -2842,7 +2842,10 @@
                     if (key === 'OBSERVACION') {
                         colDef.render = function (val, type, row) {
                             if (type === 'display') {
-                                return `<input type="text" class="obs-input" data-doc="${row.NRO_DOCUMENTO}" data-cargo="${row.NUMERO_CARGO}" value="${val || ''}" style="width: 100%; min-width: 200px; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; background: transparent; color: inherit;" />`;
+                                const docAttr = row.NRO_DOCUMENTO ? `data-doc="${row.NRO_DOCUMENTO}"` : '';
+                                const cargoAttr = row.NUMERO_CARGO ? `data-cargo="${row.NUMERO_CARGO}"` : '';
+                                const claveAttr = row.CLAVE ? `data-clave="${row.CLAVE}"` : '';
+                                return `<input type="text" class="obs-input" ${docAttr} ${cargoAttr} ${claveAttr} value="${val || ''}" style="width: 100%; min-width: 200px; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; background: transparent; color: inherit;" />`;
                             }
                             return val || '';
                         };
@@ -3227,23 +3230,48 @@
             // Botón Guardar Control Residentes
             const btnSaveResidentesControl = document.getElementById('btn-save-residentes-control');
             if (btnSaveResidentesControl) {
-                btnSaveResidentesControl.addEventListener('click', function () {
-                    const changes = [];
+                // Ensure we only attach the event listener once
+                const newBtn = btnSaveResidentesControl.cloneNode(true);
+                btnSaveResidentesControl.parentNode.replaceChild(newBtn, btnSaveResidentesControl);
+                
+                newBtn.addEventListener('click', function () {
+                    const changesResidentes = [];
+                    const changesGC = [];
                     modifiedObservations.forEach((value, key) => {
-                        const [doc, cargo] = key.split('_');
-                        changes.push({ nro_documento: doc, numero_cargo: cargo, observacion: value });
+                        if (key.startsWith('gc_')) {
+                            changesGC.push({ clave: key.substring(3), observacion: value });
+                        } else if (key.startsWith('res_')) {
+                            const parts = key.substring(4).split('_');
+                            changesResidentes.push({ nro_documento: parts[0], numero_cargo: parts[1], observacion: value });
+                        } else {
+                            const parts = key.split('_');
+                            if (parts.length >= 2) {
+                                changesResidentes.push({ nro_documento: parts[0], numero_cargo: parts[1], observacion: value });
+                            }
+                        }
                     });
 
+                    const title = document.getElementById('table-title').innerText;
+                    let endpoint = '';
+                    let changes = [];
+                    if (title === 'Control GC Liquidacion a Eps') {
+                        endpoint = '/api/gc-liquidacion-eps/save-observaciones';
+                        changes = changesGC;
+                    } else {
+                        endpoint = '/api/residentes/save-observaciones';
+                        changes = changesResidentes;
+                    }
+
                     if (changes.length === 0) {
-                        alert("No hay observaciones modificadas para guardar.");
+                        alert("No hay observaciones modificadas para guardar en esta vista.");
                         return;
                     }
 
-                    btnSaveResidentesControl.disabled = true;
-                    const originalHTML = btnSaveResidentesControl.innerHTML;
-                    btnSaveResidentesControl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                    newBtn.disabled = true;
+                    const originalHTML = newBtn.innerHTML;
+                    newBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
-                    fetch('/api/residentes/save-observaciones', {
+                    fetch(endpoint, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -3256,7 +3284,8 @@
                             alert("¡Observaciones guardadas correctamente!");
                             modifiedObservations.clear();
                             const title = document.getElementById('table-title').innerText;
-                            loadDataAndRenderTable('/api/residentes/control', title);
+                            let reloadEndpoint = title === 'Control GC Liquidacion a Eps' ? '/api/gc-liquidacion-eps' : '/api/residentes/control';
+                            loadDataAndRenderTable(reloadEndpoint, title);
                         } else {
                             alert("Error al guardar observaciones: " + (result.error || 'Error desconocido'));
                         }
@@ -3265,17 +3294,23 @@
                         alert("Error de red al guardar: " + err.message);
                     })
                     .finally(() => {
-                        btnSaveResidentesControl.disabled = false;
-                        btnSaveResidentesControl.innerHTML = originalHTML;
+                        newBtn.disabled = false;
+                        newBtn.innerHTML = originalHTML;
                     });
                 });
             }
 
             // Capturar cambios en inputs de observaciones (event delegation)
-            $(document).on('change', '.obs-input', function () {
+            $(document).off('change', '.obs-input').on('change', '.obs-input', function () {
                 const doc = $(this).attr('data-doc');
                 const cargo = $(this).attr('data-cargo');
-                const key = doc + '_' + cargo;
+                const clave = $(this).attr('data-clave');
+                let key;
+                if (clave) {
+                    key = 'gc_' + clave;
+                } else {
+                    key = 'res_' + doc + '_' + cargo;
+                }
                 const val = $(this).val();
                 modifiedObservations.set(key, val);
             });
