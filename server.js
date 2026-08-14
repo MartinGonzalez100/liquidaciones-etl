@@ -661,6 +661,23 @@ app.get('/api/config/available-columns', (req, res) => {
         .on('error', (err) => res.status(500).json({ error: err.message }));
 });
 
+// Función para limpiar todas las planillas auxiliares que dependen de configuración
+function limpiarPlanillasAuxiliares() {
+    try {
+        const archivos = [
+            path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxGcNovedades.csv'),
+            path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv'),
+            path.join(CSV_UNIDOS_DIR, 'AuxResidentesLiquidacion.csv')
+        ];
+        archivos.forEach(p => {
+            if (fs.existsSync(p)) fs.unlinkSync(p);
+        });
+        console.log('[SERVER] 🧹 Planillas auxiliares borradas tras actualización de configuración.');
+    } catch (e) {
+        console.error('[SERVER] ⚠️ Error al borrar planillas auxiliares:', e.message);
+    }
+}
+
 // 2. Guardar configuración de Libres Disponibilidad
 app.post('/api/config/save-ld', (req, res) => {
     const { columns } = req.body;
@@ -669,6 +686,7 @@ app.post('/api/config/save-ld', (req, res) => {
     try {
         const content = "columna\n" + columns.join('\n');
         fs.writeFileSync(LD_CONFIG_FILE, content, 'utf8');
+        limpiarPlanillasAuxiliares();
         res.json({ success: true, message: 'Configuración guardada correctamente' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -695,6 +713,7 @@ app.post('/api/config/save-gc', (req, res) => {
     try {
         const content = "columna\n" + columns.join('\n');
         fs.writeFileSync(GC_CONFIG_FILE, content, 'utf8');
+        limpiarPlanillasAuxiliares();
         res.json({ success: true, message: 'Configuración de Guardias Críticas guardada' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -747,6 +766,7 @@ app.post('/api/config/save-gc-efectores', (req, res) => {
             content += `${efector},${nuevoEfector}\n`;
         });
         fs.writeFileSync(GC_EFECTORES_CONFIG_FILE, content, 'utf8');
+        limpiarPlanillasAuxiliares();
         res.json({ success: true, message: 'Configuración de Efectores guardada correctamente' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -785,6 +805,7 @@ app.post('/api/config/save-gc-codigos-efectores', (req, res) => {
             content += `${claveUnica};${dias};${tipo};${nivel};${codigo};${importe}\n`;
         });
         fs.writeFileSync(GC_CODIGOS_IMPORTES_CONFIG_FILE, content, 'latin1');
+        limpiarPlanillasAuxiliares();
         res.json({ success: true, message: 'Configuración de Códigos guardada correctamente' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -818,6 +839,7 @@ app.post('/api/config/save-gc-sdyf', (req, res) => {
             content += `${dia};${sdyf}\n`;
         });
         fs.writeFileSync(GC_SDYF_CONFIG_FILE, content, 'utf8');
+        limpiarPlanillasAuxiliares();
         res.json({ success: true, message: 'Configuración de Fines de Semanas y Feriados guardada' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -854,6 +876,7 @@ app.post('/api/config/save-asig-a3', (req, res) => {
             content += `${desc},${nro},${asig},${planta},${org}\n`;
         });
         fs.writeFileSync(ASIG_A3_CONFIG_FILE, content, 'latin1');
+        limpiarPlanillasAuxiliares();
         res.json({ success: true, message: 'Configuración de Asignaciones A3 guardada correctamente' });
     } catch (err) {
         res.status(500).json({ error: err.message });

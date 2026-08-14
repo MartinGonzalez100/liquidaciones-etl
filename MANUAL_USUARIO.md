@@ -270,6 +270,10 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
 
 *Nota:* Los paneles de configuración que son independientes del archivo de liquidaciones unificadas (como Paletas de Colores, Efectores, Códigos de Guardias Críticas, SDYF y Asignaciones A3) cargan y son totalmente editables incluso si no se ha realizado ninguna conversión o importación de archivos de liquidación en el sistema.
 
+### 3.6 Regeneración Automática de Reportes Auxiliares
+El sistema cuenta con un mecanismo de limpieza en segundo plano que garantiza la precisión de los datos auditados. Al modificar y guardar cualquier parámetro desde la pantalla de Configuración del Sistema (tales como Mapeo de LD/GC, Efectores, Códigos e Importes, Fines de Semana y Feriados, o Asignaciones A3), el servidor ejecuta de forma silenciosa el borrado de las planillas auxiliares generadas previamente (`AuxGcNovedades.csv`, `AuxGCLiquidacion.csv` y `AuxResidentesLiquidacion.csv`). 
+Esta acción asegura que, la próxima vez que el usuario consulte un reporte de control, el sistema no utilice archivos cacheados obsoletos, sino que recalcule y regenere estas planillas instantáneamente leyendo la configuración más reciente.
+
 ---
 
 ## 4. Control de Acceso y Sistema de Permisos
