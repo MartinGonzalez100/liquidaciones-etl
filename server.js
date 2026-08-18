@@ -1233,7 +1233,10 @@ function processGCControl(csvFile, filterFn, res) {
 
 app.get('/api/gc-control', async (req, res) => {
     try {
-        await generateAuxGCLiquidacion();
+        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
+        if (!fs.existsSync(auxLiqPath)) {
+            await generateAuxGCLiquidacion();
+        }
         processGCControl('AuxGCLiquidacion.csv', (row) => {
             const pImp = (row.PERIODO_IMPUTADO || '').trim();
             const pLiq = (row.PERIODO_LIQUIDADO || '').trim();
@@ -1246,7 +1249,10 @@ app.get('/api/gc-control', async (req, res) => {
 
 app.get('/api/gc-control-retro', async (req, res) => {
     try {
-        await generateAuxGCLiquidacion();
+        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
+        if (!fs.existsSync(auxLiqPath)) {
+            await generateAuxGCLiquidacion();
+        }
         processGCControl('AuxGCLiquidacion.csv', (row) => {
             const pImp = (row.PERIODO_IMPUTADO || '').trim();
             const pLiq = (row.PERIODO_LIQUIDADO || '').trim();
@@ -1598,6 +1604,14 @@ async function generateAuxGcNovedades() {
     const gcCsvPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'gc.csv');
     const auxPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxGcNovedades.csv');
 
+    // Al generar de nuevo las Novedades, forzamos que se regeneren las Liquidaciones 
+    // para que se borren las observaciones previas.
+    const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
+    if (fs.existsSync(auxLiqPath)) {
+        fs.unlinkSync(auxLiqPath);
+        console.log(`[SERVER] 🗑️ AuxGCLiquidacion.csv borrado para forzar regeneración y limpieza de observaciones.`);
+    }
+
     if (!fs.existsSync(gcCsvPath)) throw new Error('Archivo origen de Novedades GC no encontrado');
 
     const efectoresMap = new Map();
@@ -1778,14 +1792,15 @@ app.get('/api/novedades/gc-para-control', async (req, res) => {
 
 app.get('/api/gc-liquidacion-eps', async (req, res) => {
     try {
-        // 1. Asegurar que AuxGCLiquidacion y AuxGcNovedades existen
-        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
-        if (!fs.existsSync(auxLiqPath)) {
-            await generateAuxGCLiquidacion();
-        }
+        // 1. Asegurar que AuxGcNovedades y AuxGCLiquidacion existen
         const auxNovedadesPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxGcNovedades.csv');
         if (!fs.existsSync(auxNovedadesPath)) {
             await generateAuxGcNovedades();
+        }
+
+        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
+        if (!fs.existsSync(auxLiqPath)) {
+            await generateAuxGCLiquidacion();
         }
 
         // 2. Leer y agrupar Novedades por 'clave'
@@ -1919,14 +1934,15 @@ app.post('/api/gc-liquidacion-eps/save-observaciones', async (req, res) => {
 
 app.get('/api/gc-no-liquidados', async (req, res) => {
     try {
-        // 1. Asegurar que AuxGCLiquidacion y AuxGcNovedades existen
-        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
-        if (!fs.existsSync(auxLiqPath)) {
-            await generateAuxGCLiquidacion();
-        }
+        // 1. Asegurar que AuxGcNovedades y AuxGCLiquidacion existen
         const auxNovedadesPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxGcNovedades.csv');
         if (!fs.existsSync(auxNovedadesPath)) {
             await generateAuxGcNovedades();
+        }
+
+        const auxLiqPath = path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv');
+        if (!fs.existsSync(auxLiqPath)) {
+            await generateAuxGCLiquidacion();
         }
 
         // 2. Leer "GC Para Control" y guardar sus CLAVEs
