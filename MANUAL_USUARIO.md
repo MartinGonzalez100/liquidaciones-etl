@@ -112,7 +112,7 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
 #### LD Codigos Separados
 - Genera y visualiza códigos separados provenientes de los datos de LD Liquidación. Detecta las columnas que contienen los códigos predefinidos (ej. 003, 031, 032, 033) con importes mayores a cero.
 - Por cada columna encontrada, crea un registro individual que incluye nuevas columnas de control:
-  - `clave`: Ubicada al inicio, conformada por la unión sin espacios de `NRO_DOCUMENTO`, `Codigo_Optimo` y `ORGANISMO`.
+  - `clave`: Ubicada al inicio, conformada por la unión sin espacios de `NRO_DOCUMENTO`, `Codigo_Optimo`, `ORGANISMO` y `numero_ld_agente`.
   - `Codigo_Optimo`: Extraído del nombre de la columna.
   - `Importe_Optimo`: Valor del importe a liquidar.
   - `numero_Copia`: Contador del código dentro del mismo registro original.

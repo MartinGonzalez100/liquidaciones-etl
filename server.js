@@ -1155,7 +1155,7 @@ async function ensureAuxLDLiquidacionFiles() {
                     
                     const docStr = String(row.NRO_DOCUMENTO || '');
                     const orgStr = String(row.ORGANISMO || '');
-                    const clave = `${docStr}${last6}${orgStr}`;
+                    const clave = `${docStr}${last6}${orgStr}${numero_ld_agente}`;
 
                     const newRow = {
                         clave: clave,
