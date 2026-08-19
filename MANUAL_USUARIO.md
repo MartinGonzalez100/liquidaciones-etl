@@ -109,8 +109,8 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
 #### LD Liquidación
 - Utiliza combinaciones configurables. El sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Libre Disponibilidad" durante la pestaña de Configuración e integrarla al cálculo final. Genera automáticamente de forma física el archivo `AuxLDLiquidacion.csv` ordenado numéricamente por documento y período de liquidación si no existe.
 
-#### LD Codigos Separados
-- Genera y visualiza códigos separados provenientes de los datos de LD Liquidación. Detecta las columnas que contienen los códigos predefinidos (ej. 003, 031, 032, 033) con importes mayores a cero.
+##### LD Codigos Separados
+- (Submenú de LD Liquidación) Genera y visualiza códigos separados provenientes de los datos de LD Liquidación. Detecta las columnas que contienen los códigos predefinidos (ej. 003, 031, 032, 033) con importes mayores a cero.
 - Por cada columna encontrada, crea un registro individual que incluye nuevas columnas de control:
   - `clave`: Ubicada al inicio, conformada por la unión sin espacios de `NRO_DOCUMENTO`, `Codigo_Optimo`, `ORGANISMO` y `numero_ld_agente`.
   - `Codigo_Optimo`: Extraído del nombre de la columna.
