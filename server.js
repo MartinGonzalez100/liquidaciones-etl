@@ -1115,7 +1115,15 @@ async function ensureAuxLDLiquidacionFiles() {
 
     // Generar codigos
     const codigosResults = [];
+    let currentDoc = null;
+    let numero_ld_agente = 1;
+
     for (const row of results) {
+        if (row.NRO_DOCUMENTO !== currentDoc) {
+            currentDoc = row.NRO_DOCUMENTO;
+            numero_ld_agente = 1;
+        }
+
         let numero_Copia = 1;
         for (const col of Object.keys(row)) {
             if (col.includes('003_') || col.includes('031') || col.includes('032') || col.includes('033')) {
@@ -1145,21 +1153,28 @@ async function ensureAuxLDLiquidacionFiles() {
                     const trimmedCol = col.replace(/\s+/g, '');
                     const last6 = trimmedCol.slice(-6).replace(/_/g, '-');
                     
+                    const docStr = String(row.NRO_DOCUMENTO || '');
+                    const orgStr = String(row.ORGANISMO || '');
+                    const clave = `${docStr}${last6}${orgStr}`;
+
                     const newRow = {
+                        clave: clave,
                         Codigo_Optimo: last6,
                         Importe_Optimo: val,
                         numero_Copia: numero_Copia,
+                        numero_ld_agente: numero_ld_agente,
                         ...row
                     };
                     codigosResults.push(newRow);
                     numero_Copia++;
+                    numero_ld_agente++;
                 }
             }
         }
     }
     
-    const headersCodigos = ['Codigo_Optimo', 'Importe_Optimo', 'numero_Copia', ...headersAuxLD];
-    if (codigosResults.length > 0 || headersCodigos.length > 3) {
+    const headersCodigos = ['clave', 'Codigo_Optimo', 'Importe_Optimo', 'numero_Copia', 'numero_ld_agente', ...headersAuxLD];
+    if (codigosResults.length > 0 || headersCodigos.length > 5) {
         await writeCsvFile(auxLDCodigosPath, headersCodigos, codigosResults);
     } else {
         fs.writeFileSync(auxLDCodigosPath, "");

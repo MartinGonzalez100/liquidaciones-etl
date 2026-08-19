@@ -110,7 +110,13 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
 - Utiliza combinaciones configurables. El sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Libre Disponibilidad" durante la pestaña de Configuración e integrarla al cálculo final. Genera automáticamente de forma física el archivo `AuxLDLiquidacion.csv` ordenado numéricamente por documento y período de liquidación si no existe.
 
 #### LD Codigos Separados
-- Genera y visualiza códigos separados provenientes de los datos de LD Liquidación. Detecta las columnas que contienen los códigos predefinidos (ej. 003, 031, 032, 033) con importes mayores a cero. Por cada columna encontrada, crea un registro individual con las columnas `Codigo_Optimo`, `Importe_Optimo` y `numero_Copia` correspondientes a dicho importe.
+- Genera y visualiza códigos separados provenientes de los datos de LD Liquidación. Detecta las columnas que contienen los códigos predefinidos (ej. 003, 031, 032, 033) con importes mayores a cero.
+- Por cada columna encontrada, crea un registro individual que incluye nuevas columnas de control:
+  - `clave`: Ubicada al inicio, conformada por la unión sin espacios de `NRO_DOCUMENTO`, `Codigo_Optimo` y `ORGANISMO`.
+  - `Codigo_Optimo`: Extraído del nombre de la columna.
+  - `Importe_Optimo`: Valor del importe a liquidar.
+  - `numero_Copia`: Contador del código dentro del mismo registro original.
+  - `numero_ld_agente`: Contador general de códigos para un mismo agente (`NRO_DOCUMENTO`), que se incrementa de a 1 por cada registro generado y se reinicia al cambiar de documento.
 - **Excepciones de cálculo:**
   - Si la columna es `LIB_003_34`, se toma como `Importe_Optimo` la suma de `LIB_003_34` + `LIB_032_34`.
   - Si la columna es `LIB_031_34`, se toma como `Importe_Optimo` la suma de `LIB_031_34` + `LIB_033_34`.
