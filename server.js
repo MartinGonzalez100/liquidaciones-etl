@@ -1019,47 +1019,176 @@ app.get('/api/reemplazos', (req, res) => {
         .on('end', () => res.json(results))
         .on('error', (err) => res.status(500).json({ error: err.message }));
 });
+// Funciones auxiliares para LD Liquidacion
+function writeCsvFile(filePath, headers, data) {
+    return new Promise((resolve, reject) => {
+        try {
+            const stream = fs.createWriteStream(filePath);
+            stream.write(headers.map(h => `"${h}"`).join(',') + '\n');
+            for (const row of data) {
+                const line = headers.map(h => {
+                    let val = row[h] !== undefined && row[h] !== null ? String(row[h]) : '';
+                    if (val.includes('"') || val.includes(',')) {
+                        val = `"${val.replace(/"/g, '""')}"`;
+                    }
+                    return val;
+                }).join(',');
+                stream.write(line + '\n');
+            }
+            stream.end();
+            stream.on('finish', resolve);
+            stream.on('error', reject);
+        } catch(e) {
+            reject(e);
+        }
+    });
+}
 
-// 7. Reporte LD Liquidacion (Filtrado por columnas configuradas en LD_config.csv)
-app.get('/api/ld-liquidacion', (req, res) => {
+async function ensureAuxLDLiquidacionFiles() {
+    const auxLDPath = path.join(CSV_UNIDOS_DIR, 'AuxLDLiquidacion.csv');
+    const auxLDCodigosPath = path.join(CSV_UNIDOS_DIR, 'AuxLDLiquidacionCodigos.csv');
     const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);
-    if (!fs.existsSync(csvPath)) return res.status(404).json({ error: 'Archivo unificado no encontrado' });
+    
+    if (fs.existsSync(auxLDPath) && fs.existsSync(auxLDCodigosPath)) {
+        return true;
+    }
+    if (!fs.existsSync(csvPath)) return false;
 
-    // 1. Cargar configuración de LD
+    // Load LD config
     const configColumns = [];
     if (fs.existsSync(LD_CONFIG_FILE)) {
         const content = fs.readFileSync(LD_CONFIG_FILE, 'utf8').split('\n');
         content.shift(); // Quitar encabezado "columna"
         content.forEach(line => { if (line.trim()) configColumns.push(line.trim()); });
     }
-
-    if (configColumns.length === 0) return res.json([]);
+    if (configColumns.length === 0) return false;
 
     const results = [];
-    fs.createReadStream(csvPath)
-        .pipe(csv())
-        .on('data', (row) => {
-            // Verificar si alguna de las columnas configuradas tiene valor != 0
-            const hasValue = configColumns.some(col => {
-                const val = parseFloat(row[col]);
-                return !isNaN(val) && val !== 0;
-            });
+    await new Promise((resolve, reject) => {
+        fs.createReadStream(csvPath)
+            .pipe(csv())
+            .on('data', (row) => {
+                const hasValue = configColumns.some(col => {
+                    const val = parseFloat(row[col]);
+                    return !isNaN(val) && val !== 0;
+                });
 
-            if (hasValue) {
-                const projectedRow = {};
-                // Copiar campos estándar
-                CAMPOS_LIQUIDACION.forEach(field => {
-                    projectedRow[field] = row[field] ?? '';
-                });
-                // Inyectar columnas de configuración al final (después de Area2)
-                configColumns.forEach(col => {
-                    projectedRow[col] = row[col] ?? '0';
-                });
-                results.push(projectedRow);
+                if (hasValue) {
+                    const projectedRow = {};
+                    CAMPOS_LIQUIDACION.forEach(field => {
+                        projectedRow[field] = row[field] ?? '';
+                    });
+                    configColumns.forEach(col => {
+                        projectedRow[col] = row[col] ?? '0';
+                    });
+                    results.push(projectedRow);
+                }
+            })
+            .on('end', resolve)
+            .on('error', reject);
+    });
+
+    // Ordenar results
+    // NRO_DOCUMENTO ascendente (Numérico) y PERIODO_IMPUTADO mas reciente a menos reciente (descendente)
+    results.sort((a, b) => {
+        const docA = parseInt(a.NRO_DOCUMENTO) || 0;
+        const docB = parseInt(b.NRO_DOCUMENTO) || 0;
+        if (docA !== docB) {
+            return docA - docB; // Ascendente numérico
+        }
+        
+        const perA = a.PERIODO_IMPUTADO || '';
+        const perB = b.PERIODO_IMPUTADO || '';
+        if (perA !== perB) {
+            return perB.localeCompare(perA); // Descendente
+        }
+        return 0;
+    });
+
+    // Escribir AuxLDLiquidacion.csv
+    const headersAuxLD = results.length > 0 ? Object.keys(results[0]) : [];
+    if (headersAuxLD.length > 0) {
+        await writeCsvFile(auxLDPath, headersAuxLD, results);
+    } else {
+        fs.writeFileSync(auxLDPath, "");
+    }
+
+    // Generar codigos
+    const codigosResults = [];
+    for (const row of results) {
+        let numero_Copia = 1;
+        for (const col of Object.keys(row)) {
+            if (col.includes('003_') || col.includes('031') || col.includes('032') || col.includes('033')) {
+                const val = parseFloat(row[col]);
+                if (!isNaN(val) && val > 0) {
+                    const trimmedCol = col.replace(/\s+/g, '');
+                    const last6 = trimmedCol.slice(-6).replace(/_/g, '-');
+                    
+                    const newRow = {
+                        Codigo_Optimo: last6,
+                        Importe_Optimo: val,
+                        numero_Copia: numero_Copia,
+                        ...row
+                    };
+                    codigosResults.push(newRow);
+                    numero_Copia++;
+                }
             }
-        })
-        .on('end', () => res.json(results))
-        .on('error', (err) => res.status(500).json({ error: err.message }));
+        }
+    }
+    
+    const headersCodigos = ['Codigo_Optimo', 'Importe_Optimo', 'numero_Copia', ...headersAuxLD];
+    if (codigosResults.length > 0 || headersCodigos.length > 3) {
+        await writeCsvFile(auxLDCodigosPath, headersCodigos, codigosResults);
+    } else {
+        fs.writeFileSync(auxLDCodigosPath, "");
+    }
+    
+    return true;
+}
+
+// 7. Reporte LD Liquidacion (Filtrado por columnas configuradas en LD_config.csv)
+app.get('/api/ld-liquidacion', async (req, res) => {
+    try {
+        const success = await ensureAuxLDLiquidacionFiles();
+        if (!success) {
+            return res.json([]);
+        }
+
+        const auxLDPath = path.join(CSV_UNIDOS_DIR, 'AuxLDLiquidacion.csv');
+        const results = [];
+        if (!fs.existsSync(auxLDPath)) return res.json([]);
+
+        fs.createReadStream(auxLDPath)
+            .pipe(csv())
+            .on('data', (row) => results.push(row))
+            .on('end', () => res.json(results))
+            .on('error', (err) => res.status(500).json({ error: err.message }));
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// 7.1 Reporte LD Codigos Separados
+app.get('/api/ld-codigos-separados', async (req, res) => {
+    try {
+        const success = await ensureAuxLDLiquidacionFiles();
+        if (!success) {
+            return res.json([]);
+        }
+
+        const auxLDCodigosPath = path.join(CSV_UNIDOS_DIR, 'AuxLDLiquidacionCodigos.csv');
+        const results = [];
+        if (!fs.existsSync(auxLDCodigosPath)) return res.json([]);
+
+        fs.createReadStream(auxLDCodigosPath)
+            .pipe(csv())
+            .on('data', (row) => results.push(row))
+            .on('end', () => res.json(results))
+            .on('error', (err) => res.status(500).json({ error: err.message }));
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // 8. Reporte GC Liquidacion (Filtrado por columnas configuradas en GC_config.csv)

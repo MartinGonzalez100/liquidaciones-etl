@@ -107,7 +107,10 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
 - Utiliza el filtro que extrae aquellos empleados cuya `PLANTA` corresponda a reemplazos (ej: `Reemplazante no permanente` o `Reemplazante no permanente-LD`), agrupándolos por Nivel Educativo y Organismo/Efector.
 
 #### LD Liquidación
-- Utiliza combinaciones configurables. El sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Libre Disponibilidad" durante la pestaña de Configuración e integrarla al cálculo final.
+- Utiliza combinaciones configurables. El sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Libre Disponibilidad" durante la pestaña de Configuración e integrarla al cálculo final. Genera automáticamente de forma física el archivo `AuxLDLiquidacion.csv` ordenado numéricamente por documento y período de liquidación si no existe.
+
+#### LD Codigos Separados
+- Genera y visualiza códigos separados provenientes de los datos de LD Liquidación. Detecta las columnas que contienen los códigos predefinidos (ej. 003, 031, 032, 033) con importes mayores a cero. Por cada columna encontrada, crea un registro individual con las columnas `Codigo_Optimo`, `Importe_Optimo` y `numero_Copia` correspondientes a dicho importe.
 
 #### GC Liquidación
 - Similar a LD, el sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Guardias Críticas" durante la pestaña de Configuración e integrarla al cálculo final.
