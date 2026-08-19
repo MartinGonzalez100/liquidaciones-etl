@@ -2862,7 +2862,13 @@
                     pageLength: 25,
                     responsive: true,
                     dom: 'Bfrtip',
-                    buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+                    buttons: [
+                        { extend: 'copy', exportOptions: { format: { body: function (data, row, column, node) { return (node && node.querySelector && node.querySelector('input')) ? node.querySelector('input').value : (typeof data === 'string' && data.includes('<input') ? (data.match(/value="([^"]*)"/) ? data.match(/value="([^"]*)"/)[1] : '') : data); } } } },
+                        { extend: 'csv', exportOptions: { format: { body: function (data, row, column, node) { return (node && node.querySelector && node.querySelector('input')) ? node.querySelector('input').value : (typeof data === 'string' && data.includes('<input') ? (data.match(/value="([^"]*)"/) ? data.match(/value="([^"]*)"/)[1] : '') : data); } } } },
+                        { extend: 'excel', exportOptions: { format: { body: function (data, row, column, node) { return (node && node.querySelector && node.querySelector('input')) ? node.querySelector('input').value : (typeof data === 'string' && data.includes('<input') ? (data.match(/value="([^"]*)"/) ? data.match(/value="([^"]*)"/)[1] : '') : data); } } } },
+                        { extend: 'pdf', exportOptions: { format: { body: function (data, row, column, node) { return (node && node.querySelector && node.querySelector('input')) ? node.querySelector('input').value : (typeof data === 'string' && data.includes('<input') ? (data.match(/value="([^"]*)"/) ? data.match(/value="([^"]*)"/)[1] : '') : data); } } } },
+                        { extend: 'print', exportOptions: { format: { body: function (data, row, column, node) { return (node && node.querySelector && node.querySelector('input')) ? node.querySelector('input').value : (typeof data === 'string' && data.includes('<input') ? (data.match(/value="([^"]*)"/) ? data.match(/value="([^"]*)"/)[1] : '') : data); } } } }
+                    ],
                     language: {
                         url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                     }
