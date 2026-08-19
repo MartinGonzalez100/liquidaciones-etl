@@ -1119,8 +1119,29 @@ async function ensureAuxLDLiquidacionFiles() {
         let numero_Copia = 1;
         for (const col of Object.keys(row)) {
             if (col.includes('003_') || col.includes('031') || col.includes('032') || col.includes('033')) {
-                const val = parseFloat(row[col]);
-                if (!isNaN(val) && val > 0) {
+                const cleanCol = col.replace(/\s+/g, '');
+                
+                // Excepciones: estas columnas no generan registro por sí solas
+                if (cleanCol === 'LIB_032_34' || cleanCol === 'LIB_033_34') {
+                    continue;
+                }
+
+                let val = parseFloat(row[col]) || 0;
+
+                // Sumar importes según excepciones
+                if (cleanCol === 'LIB_003_34') {
+                    const col32 = Object.keys(row).find(k => k.replace(/\s+/g, '') === 'LIB_032_34');
+                    if (col32) {
+                        val += (parseFloat(row[col32]) || 0);
+                    }
+                } else if (cleanCol === 'LIB_031_34') {
+                    const col33 = Object.keys(row).find(k => k.replace(/\s+/g, '') === 'LIB_033_34');
+                    if (col33) {
+                        val += (parseFloat(row[col33]) || 0);
+                    }
+                }
+
+                if (val > 0) {
                     const trimmedCol = col.replace(/\s+/g, '');
                     const last6 = trimmedCol.slice(-6).replace(/_/g, '-');
                     

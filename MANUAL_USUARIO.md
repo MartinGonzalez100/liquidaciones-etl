@@ -111,6 +111,10 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
 
 #### LD Codigos Separados
 - Genera y visualiza códigos separados provenientes de los datos de LD Liquidación. Detecta las columnas que contienen los códigos predefinidos (ej. 003, 031, 032, 033) con importes mayores a cero. Por cada columna encontrada, crea un registro individual con las columnas `Codigo_Optimo`, `Importe_Optimo` y `numero_Copia` correspondientes a dicho importe.
+- **Excepciones de cálculo:**
+  - Si la columna es `LIB_003_34`, se toma como `Importe_Optimo` la suma de `LIB_003_34` + `LIB_032_34`.
+  - Si la columna es `LIB_031_34`, se toma como `Importe_Optimo` la suma de `LIB_031_34` + `LIB_033_34`.
+  - Las columnas `LIB_032_34` y `LIB_033_34` no generan un registro individual de código separado por sí solas.
 
 #### GC Liquidación
 - Similar a LD, el sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Guardias Críticas" durante la pestaña de Configuración e integrarla al cálculo final.
