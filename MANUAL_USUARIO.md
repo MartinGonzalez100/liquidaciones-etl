@@ -203,6 +203,13 @@ Este reporte, accesible desde el submenú de Novedades Residentes, permite visua
 - **Funcionamiento y Limpieza de Datos:** Para evitar errores de visualización, el sistema detecta saltos de línea (`Enter`) en celdas y los reemplaza por espacios. Además, normaliza textos para prevenir errores de parsing.
 - **Proceso de Generación y Cálculos de AuxGcNovedades:** Se genera a partir de `gc.csv`. Normaliza `EfectorTransformado` y calcula `clave_importe` usando indicadores como SDYF. Luego aplica tarifas desde `GC_config_codigos_importes.csv`.
 
+#### Novedades LD
+- Expone los datos de `ld.csv`, listando de forma directa las novedades procesadas para Libre Disponibilidad.
+- **Filtros por Modalidad:** La interfaz habilita tres botones especiales en la barra superior para facilitar su lectura:
+  - **Todos:** Lista completa de registros.
+  - **Mensual:** Filtra y muestra aquellos registros cuya primera letra de la columna `MODALIDAD` sea "A" o "C" (sin distinguir mayúsculas/minúsculas).
+  - **Retroactivo:** Filtra y muestra aquellos registros cuya primera letra de la columna `MODALIDAD` sea "R" (sin distinguir mayúsculas/minúsculas).
+
 #### Novedades Residentes
 - Despliega el listado completo de los registros contenidos en el archivo `residentes.csv`. Este reporte es dinámico y muestra toda la información biográfica, administrativa y de haberes de la planta de Residentes procesada.
 - **Campos Detallados Clave:**
@@ -355,6 +362,7 @@ Estas pantallas muestran datos provenientes del procesamiento de archivos Excel 
 - **Resumen de Novedades Mensuales**: Carga el listado consolidado de lotes en la carpeta de novedades.
 - **Novedades GC**: Consume el archivo unificado de novedades de guardias críticas (`gc.csv`).
 - **Novedades GC Para Control**: Muestra el consolidado agrupado desde el archivo auxiliar de novedades (`AuxGcNovedades.csv`).
+- **Novedades LD**: Consume y filtra interactivamente el archivo `ld.csv`.
 - **Novedades Residentes**: Lee y expone los datos de `residentes.csv`.
 - **Residentes - Criticidad**: Consume el archivo `criticidad.csv`.
 - **Residentes - Fortalecimiento**: Consume el archivo `fortalecimiento.csv`.

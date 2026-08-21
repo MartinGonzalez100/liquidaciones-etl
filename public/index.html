@@ -1413,6 +1413,7 @@
             <div class="menu-accordion-content">
                 <a href="#" id="menu-novedades-gc">└─ Novedades GC</a>
                 <a href="#" id="menu-novedades-gc-control" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Novedades GC Para Control</a>
+                <a href="#" id="menu-novedades-ld">└─ Novedades LD</a>
                 <a href="#" id="menu-novedades-residentes">└─ Novedades Residentes</a>
                 <a href="#" id="menu-novedades-residentes-no-liquidados" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Residentes No Liquidados</a>
                 <a href="#" id="menu-novedades-criticidad" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Criticidad</a>
@@ -2349,6 +2350,7 @@
 
         setupNovedadesMenu('menu-novedades-gc', 'Novedades GC', 'gc');
         setupNovedadesMenu('menu-novedades-gc-control', 'Novedades GC Para Control', 'gc-para-control');
+        setupNovedadesMenu('menu-novedades-ld', 'Novedades LD', 'ld');
         setupNovedadesMenu('menu-novedades-residentes', 'Novedades Residentes', 'residentes');
         setupNovedadesMenu('menu-novedades-residentes-no-liquidados', 'Residentes No Liquidados', 'residentes-no-liquidados');
         setupNovedadesMenu('menu-novedades-criticidad', 'Residentes - Criticidad', 'criticidad');
@@ -2899,7 +2901,9 @@
                         // --- Iniciar lógica de filtros por PERIODO ---
                         const hasPeriodos = columns.some(c => c.data === 'PERIODO_IMPUTADO') && columns.some(c => c.data === 'PERIODO_LIQUIDADO');
 
-                        if (hasPeriodos) {
+                        const hasModalidad = title === 'Novedades LD' && columns.some(c => c.data === 'MODALIDAD');
+
+                        if (hasPeriodos || hasModalidad) {
                             const btnGroup = document.createElement('div');
                             btnGroup.className = 'btn-filter-group';
 
@@ -2940,14 +2944,26 @@
                                 if (settings.nTable.id !== 'tabla-datos') return true;
                                 if (currentFilterMode === 'todos') return true;
 
-                                const imputado = originalData.PERIODO_IMPUTADO ? String(originalData.PERIODO_IMPUTADO).trim() : '';
-                                const liquidado = originalData.PERIODO_LIQUIDADO ? String(originalData.PERIODO_LIQUIDADO).trim() : '';
+                                if (hasPeriodos) {
+                                    const imputado = originalData.PERIODO_IMPUTADO ? String(originalData.PERIODO_IMPUTADO).trim() : '';
+                                    const liquidado = originalData.PERIODO_LIQUIDADO ? String(originalData.PERIODO_LIQUIDADO).trim() : '';
 
-                                if (currentFilterMode === 'mensual') {
-                                    return imputado === liquidado;
-                                } else if (currentFilterMode === 'retroactivo') {
-                                    return imputado !== liquidado;
+                                    if (currentFilterMode === 'mensual') {
+                                        return imputado === liquidado;
+                                    } else if (currentFilterMode === 'retroactivo') {
+                                        return imputado !== liquidado;
+                                    }
+                                } else if (hasModalidad) {
+                                    const modalidad = originalData.MODALIDAD ? String(originalData.MODALIDAD).trim().toLowerCase() : '';
+                                    const firstChar = modalidad.charAt(0);
+                                    
+                                    if (currentFilterMode === 'mensual') {
+                                        return firstChar === 'a' || firstChar === 'c';
+                                    } else if (currentFilterMode === 'retroactivo') {
+                                        return firstChar === 'r';
+                                    }
                                 }
+                                
                                 return true;
                             };
                             periodoFilter.isPeriodoFilter = true;
@@ -2966,7 +2982,7 @@
                             btnMensual.onclick = () => updateButtons(btnMensual, 'mensual');
                             btnRetro.onclick = () => updateButtons(btnRetro, 'retroactivo');
                         } else {
-                            // Limpiar los filtros si esta pantalla no usa periodos
+                            // Limpiar los filtros si esta pantalla no usa periodos ni modalidad
                             $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(func => !func.isPeriodoFilter);
                         }
                     }
@@ -5124,6 +5140,7 @@
             "Novedades Mensuales": [
                 { id: "menu-novedades-gc", label: "Novedades GC", elementId: "menu-novedades-gc" },
                 { id: "menu-novedades-gc-control", label: "Novedades GC Para Control", elementId: "menu-novedades-gc-control" },
+                { id: "menu-novedades-ld", label: "Novedades LD", elementId: "menu-novedades-ld" },
                 { id: "menu-novedades-residentes", label: "Novedades Residentes", elementId: "menu-novedades-residentes" },
                 { id: "menu-novedades-residentes-no-liquidados", label: "Residentes No Liquidados", elementId: "menu-novedades-residentes-no-liquidados" },
                 { id: "menu-novedades-criticidad", label: "Criticidad", elementId: "menu-novedades-criticidad" },
@@ -5204,7 +5221,7 @@
                 return hasPermission(user.permissions, 'menu-configuracion', null) || hasAnySubPerm;
             }
             if (sectionId === 'novedades-resumen-view') {
-                const subPerms = ['menu-novedades-gc', 'menu-novedades-gc-control', 'menu-novedades-residentes', 'menu-novedades-residentes-no-liquidados', 'menu-novedades-criticidad', 'menu-novedades-fortalecimiento'];
+                const subPerms = ['menu-novedades-gc', 'menu-novedades-gc-control', 'menu-novedades-ld', 'menu-novedades-residentes', 'menu-novedades-residentes-no-liquidados', 'menu-novedades-criticidad', 'menu-novedades-fortalecimiento'];
                 return hasPermission(user.permissions, 'menu-novedades-mensuales', null) || subPerms.some(p => hasPermission(user.permissions, p, null));
             }
             if (sectionId === 'informe-modelo-view') return hasPermission(user.permissions, 'menu-informe-modelo', 'menu-informes');
@@ -5218,7 +5235,7 @@
                     'menu-ley100', 'menu-calculo-ley100',
                     'menu-asignaciones', 'menu-asignaciones-familiares', 'menu-asignaciones-familiares-reemp',
                     'menu-acumulado', 'menu-topes-jubilatorios',
-                    'menu-novedades-mensuales', 'menu-novedades-gc', 'menu-novedades-gc-control', 'menu-novedades-residentes', 'menu-novedades-residentes-no-liquidados',
+                    'menu-novedades-mensuales', 'menu-novedades-gc', 'menu-novedades-gc-control', 'menu-novedades-ld', 'menu-novedades-residentes', 'menu-novedades-residentes-no-liquidados',
                     'menu-novedades-criticidad', 'menu-novedades-fortalecimiento'
                 ];
                 return allowedMenus.some(menuId => hasPermission(user.permissions, menuId, null));
@@ -5586,6 +5603,7 @@
                 'menu-gc-liquidacion',
                 'menu-residentes',
                 'menu-novedades-gc',
+                'menu-novedades-ld',
                 'menu-novedades-residentes'
             ];
 
