@@ -19,6 +19,7 @@ Esta pantalla se encarga de procesar archivos Excel en bruto y unificarlos en fo
 
 ### 1.2 Conversión de Novedades
 - **Validación:** El sistema verifica que el nombre del archivo comience con ciertos prefijos válidos (`ld`, `reem`, `gc`, `residentes`, `criticidad`, `fortalecimiento`).
+- **Tratamiento de Importes (Novedades LD):** Durante la limpieza de los lotes de novedades Libre Disponibilidad (`ld`), las columnas `IMPORTE_AUTORIZADO` e `IMPORTE_LIQUIDADO` son higienizadas (se eliminan símbolos monetarios o textos residuales) y convertidas rigurosamente a un formato matemático que utiliza la coma (`,`) como separador de decimales dentro del archivo `ld.csv`. Esto asegura la total compatibilidad aritmética (para su ordenamiento y cálculo) tanto dentro del visualizador web del sistema como al ser abierto en planillas de cálculo regionales (ej. Microsoft Excel en español).
 - **Acción Adicional:**
   - **Borrado de Novedad:** Elimina únicamente los archivos correspondientes a las dependencias de novedades, permitiendo reiniciar el ciclo sin afectar las liquidaciones. Vacía por completo:
     - `excel-a-convertir-novedades/` (Archivos origen de novedades).

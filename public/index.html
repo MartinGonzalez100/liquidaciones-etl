@@ -2850,7 +2850,7 @@
                             }
                             return val || '';
                         };
-                    } else if (key === 'Importe_Optimo') {
+                    } else if (key === 'Importe_Optimo' || key === 'IMPORTE_AUTORIZADO' || key === 'IMPORTE_LIQUIDADO') {
                         colDef.render = function (val, type, row) {
                             if (type === 'display' || type === 'filter') {
                                 return typeof val === 'number' ? Number(val.toFixed(2)).toString() : val;

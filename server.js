@@ -2452,6 +2452,14 @@ app.get('/api/novedades/:tipo', (req, res) => {
     fs.createReadStream(csvPath)
         .pipe(csv())
         .on('data', (row) => {
+            if (tipo === 'ld') {
+                if (row.IMPORTE_AUTORIZADO !== undefined) {
+                    row.IMPORTE_AUTORIZADO = parseFloat(String(row.IMPORTE_AUTORIZADO).replace(',', '.')) || 0;
+                }
+                if (row.IMPORTE_LIQUIDADO !== undefined) {
+                    row.IMPORTE_LIQUIDADO = parseFloat(String(row.IMPORTE_LIQUIDADO).replace(',', '.')) || 0;
+                }
+            }
             results.push(row);
         })
         .on('end', () => res.json(results))

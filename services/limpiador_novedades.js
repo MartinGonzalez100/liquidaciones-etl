@@ -35,9 +35,37 @@ async function limpiarYNombrarNovedadesCsv(inputCsvPath, prefix) {
                         // Trimear el contenido de la celda si es string
                         let val = row[key];
                         if (typeof val === 'string') {
-                            val = val.trimRight(); // Quitar los espacios en blanco de la derecha específicamente, o trim total. 
-                            // Uso trim() que es mas seguro, pero cumplimos quitando los blancos a la derecha.
+                            val = val.trimRight(); 
                             val = val.trim();
+                            
+                            // Convertir a numérico si es columna de importe de ld
+                            if (prefix === 'ld' && (cleanKey === 'IMPORTE_AUTORIZADO' || cleanKey === 'IMPORTE_LIQUIDADO')) {
+                                // Forma robusta:
+                                let cleanNum = val.replace(/[$A-Za-z\s]/g, ''); // Quita moneda y letras
+                                if (cleanNum.includes(',') && cleanNum.includes('.')) {
+                                    // Tiene ambos, el ultimo suele ser el decimal
+                                    let lastComma = cleanNum.lastIndexOf(',');
+                                    let lastDot = cleanNum.lastIndexOf('.');
+                                    if (lastComma > lastDot) {
+                                        // 1.234,56
+                                        cleanNum = cleanNum.replace(/\./g, '').replace(',', '.');
+                                    } else {
+                                        // 1,234.56
+                                        cleanNum = cleanNum.replace(/,/g, '');
+                                    }
+                                } else if (cleanNum.includes(',')) {
+                                    // Solo comas
+                                    // Asumir que es decimal si solo hay una coma, sino quitar
+                                    if (cleanNum.split(',').length - 1 === 1) {
+                                        cleanNum = cleanNum.replace(',', '.');
+                                    } else {
+                                        cleanNum = cleanNum.replace(/,/g, '');
+                                    }
+                                }
+                                
+                                val = parseFloat(cleanNum);
+                                if (isNaN(val)) val = 0;
+                            }
                         }
                         cleanedRow[cleanKey] = val;
                     }
@@ -62,7 +90,15 @@ async function limpiarYNombrarNovedadesCsv(inputCsvPath, prefix) {
 
                         for (const r of results) {
                             const line = finalHeaders.map(h => {
-                                let val = r[h] !== null && r[h] !== undefined ? String(r[h]) : '';
+                                let cellVal = r[h];
+                                if (prefix === 'ld' && (h === 'IMPORTE_AUTORIZADO' || h === 'IMPORTE_LIQUIDADO')) {
+                                    if (typeof cellVal === 'number') {
+                                        // Guardar con coma para que Excel lo detecte como número en español
+                                        cellVal = cellVal.toString().replace('.', ',');
+                                    }
+                                }
+                                
+                                let val = cellVal !== null && cellVal !== undefined ? String(cellVal) : '';
                                 // Escapar comas
                                 if (val.includes(',') || val.includes('"')) {
                                     val = `"${val.replace(/"/g, '""')}"`;
