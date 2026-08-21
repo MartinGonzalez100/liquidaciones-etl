@@ -1160,7 +1160,7 @@ async function ensureAuxLDLiquidacionFiles() {
                     const newRow = {
                         clave: clave,
                         Codigo_Optimo: last6,
-                        Importe_Optimo: val,
+                        Importe_Optimo: Number(val.toFixed(2)),
                         numero_Copia: numero_Copia,
                         numero_ld_agente: numero_ld_agente,
                         ...row
@@ -1219,7 +1219,12 @@ app.get('/api/ld-codigos-separados', async (req, res) => {
 
         fs.createReadStream(auxLDCodigosPath)
             .pipe(csv())
-            .on('data', (row) => results.push(row))
+            .on('data', (row) => {
+                if (row.Importe_Optimo !== undefined) {
+                    row.Importe_Optimo = parseFloat(row.Importe_Optimo);
+                }
+                results.push(row);
+            })
             .on('end', () => res.json(results))
             .on('error', (err) => res.status(500).json({ error: err.message }));
     } catch (e) {

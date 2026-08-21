@@ -114,7 +114,7 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
 - Por cada columna encontrada, crea un registro individual que incluye nuevas columnas de control:
   - `clave`: Ubicada al inicio, conformada por la unión sin espacios de `NRO_DOCUMENTO`, `Codigo_Optimo`, `ORGANISMO` y `numero_ld_agente`.
   - `Codigo_Optimo`: Extraído del nombre de la columna.
-  - `Importe_Optimo`: Valor del importe a liquidar.
+  - `Importe_Optimo`: Valor numérico del importe a liquidar, formateado y almacenado con un máximo de dos decimales para garantizar su correcto ordenamiento matemático en las tablas visualizadas.
   - `numero_Copia`: Contador del código dentro del mismo registro original.
   - `numero_ld_agente`: Contador general de códigos para un mismo agente (`NRO_DOCUMENTO`), que se incrementa de a 1 por cada registro generado y se reinicia al cambiar de documento.
 - **Excepciones de cálculo:**

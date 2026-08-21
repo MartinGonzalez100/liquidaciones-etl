@@ -2850,6 +2850,13 @@
                             }
                             return val || '';
                         };
+                    } else if (key === 'Importe_Optimo') {
+                        colDef.render = function (val, type, row) {
+                            if (type === 'display' || type === 'filter') {
+                                return typeof val === 'number' ? Number(val.toFixed(2)).toString() : val;
+                            }
+                            return val;
+                        };
                     }
                     return colDef;
                 });
