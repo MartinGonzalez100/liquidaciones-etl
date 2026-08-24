@@ -2117,7 +2117,14 @@
                             <i class="fas fa-chevron-down"></i>
                         </div>
                         <div class="config-accordion-content">
-                            <p style="color: #666; margin-bottom: 20px;">Gestión de códigos de guardias críticas importes. Puede agregar, editar o eliminar filas:</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <p style="color: #666; margin: 0;">Gestión de códigos de guardias críticas importes. Puede agregar, editar o eliminar filas:</p>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <label for="gc-codigos-filter-date" style="font-weight: bold; font-size: 14px; color: #333;">Filtrar activos a la fecha:</label>
+                                    <input type="date" id="gc-codigos-filter-date" onchange="filterGCCodigosEfectores()" style="padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <button onclick="document.getElementById('gc-codigos-filter-date').value=''; filterGCCodigosEfectores();" style="padding: 5px 10px; background: #95a5a6; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 12px;" title="Limpiar filtro"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
                             <div style="overflow-x: auto; margin-bottom: 20px; max-height: 600px;">
                                 <table id="table-gc-codigos-efectores" style="width: 100%; border-collapse: collapse;">
                                     <thead style="position: sticky; top: 0; background: white; z-index: 10;">
@@ -2128,6 +2135,8 @@
                                             <th style="padding: 10px; text-align: left;">NIVEL</th>
                                             <th style="padding: 10px; text-align: left;">CODIGO</th>
                                             <th style="padding: 10px; text-align: left;">IMPORTE</th>
+                                            <th style="padding: 10px; text-align: left; width: 120px;">ACTIVO DESDE</th>
+                                            <th style="padding: 10px; text-align: left; width: 120px;">ACTIVO HASTA</th>
                                             <th style="padding: 10px; text-align: center; width: 50px;">Acción</th>
                                         </tr>
                                     </thead>
@@ -4223,26 +4232,81 @@
             }
         }
 
+        function convertDateToISO(ddmmyyyy) {
+            if (!ddmmyyyy) return '';
+            const parts = ddmmyyyy.split('/');
+            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            return ddmmyyyy; // fallback
+        }
+
+        function convertDateToDDMMYYYY(isoDate) {
+            if (!isoDate) return '';
+            const parts = isoDate.split('-');
+            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            return isoDate;
+        }
+
+        function filterGCCodigosEfectores() {
+            const filterInput = document.getElementById('gc-codigos-filter-date').value;
+            const rows = document.querySelectorAll('#gc-codigos-efectores-list tr');
+            
+            rows.forEach(row => {
+                if (!row.querySelector('.claveunica-input')) return; // header or empty row
+                
+                if (!filterInput) {
+                    row.style.display = '';
+                    return;
+                }
+                
+                const activoDesdeInput = row.querySelector('.activo-desde-input').value;
+                const activoHastaInput = row.querySelector('.activo-hasta-input').value;
+                
+                const filterDate = new Date(filterInput);
+                const desdeDate = activoDesdeInput ? new Date(activoDesdeInput) : null;
+                const hastaDate = activoHastaInput ? new Date(activoHastaInput) : null;
+                
+                let show = true;
+                if (desdeDate && desdeDate > filterDate) {
+                    show = false;
+                }
+                if (hastaDate && hastaDate < filterDate) {
+                    show = false;
+                }
+                
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
         async function loadGCCodigosEfectoresConfig() {
             const container = document.getElementById('gc-codigos-efectores-list');
-            container.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">Cargando códigos...</td></tr>';
+            container.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #999;">Cargando códigos...</td></tr>';
 
             try {
                 const response = await fetch('/api/config/load-gc-codigos-efectores');
                 const data = await response.json();
 
                 if (!Array.isArray(data) || data.length === 0) {
-                    container.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">No hay códigos configurados.</td></tr>';
+                    container.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #999;">No hay códigos configurados.</td></tr>';
                     return;
                 }
 
                 container.innerHTML = '';
                 data.forEach(row => {
                     const claveUnicaKey = row['CLAVEUNICA'] !== undefined ? 'CLAVEUNICA' : '\uFEFFCLAVEUNICA';
-                    addGCCodigosEfectorRow(row[claveUnicaKey] || '', row['DIAS'] || '', row['TIPO DE GUARDIA'] || '', row['NIVEL'] || '', row['CODIGO'] || '', row['IMPORTE'] || '');
+                    addGCCodigosEfectorRow(
+                        row[claveUnicaKey] || '', 
+                        row['DIAS'] || '', 
+                        row['TIPO DE GUARDIA'] || '', 
+                        row['NIVEL'] || '', 
+                        row['CODIGO'] || '', 
+                        row['IMPORTE'] || '',
+                        row['ACTIVO_DESDE'] || '',
+                        row['ACTIVO_HASTA'] || ''
+                    );
                 });
+                filterGCCodigosEfectores();
             } catch (err) {
-                container.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #e74c3c;">Error: ${err.message}</td></tr>`;
+                container.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 20px; color: #e74c3c;">Error: ${err.message}</td></tr>`;
             }
         }
 
@@ -4255,12 +4319,17 @@
             claveUnicaInput.value = `${dias}${tipo}${nivel}`;
         }
 
-        function addGCCodigosEfectorRow(clave = '', dias = '', tipo = '', nivel = '', codigo = '', importe = '') {
+        function addGCCodigosEfectorRow(clave = '', dias = '', tipo = '', nivel = '', codigo = '', importe = '', activoDesde = '', activoHasta = '') {
             const container = document.getElementById('gc-codigos-efectores-list');
             
-            if (container.querySelector('td[colspan="7"]')) {
+            if (container.querySelector('td[colspan="9"]') || container.querySelector('td[colspan="7"]')) {
                 container.innerHTML = '';
             }
+
+            // Convert DD/MM/YYYY to YYYY-MM-DD for input type="date"
+            const defaultDesde = clave ? '' : '2026-07-01'; // Default only for new rows
+            const isoDesde = convertDateToISO(activoDesde) || defaultDesde;
+            const isoHasta = convertDateToISO(activoHasta);
 
             const tr = document.createElement('tr');
             tr.style.borderBottom = '1px solid #eee';
@@ -4271,6 +4340,8 @@
                 <td style="padding: 5px;"><input type="text" class="nivel-input" value="${nivel}" oninput="updateClaveUnica(this)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
                 <td style="padding: 5px;"><input type="text" class="codigo-input" value="${codigo}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
                 <td style="padding: 5px;"><input type="text" class="importe-input" value="${importe}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
+                <td style="padding: 5px;"><input type="date" class="activo-desde-input" value="${isoDesde}" onchange="filterGCCodigosEfectores()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
+                <td style="padding: 5px;"><input type="date" class="activo-hasta-input" value="${isoHasta}" onchange="filterGCCodigosEfectores()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
                 <td style="padding: 5px; text-align: center;">
                     <button onclick="this.closest('tr').remove()" style="background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;" title="Eliminar">
                         <i class="fas fa-trash"></i>
@@ -4281,6 +4352,7 @@
             if (!clave) {
                 updateClaveUnica(tr.querySelector('.dias-input'));
             }
+            filterGCCodigosEfectores();
         }
 
         async function saveGCCodigosEfectoresConfig() {
@@ -4295,8 +4367,20 @@
                 const nivel = row.querySelector('.nivel-input')?.value;
                 const codigo = row.querySelector('.codigo-input')?.value;
                 const importe = row.querySelector('.importe-input')?.value;
+                const activoDesde = row.querySelector('.activo-desde-input')?.value;
+                const activoHasta = row.querySelector('.activo-hasta-input')?.value;
+                
                 if (claveunica || dias || tipo || nivel || codigo || importe) {
-                    data.push({ CLAVEUNICA: claveunica, DIAS: dias, TIPODEGUARDIA: tipo, NIVEL: nivel, CODIGO: codigo, IMPORTE: importe });
+                    data.push({ 
+                        CLAVEUNICA: claveunica, 
+                        DIAS: dias, 
+                        TIPODEGUARDIA: tipo, 
+                        NIVEL: nivel, 
+                        CODIGO: codigo, 
+                        IMPORTE: importe,
+                        ACTIVO_DESDE: convertDateToDDMMYYYY(activoDesde),
+                        ACTIVO_HASTA: convertDateToDDMMYYYY(activoHasta)
+                    });
                 }
             });
 

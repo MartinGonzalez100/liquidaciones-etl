@@ -280,7 +280,15 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
 3. **Dashboards:** Los gráficos de sectores (Tortas/Donuts) de LD y GC en el Informe de Liquidación se alimentan directamente de estos mapeos.
 4. **Resumen de Gestión:** Las hojas de cálculo de áreas inyectan estos montos si están configurados.
 
-### 3.5 Configuración de Asignaciones (Base A3)
+### 3.5 Configuración de Códigos Guardias Críticas Importes
+- **Función:** Gestiona los códigos arancelarios y sus montos aplicables a los distintos niveles y tipos de Guardias Críticas.
+- **Control de Vigencia:** Cada código arancelario incluye dos campos de fecha (`ACTIVO_DESDE` y `ACTIVO_HASTA`) para llevar un control estricto de su período de validez.
+  - Al agregar un nuevo registro, el sistema inicializa automáticamente la fecha de inicio (`ACTIVO_DESDE`) en **01/07/2026**.
+  - Si el campo de fin de vigencia (`ACTIVO_HASTA`) se deja en blanco, el registro se considera activo indefinidamente a partir de su fecha de inicio.
+- **Filtro de Fecha Activa:** La interfaz provee un calendario en la parte superior de la tabla que permite simular la visión de los códigos activos a una fecha específica. Al seleccionar una fecha, la tabla oculta automáticamente aquellos códigos cuya vigencia ya haya expirado o que aún no hayan entrado en vigor para el momento consultado.
+- **Archivo de Persistencia:** Los datos y sus vigencias se guardan en el archivo `GC_config_codigos_importes.csv` de la carpeta `configuracion_parametros/`.
+
+### 3.6 Configuración de Asignaciones (Base A3)
 - **Función:** Permite la gestión (Alta, Baja, Modificación) de los datos de base de Asignaciones Familiares correspondientes al Área 3, desde una tabla interactiva en la interfaz.
 - **Archivo de Persistencia:** Toda modificación realizada a través de la interfaz visual se guarda directamente en el archivo `Asig_A3_config_agentes_base.csv` ubicado en la carpeta `configuracion_parametros/`.
 - **Columnas Administrables:**
@@ -292,7 +300,7 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
 
 *Nota:* Los paneles de configuración que son independientes del archivo de liquidaciones unificadas (como Paletas de Colores, Efectores, Códigos de Guardias Críticas, SDYF y Asignaciones A3) cargan y son totalmente editables incluso si no se ha realizado ninguna conversión o importación de archivos de liquidación en el sistema.
 
-### 3.6 Regeneración Automática de Reportes Auxiliares
+### 3.7 Regeneración Automática de Reportes Auxiliares
 El sistema cuenta con un mecanismo de limpieza en segundo plano que garantiza la precisión de los datos auditados. Al modificar y guardar cualquier parámetro desde la pantalla de Configuración del Sistema (tales como Mapeo de LD/GC, Efectores, Códigos e Importes, Fines de Semana y Feriados, o Asignaciones A3), el servidor ejecuta de forma silenciosa el borrado de las planillas auxiliares generadas previamente (`AuxGcNovedades.csv`, `AuxGCLiquidacion.csv` y `AuxResidentesLiquidacion.csv`). 
 Esta acción asegura que, la próxima vez que el usuario consulte un reporte de control, el sistema no utilice archivos cacheados obsoletos, sino que recalcule y regenere estas planillas instantáneamente leyendo la configuración más reciente.
 

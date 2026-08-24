@@ -793,7 +793,7 @@ app.post('/api/config/save-gc-codigos-efectores', (req, res) => {
     if (!Array.isArray(data)) return res.status(400).json({ error: 'Formato inválido. Debe ser un array.' });
 
     try {
-        let content = 'CLAVEUNICA;DIAS;TIPO DE GUARDIA;NIVEL;CODIGO;IMPORTE\n';
+        let content = 'CLAVEUNICA;DIAS;TIPO DE GUARDIA;NIVEL;CODIGO;IMPORTE;ACTIVO_DESDE;ACTIVO_HASTA\n';
         data.forEach(row => {
             const claveUnica = (row.CLAVEUNICA || '').replace(/;/g, ' ');
             const dias = (row.DIAS || '').replace(/;/g, ' ');
@@ -801,8 +801,10 @@ app.post('/api/config/save-gc-codigos-efectores', (req, res) => {
             const nivel = (row.NIVEL || '').replace(/;/g, ' ');
             const codigo = (row.CODIGO || '').replace(/;/g, ' ');
             const importe = (row.IMPORTE || '').replace(/;/g, ' ');
+            const activoDesde = (row.ACTIVO_DESDE || '01/07/2026').replace(/;/g, ' ');
+            const activoHasta = (row.ACTIVO_HASTA || '').replace(/;/g, ' ');
             
-            content += `${claveUnica};${dias};${tipo};${nivel};${codigo};${importe}\n`;
+            content += `${claveUnica};${dias};${tipo};${nivel};${codigo};${importe};${activoDesde};${activoHasta}\n`;
         });
         fs.writeFileSync(GC_CODIGOS_IMPORTES_CONFIG_FILE, content, 'latin1');
         limpiarPlanillasAuxiliares();
