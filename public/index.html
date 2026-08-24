@@ -2129,15 +2129,15 @@
                                 <table id="table-gc-codigos-efectores" style="width: 100%; border-collapse: collapse;">
                                     <thead style="position: sticky; top: 0; background: white; z-index: 10;">
                                         <tr style="background: #f8f9fa; border-bottom: 2px solid #5c67f2;">
-                                            <th style="padding: 10px; text-align: left;">CLAVEUNICA</th>
-                                            <th style="padding: 10px; text-align: left;">DIAS</th>
-                                            <th style="padding: 10px; text-align: left;">TIPO DE GUARDIA</th>
-                                            <th style="padding: 10px; text-align: left;">NIVEL</th>
-                                            <th style="padding: 10px; text-align: left;">CODIGO</th>
-                                            <th style="padding: 10px; text-align: left;">IMPORTE</th>
-                                            <th style="padding: 10px; text-align: left; width: 120px;">ACTIVO DESDE</th>
-                                            <th style="padding: 10px; text-align: left; width: 120px;">ACTIVO HASTA</th>
-                                            <th style="padding: 10px; text-align: center; width: 50px;">Acción</th>
+                                            <th style="padding: 10px; text-align: left; width: 15%;">CLAVEUNICA</th>
+                                            <th style="padding: 10px; text-align: left; width: 6%;">DIAS</th>
+                                            <th style="padding: 10px; text-align: left; width: 12%;">TIPO DE GUARDIA</th>
+                                            <th style="padding: 10px; text-align: left; width: 6%;">NIVEL</th>
+                                            <th style="padding: 10px; text-align: left; width: 8%;">CODIGO</th>
+                                            <th style="padding: 10px; text-align: left; width: 8%;">IMPORTE</th>
+                                            <th style="padding: 10px; text-align: left; width: 110px;">ACTIVO DESDE</th>
+                                            <th style="padding: 10px; text-align: left; width: 110px;">ACTIVO HASTA</th>
+                                            <th style="padding: 10px; text-align: center; width: 280px;">Acción</th>
                                         </tr>
                                     </thead>
                                     <tbody id="gc-codigos-efectores-list">
@@ -4301,7 +4301,8 @@
                         row['CODIGO'] || '', 
                         row['IMPORTE'] || '',
                         row['ACTIVO_DESDE'] || '',
-                        row['ACTIVO_HASTA'] || ''
+                        row['ACTIVO_HASTA'] || '',
+                        false // No es nuevo
                     );
                 });
                 filterGCCodigosEfectores();
@@ -4319,7 +4320,32 @@
             claveUnicaInput.value = `${dias}${tipo}${nivel}`;
         }
 
-        function addGCCodigosEfectorRow(clave = '', dias = '', tipo = '', nivel = '', codigo = '', importe = '', activoDesde = '', activoHasta = '') {
+        function editGCCodigoRow(btn) {
+            const tr = btn.closest('tr');
+            tr.querySelectorAll('.dias-input, .tipo-input, .nivel-input, .codigo-input, .importe-input').forEach(input => {
+                input.removeAttribute('readonly');
+                input.style.backgroundColor = '';
+            });
+            tr.querySelector('.importe-input').focus();
+        }
+
+        function updateGCCodigoRow(btn) {
+            const tr = btn.closest('tr');
+            const clave = tr.querySelector('.claveunica-input').value;
+            const dias = tr.querySelector('.dias-input').value;
+            const tipo = tr.querySelector('.tipo-input').value;
+            const nivel = tr.querySelector('.nivel-input').value;
+            const codigo = tr.querySelector('.codigo-input').value;
+            const importe = tr.querySelector('.importe-input').value;
+            
+            const newTr = addGCCodigosEfectorRow(clave, dias, tipo, nivel, codigo, importe, '', '', true);
+            if (tr.nextSibling) {
+                tr.parentNode.insertBefore(newTr, tr.nextSibling);
+            }
+            newTr.querySelector('.activo-desde-input').focus();
+        }
+
+        function addGCCodigosEfectorRow(clave = '', dias = '', tipo = '', nivel = '', codigo = '', importe = '', activoDesde = '', activoHasta = '', isNew = true) {
             const container = document.getElementById('gc-codigos-efectores-list');
             
             if (container.querySelector('td[colspan="9"]') || container.querySelector('td[colspan="7"]')) {
@@ -4327,24 +4353,35 @@
             }
 
             // Convert DD/MM/YYYY to YYYY-MM-DD for input type="date"
-            const defaultDesde = clave ? '' : '2026-07-01'; // Default only for new rows
+            const defaultDesde = isNew ? '2026-07-01' : ''; 
             const isoDesde = convertDateToISO(activoDesde) || defaultDesde;
             const isoHasta = convertDateToISO(activoHasta);
+
+            const readOnlyAttr = isNew ? '' : 'readonly';
+            const readOnlyStyle = isNew ? '' : 'background-color: #f8f9fa;';
 
             const tr = document.createElement('tr');
             tr.style.borderBottom = '1px solid #eee';
             tr.innerHTML = `
-                <td style="padding: 5px;"><input type="text" class="claveunica-input" value="${clave}" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #f8f9fa;" title="Calculado automáticamente"></td>
-                <td style="padding: 5px;"><input type="text" class="dias-input" value="${dias}" oninput="updateClaveUnica(this)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
-                <td style="padding: 5px;"><input type="text" class="tipo-input" value="${tipo}" oninput="updateClaveUnica(this)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
-                <td style="padding: 5px;"><input type="text" class="nivel-input" value="${nivel}" oninput="updateClaveUnica(this)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
-                <td style="padding: 5px;"><input type="text" class="codigo-input" value="${codigo}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
-                <td style="padding: 5px;"><input type="text" class="importe-input" value="${importe}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
-                <td style="padding: 5px;"><input type="date" class="activo-desde-input" value="${isoDesde}" onchange="filterGCCodigosEfectores()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
-                <td style="padding: 5px;"><input type="date" class="activo-hasta-input" value="${isoHasta}" onchange="filterGCCodigosEfectores()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
-                <td style="padding: 5px; text-align: center;">
-                    <button onclick="this.closest('tr').remove()" style="background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;" title="Eliminar">
-                        <i class="fas fa-trash"></i>
+                <td style="padding: 5px;"><input type="text" class="claveunica-input" value="${clave}" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background-color: #e9ecef;" title="Calculado automáticamente"></td>
+                <td style="padding: 5px;"><input type="text" class="dias-input" value="${dias}" oninput="updateClaveUnica(this)" ${readOnlyAttr} style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; ${readOnlyStyle}"></td>
+                <td style="padding: 5px;"><input type="text" class="tipo-input" value="${tipo}" oninput="updateClaveUnica(this)" ${readOnlyAttr} style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; ${readOnlyStyle}"></td>
+                <td style="padding: 5px;"><input type="text" class="nivel-input" value="${nivel}" oninput="updateClaveUnica(this)" ${readOnlyAttr} style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; ${readOnlyStyle}"></td>
+                <td style="padding: 5px;"><input type="text" class="codigo-input" value="${codigo}" ${readOnlyAttr} style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; ${readOnlyStyle}"></td>
+                <td style="padding: 5px;"><input type="text" class="importe-input" value="${importe}" ${readOnlyAttr} style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; ${readOnlyStyle}"></td>
+                <td style="padding: 5px;"><input type="date" class="activo-desde-input" value="${isoDesde}" onchange="filterGCCodigosEfectores()" ${isNew ? '' : 'readonly'} style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; ${isNew ? '' : 'background-color: #f8f9fa;'}"></td>
+                <td style="padding: 5px;"><input type="date" class="activo-hasta-input" value="${isoHasta}" onchange="filterGCCodigosEfectores()" ${isNew ? '' : 'readonly'} style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; ${isNew ? '' : 'background-color: #f8f9fa;'}"></td>
+                <td style="padding: 5px; text-align: center; white-space: nowrap;">
+                    ${!isNew ? `
+                    <button onclick="editGCCodigoRow(this)" style="background: #3498db; color: white; border: none; border-radius: 4px; padding: 5px 8px; cursor: pointer; margin-right: 2px;" title="Editar">
+                        <i class="fas fa-pencil-alt"></i> Editar
+                    </button>
+                    <button onclick="updateGCCodigoRow(this)" style="background: #f39c12; color: white; border: none; border-radius: 4px; padding: 5px 8px; cursor: pointer; margin-right: 2px;" title="Actualizar / Renovar">
+                        <i class="fas fa-sync-alt"></i> Renovar
+                    </button>
+                    ` : ''}
+                    <button onclick="this.closest('tr').remove()" style="background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 5px 8px; cursor: pointer;" title="Eliminar">
+                        <i class="fas fa-trash"></i> Eliminar
                     </button>
                 </td>
             `;
@@ -4353,6 +4390,7 @@
                 updateClaveUnica(tr.querySelector('.dias-input'));
             }
             filterGCCodigosEfectores();
+            return tr;
         }
 
         async function saveGCCodigosEfectoresConfig() {
