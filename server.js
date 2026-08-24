@@ -787,12 +787,75 @@ app.get('/api/config/load-gc-codigos-efectores', (req, res) => {
         .on('error', (err) => res.status(500).json({ error: err.message }));
 });
 
+function parseDateForSort(dateStr) {
+    if (!dateStr) return new Date(8640000000000000); // max date if empty
+    const parts = dateStr.split('/');
+    if (parts.length === 3) return new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00Z`);
+    return new Date(8640000000000000);
+}
+
+function formatDateToDDMMYYYY(dateObj) {
+    if (!dateObj || isNaN(dateObj)) return '';
+    const d = String(dateObj.getUTCDate()).padStart(2, '0');
+    const m = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const y = dateObj.getUTCFullYear();
+    return `${d}/${m}/${y}`;
+}
+
 // 9. Guardar configuración de Códigos Guardias Críticas Importes (ABM)
 app.post('/api/config/save-gc-codigos-efectores', (req, res) => {
-    const data = req.body;
+    let data = req.body;
     if (!Array.isArray(data)) return res.status(400).json({ error: 'Formato inválido. Debe ser un array.' });
 
     try {
+        // Validación de Duplicados Exactos
+        const seen = new Set();
+        for (const row of data) {
+            const hash = `${row.CLAVEUNICA}|${row.DIAS}|${row.TIPODEGUARDIA}|${row.NIVEL}|${row.CODIGO}|${row.IMPORTE}|${row.ACTIVO_DESDE}|${row.ACTIVO_HASTA}`;
+            if (seen.has(hash)) {
+                return res.status(400).json({ error: 'Existe un registro igual, cambiar algun parametro' });
+            }
+            seen.add(hash);
+        }
+
+        // Cierre Automático de Vigencias Anteriores
+        const groups = {};
+        data.forEach(row => {
+            const key = row.CLAVEUNICA || '';
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(row);
+        });
+
+        for (const key in groups) {
+            const group = groups[key];
+            // Ordenar por ACTIVO_DESDE ascendente para ajustar ACTIVO_HASTA
+            group.sort((a, b) => parseDateForSort(a.ACTIVO_DESDE) - parseDateForSort(b.ACTIVO_DESDE));
+            
+            for (let i = 0; i < group.length - 1; i++) {
+                const current = group[i];
+                const next = group[i+1];
+                const nextDate = parseDateForSort(next.ACTIVO_DESDE);
+                
+                // Restar 1 día
+                const hastaDate = new Date(nextDate.getTime() - 24 * 60 * 60 * 1000);
+                current.ACTIVO_HASTA = formatDateToDDMMYYYY(hastaDate);
+            }
+        }
+
+        data = [];
+        for (const key in groups) {
+            data.push(...groups[key]);
+        }
+
+        // Ordenamiento Final: ACTIVO_DESDE (desc) y CODIGO (asc)
+        data.sort((a, b) => {
+            const dateDiff = parseDateForSort(b.ACTIVO_DESDE) - parseDateForSort(a.ACTIVO_DESDE);
+            if (dateDiff !== 0) return dateDiff;
+            const codeA = (a.CODIGO || '').toString();
+            const codeB = (b.CODIGO || '').toString();
+            return codeA.localeCompare(codeB);
+        });
+
         let content = 'CLAVEUNICA;DIAS;TIPO DE GUARDIA;NIVEL;CODIGO;IMPORTE;ACTIVO_DESDE;ACTIVO_HASTA\n';
         data.forEach(row => {
             const claveUnica = (row.CLAVEUNICA || '').replace(/;/g, ' ');
@@ -806,6 +869,7 @@ app.post('/api/config/save-gc-codigos-efectores', (req, res) => {
             
             content += `${claveUnica};${dias};${tipo};${nivel};${codigo};${importe};${activoDesde};${activoHasta}\n`;
         });
+        
         fs.writeFileSync(GC_CODIGOS_IMPORTES_CONFIG_FILE, content, 'latin1');
         limpiarPlanillasAuxiliares();
         res.json({ success: true, message: 'Configuración de Códigos guardada correctamente' });

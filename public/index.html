@@ -4399,12 +4399,15 @@
                     statusLabel.innerText = "✅ " + result.message;
                     statusLabel.style.color = "#27ae60";
                     setTimeout(() => { statusLabel.innerText = ""; }, 3000);
+                    // Recargar tabla para mostrar fechas cerradas y orden correcto
+                    await loadGCCodigosEfectoresConfig();
                 } else {
                     throw new Error(result.error || "Fallo desconocido");
                 }
             } catch (err) {
-                statusLabel.innerText = "❌ Error: " + err.message;
+                statusLabel.innerText = "❌ Error al guardar";
                 statusLabel.style.color = "#e74c3c";
+                alert("No se pudo guardar: " + err.message);
             }
         }
 

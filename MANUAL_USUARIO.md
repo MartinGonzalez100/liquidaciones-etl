@@ -286,7 +286,11 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
   - Al agregar un nuevo registro, el sistema inicializa automáticamente la fecha de inicio (`ACTIVO_DESDE`) en **01/07/2026**.
   - Si el campo de fin de vigencia (`ACTIVO_HASTA`) se deja en blanco, el registro se considera activo indefinidamente a partir de su fecha de inicio.
 - **Filtro de Fecha Activa:** La interfaz provee un calendario en la parte superior de la tabla que permite simular la visión de los códigos activos a una fecha específica. Al seleccionar una fecha, la tabla oculta automáticamente aquellos códigos cuya vigencia ya haya expirado o que aún no hayan entrado en vigor para el momento consultado.
-- **Archivo de Persistencia:** Los datos y sus vigencias se guardan en el archivo `GC_config_codigos_importes.csv` de la carpeta `configuracion_parametros/`.
+- **Automatización y Reglas de Guardado:** Al guardar los códigos, el sistema aplica automáticamente las siguientes reglas de negocio:
+  - **Validación de Duplicados:** Se bloquea el guardado si existen dos registros exactamente iguales en todos sus campos y fechas, mostrando una alerta al usuario.
+  - **Cierre Automático de Vigencias:** Agrupa los registros por su clave única y, al detectar un registro más nuevo, asigna automáticamente al registro anterior una fecha de fin (`ACTIVO_HASTA`) de un día previo al inicio del nuevo.
+  - **Ordenamiento Autónomo:** El archivo se auto-ordena dando prioridad a los registros más recientes (orden descendente por `ACTIVO_DESDE`) y, secundariamente, en orden ascendente por `CODIGO`.
+- **Archivo de Persistencia:** Los datos y sus vigencias se guardan y mantienen ordenados en el archivo `GC_config_codigos_importes.csv` de la carpeta `configuracion_parametros/`.
 
 ### 3.6 Configuración de Asignaciones (Base A3)
 - **Función:** Permite la gestión (Alta, Baja, Modificación) de los datos de base de Asignaciones Familiares correspondientes al Área 3, desde una tabla interactiva en la interfaz.
