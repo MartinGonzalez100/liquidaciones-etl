@@ -295,6 +295,7 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
   - **Cierre Automático de Vigencias:** Agrupa los registros por su clave única y, al detectar un registro más nuevo, asigna automáticamente al registro anterior una fecha de fin (`ACTIVO_HASTA`) de un día previo al inicio del nuevo.
   - **Ordenamiento Autónomo:** El archivo se auto-ordena dando prioridad a los registros más recientes (orden descendente por `ACTIVO_DESDE`) y, secundariamente, en orden ascendente por `CODIGO`.
 - **Archivo de Persistencia:** Los datos y sus vigencias se guardan y mantienen ordenados en el archivo `GC_config_codigos_importes.csv` de la carpeta `configuracion_parametros/`.
+  - **Preservación de Caracteres (UTF-8 con BOM):** El archivo se procesa de forma nativa utilizando la codificación UTF-8 e insertando una marca BOM (`\uFEFF`) al comienzo. Esto garantiza la integridad absoluta de las tildes y caracteres especiales (por ejemplo, en términos como "CIRUGÍA" o "MÉDICOS") tanto en el sistema como en la generación de la `CLAVEUNICA`, evitando cualquier tipo de corrupción visual si el archivo es abierto mediante herramientas externas (como Excel).
 
 ### 3.6 Configuración de Asignaciones (Base A3)
 - **Función:** Permite la gestión (Alta, Baja, Modificación) de los datos de base de Asignaciones Familiares correspondientes al Área 3, desde una tabla interactiva en la interfaz.

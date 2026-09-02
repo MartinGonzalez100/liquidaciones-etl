@@ -778,7 +778,7 @@ app.get('/api/config/load-gc-codigos-efectores', (req, res) => {
     if (!fs.existsSync(GC_CODIGOS_IMPORTES_CONFIG_FILE)) return res.json([]);
 
     const results = [];
-    fs.createReadStream(GC_CODIGOS_IMPORTES_CONFIG_FILE, { encoding: 'latin1' })
+    fs.createReadStream(GC_CODIGOS_IMPORTES_CONFIG_FILE, { encoding: 'utf8' })
         .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
         .on('data', (data) => {
              results.push(data);
@@ -856,7 +856,7 @@ app.post('/api/config/save-gc-codigos-efectores', (req, res) => {
             return codeA.localeCompare(codeB);
         });
 
-        let content = 'CLAVEUNICA;DIAS;TIPO DE GUARDIA;NIVEL;CODIGO;IMPORTE;ACTIVO_DESDE;ACTIVO_HASTA\n';
+        let content = '\uFEFFCLAVEUNICA;DIAS;TIPO DE GUARDIA;NIVEL;CODIGO;IMPORTE;ACTIVO_DESDE;ACTIVO_HASTA\n';
         data.forEach(row => {
             const claveUnica = (row.CLAVEUNICA || '').replace(/;/g, ' ');
             const dias = (row.DIAS || '').replace(/;/g, ' ');
@@ -870,7 +870,7 @@ app.post('/api/config/save-gc-codigos-efectores', (req, res) => {
             content += `${claveUnica};${dias};${tipo};${nivel};${codigo};${importe};${activoDesde};${activoHasta}\n`;
         });
         
-        fs.writeFileSync(GC_CODIGOS_IMPORTES_CONFIG_FILE, content, 'latin1');
+        fs.writeFileSync(GC_CODIGOS_IMPORTES_CONFIG_FILE, content, 'utf8');
         limpiarPlanillasAuxiliares();
         res.json({ success: true, message: 'Configuración de Códigos guardada correctamente' });
     } catch (err) {
@@ -1884,7 +1884,7 @@ async function generateAuxGcNovedades() {
     const importesMap = new Map();
     if (fs.existsSync(GC_CODIGOS_IMPORTES_CONFIG_FILE)) {
         await new Promise((resolve, reject) => {
-            fs.createReadStream(GC_CODIGOS_IMPORTES_CONFIG_FILE, { encoding: 'latin1' })
+            fs.createReadStream(GC_CODIGOS_IMPORTES_CONFIG_FILE, { encoding: 'utf8' })
                 .pipe(csv({ separator: ';', mapHeaders: ({ header }) => header.trim() }))
                 .on('data', (data) => {
                     const claveUnicaKey = data['CLAVEUNICA'] !== undefined ? 'CLAVEUNICA' : '\uFEFFCLAVEUNICA';
