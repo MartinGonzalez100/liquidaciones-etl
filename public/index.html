@@ -1414,6 +1414,7 @@
                 <a href="#" id="menu-novedades-gc">└─ Novedades GC</a>
                 <a href="#" id="menu-novedades-gc-control" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Novedades GC Para Control</a>
                 <a href="#" id="menu-novedades-ld">└─ Novedades LD</a>
+                <a href="#" id="menu-novedades-ld-importes-dni" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Novedades LD Importes Por DNI</a>
                 <a href="#" id="menu-novedades-residentes">└─ Novedades Residentes</a>
                 <a href="#" id="menu-novedades-residentes-no-liquidados" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Residentes No Liquidados</a>
                 <a href="#" id="menu-novedades-criticidad" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ Criticidad</a>
@@ -2360,6 +2361,7 @@
         setupNovedadesMenu('menu-novedades-gc', 'Novedades GC', 'gc');
         setupNovedadesMenu('menu-novedades-gc-control', 'Novedades GC Para Control', 'gc-para-control');
         setupNovedadesMenu('menu-novedades-ld', 'Novedades LD', 'ld');
+        setupNovedadesMenu('menu-novedades-ld-importes-dni', 'Novedades LD Importes Por DNI', 'ld-importes-dni');
         setupNovedadesMenu('menu-novedades-residentes', 'Novedades Residentes', 'residentes');
         setupNovedadesMenu('menu-novedades-residentes-no-liquidados', 'Residentes No Liquidados', 'residentes-no-liquidados');
         setupNovedadesMenu('menu-novedades-criticidad', 'Residentes - Criticidad', 'criticidad');
@@ -5266,6 +5268,7 @@
                 { id: "menu-novedades-gc", label: "Novedades GC", elementId: "menu-novedades-gc" },
                 { id: "menu-novedades-gc-control", label: "Novedades GC Para Control", elementId: "menu-novedades-gc-control" },
                 { id: "menu-novedades-ld", label: "Novedades LD", elementId: "menu-novedades-ld" },
+                { id: "menu-novedades-ld-importes-dni", label: "Novedades LD Importes Por DNI", elementId: "menu-novedades-ld-importes-dni" },
                 { id: "menu-novedades-residentes", label: "Novedades Residentes", elementId: "menu-novedades-residentes" },
                 { id: "menu-novedades-residentes-no-liquidados", label: "Residentes No Liquidados", elementId: "menu-novedades-residentes-no-liquidados" },
                 { id: "menu-novedades-criticidad", label: "Criticidad", elementId: "menu-novedades-criticidad" },
@@ -5346,7 +5349,7 @@
                 return hasPermission(user.permissions, 'menu-configuracion', null) || hasAnySubPerm;
             }
             if (sectionId === 'novedades-resumen-view') {
-                const subPerms = ['menu-novedades-gc', 'menu-novedades-gc-control', 'menu-novedades-ld', 'menu-novedades-residentes', 'menu-novedades-residentes-no-liquidados', 'menu-novedades-criticidad', 'menu-novedades-fortalecimiento'];
+                const subPerms = ['menu-novedades-gc', 'menu-novedades-gc-control', 'menu-novedades-ld', 'menu-novedades-ld-importes-dni', 'menu-novedades-residentes', 'menu-novedades-residentes-no-liquidados', 'menu-novedades-criticidad', 'menu-novedades-fortalecimiento'];
                 return hasPermission(user.permissions, 'menu-novedades-mensuales', null) || subPerms.some(p => hasPermission(user.permissions, p, null));
             }
             if (sectionId === 'informe-modelo-view') return hasPermission(user.permissions, 'menu-informe-modelo', 'menu-informes');
@@ -5360,7 +5363,7 @@
                     'menu-ley100', 'menu-calculo-ley100',
                     'menu-asignaciones', 'menu-asignaciones-familiares', 'menu-asignaciones-familiares-reemp',
                     'menu-acumulado', 'menu-topes-jubilatorios',
-                    'menu-novedades-mensuales', 'menu-novedades-gc', 'menu-novedades-gc-control', 'menu-novedades-ld', 'menu-novedades-residentes', 'menu-novedades-residentes-no-liquidados',
+                    'menu-novedades-mensuales', 'menu-novedades-gc', 'menu-novedades-gc-control', 'menu-novedades-ld', 'menu-novedades-ld-importes-dni', 'menu-novedades-residentes', 'menu-novedades-residentes-no-liquidados',
                     'menu-novedades-criticidad', 'menu-novedades-fortalecimiento'
                 ];
                 return allowedMenus.some(menuId => hasPermission(user.permissions, menuId, null));

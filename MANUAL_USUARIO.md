@@ -210,6 +210,14 @@ Este reporte, accesible desde el submenú de Novedades Residentes, permite visua
   - **Mensual:** Filtra y muestra aquellos registros cuya primera letra de la columna `MODALIDAD` sea "A" o "C" (sin distinguir mayúsculas/minúsculas).
   - **Retroactivo:** Filtra y muestra aquellos registros cuya primera letra de la columna `MODALIDAD` sea "R" (sin distinguir mayúsculas/minúsculas).
 
+#### Novedades LD Importes Por DNI
+- Expone un informe agrupado y sumarizado a partir del archivo de Novedades de Libre Disponibilidad (`ld.csv`), consolidando y guardando los resultados físicamente en el archivo `AuxLDNovedadesPorImporte.csv`.
+- **Filtros de Negocio Aplicados:** Para ser incluido en la sumarización, cada registro debe cumplir de forma simultánea con las siguientes tres condiciones:
+  - El valor en la columna `ESTADO` debe ser "aprobado".
+  - El valor numérico de la columna `DIAS EPS` debe ser mayor a 0.
+  - La columna `MODALIDAD` debe contener exactamente "CONTINUIDAD" o "ALTA".
+- **Agrupación y Cálculos:** Agrupa todos los registros válidos utilizando el `DNI` como clave unívoca y calcula la sumatoria acumulada de la columna `IMPORTE LIQUIDADO`, presentándola en el campo `SUMA_IMPORTE` junto con el apellido y nombre del agente.
+
 #### Novedades Residentes
 - Despliega el listado completo de los registros contenidos en el archivo `residentes.csv`. Este reporte es dinámico y muestra toda la información biográfica, administrativa y de haberes de la planta de Residentes procesada.
 - **Campos Detallados Clave:**
@@ -380,6 +388,7 @@ Estas pantallas muestran datos provenientes del procesamiento de archivos Excel 
 - **Novedades GC**: Consume el archivo unificado de novedades de guardias críticas (`gc.csv`).
 - **Novedades GC Para Control**: Muestra el consolidado agrupado desde el archivo auxiliar de novedades (`AuxGcNovedades.csv`).
 - **Novedades LD**: Consume y filtra interactivamente el archivo `ld.csv`.
+- **Novedades LD Importes Por DNI**: Muestra los importes agrupados por DNI a partir de las novedades LD, consolidando los resultados sumarizados en el archivo `AuxLDNovedadesPorImporte.csv`.
 - **Novedades Residentes**: Lee y expone los datos de `residentes.csv`.
 - **Residentes - Criticidad**: Consume el archivo `criticidad.csv`.
 - **Residentes - Fortalecimiento**: Consume el archivo `fortalecimiento.csv`.
