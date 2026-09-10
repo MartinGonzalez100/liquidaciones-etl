@@ -1897,7 +1897,10 @@ async function generateAuxGcNovedades() {
                     let importe = parseFloat(val);
                     
                     if (key) {
-                        importesMap.set(normalizeStr(key), isNaN(importe) ? 0 : importe);
+                        const normalizedKey = normalizeStr(key);
+                        if (!importesMap.has(normalizedKey)) {
+                            importesMap.set(normalizedKey, isNaN(importe) ? 0 : importe);
+                        }
                     }
                 })
                 .on('end', resolve)
@@ -1917,22 +1920,31 @@ async function generateAuxGcNovedades() {
                 const clave = doc + transformado; 
                 
                 let sdyfVal = '';
-                const fechaFormatMatch = (row['Fecha'] || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+                const rawFecha = (row['Fecha'] || '').trim().split(' ')[0].split('T')[0];
+                const fechaFormatMatch = rawFecha.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
                 if (fechaFormatMatch) {
-                    const diaStr = `${fechaFormatMatch[3]}/${fechaFormatMatch[2]}/${fechaFormatMatch[1]}`;
-                    const dictVal = sdyfMap.get(diaStr);
-                    if (dictVal === 'SI') sdyfVal = 'SI';
-                } else if ((row['Fecha'] || '').includes('/')) {
+                    const d = fechaFormatMatch[3].padStart(2, '0');
+                    const m = fechaFormatMatch[2].padStart(2, '0');
+                    const diaStr = `${d}/${m}/${fechaFormatMatch[1]}`;
+                    if (sdyfMap.get(diaStr) === 'SI') sdyfVal = 'SI';
+                } else if (rawFecha.includes('/')) {
                     // Por si la fecha ya vino formateada DD/MM/YYYY o similar
-                    let parts = row['Fecha'].split('/');
-                    if(parts[0].length === 4) { // YYYY/MM/DD
-                        const diaStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                        if (sdyfMap.get(diaStr) === 'SI') sdyfVal = 'SI';
-                    } else if (parts[2].length === 4) { // DD/MM/YYYY
-                        let d = parts[0].padStart(2, '0');
-                        let m = parts[1].padStart(2, '0');
-                        const diaStr = `${d}/${m}/${parts[2]}`;
-                        if (sdyfMap.get(diaStr) === 'SI') sdyfVal = 'SI';
+                    let parts = rawFecha.split('/');
+                    if (parts.length >= 3) {
+                        if(parts[0].length === 4) { // YYYY/MM/DD
+                            let y = parts[0];
+                            let m = parts[1].padStart(2, '0');
+                            let d = parts[2].padStart(2, '0');
+                            const diaStr = `${d}/${m}/${y}`;
+                            if (sdyfMap.get(diaStr) === 'SI') sdyfVal = 'SI';
+                        } else { // DD/MM/YYYY
+                            let d = parts[0].padStart(2, '0');
+                            let m = parts[1].padStart(2, '0');
+                            let y = parts[2];
+                            if (y.length > 4) y = y.substring(0, 4);
+                            const diaStr = `${d}/${m}/${y}`;
+                            if (sdyfMap.get(diaStr) === 'SI') sdyfVal = 'SI';
+                        }
                     }
                 }
 
