@@ -1464,8 +1464,9 @@
         </div>
         <div id="conversion-form" class="container">
             <div style="position: sticky; top: 10px; z-index: 1000; display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; align-items: flex-start;">
-                <div>
-                    <button onclick="borrarLiquidacion()" style="background-color: #e74c3c; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; white-space: nowrap;">Borrado de Liquidacion</button>
+                <div style="display: flex; flex-direction: column; gap: 8px; min-width: 220px;">
+                    <button onclick="borrarLiquidacion()" style="background-color: #e74c3c; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; white-space: nowrap; width: 100%;">Borrado de Liquidacion</button>
+                    <button onclick="borrarA3()" style="background-color: #e67e22; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; white-space: nowrap; width: 100%;">Borrado de A3</button>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px; min-width: 220px;">
                     <button onclick="borrarNovedad()" style="background-color: #e74c3c; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0; white-space: nowrap; width: 100%;">Borrado de Novedad</button>
@@ -4957,6 +4958,24 @@
                     <td style="padding: 10px; color: ${r.where === 'MES ANTERIOR' ? '#e67e22' : '#27ae60'};">${r.where}</td>
                 </tr>
             `).join('');
+        }
+
+        
+        async function borrarA3() {
+            if (confirm('¿Está seguro que desea borrar los archivos de A3 procesados?')) {
+                try {
+                    const response = await fetch('/api/borrar-a3', { method: 'DELETE' });
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.message || 'Archivos A3 borrados correctamente.');
+                        loadLotesTrabajados();
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (e) {
+                    alert('Error de conexión.');
+                }
+            }
         }
 
         async function borrarLiquidacion() {

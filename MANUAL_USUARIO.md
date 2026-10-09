@@ -1,4 +1,4 @@
-# Manual de Usuario - Sistema de Liquidaciones ETL
+﻿# Manual de Usuario - Sistema de Liquidaciones ETL
 
 Este documento describe la funcionalidad completa del sistema de gestión, procesamiento y visualización de Liquidaciones y Novedades. Se detallan exhaustivamente las reglas y condiciones lógicas (filtros) aplicadas en cada una de las pantallas.
 
@@ -15,6 +15,11 @@ Esta pantalla se encarga de procesar archivos Excel en bruto y unificarlos en fo
     - `csv-convertido/` (Versiones transformadas).
     - `csv-unidos/` (Archivos consolidados finales como `liquidaciones_unificadas.csv`).
   - **Lotes de Liquidaciones Trabajados:** Muestra un listado histórico de los nombres de archivos procesados exitosamente. Este listado se actualiza automáticamente tras cada proceso de conversión y se limpia de forma sincronizada al ejecutar el **Borrado de Liquidación**, eliminando el archivo de registro `excel-convertidos.csv`.
+  - **Borrado de A3 (Borrado Individual):** Elimina de forma selectiva únicamente los archivos correspondientes a las asignaciones A3, permitiendo regenerar el estado de las liquidaciones sin afectar al resto de lotes. Específicamente realiza:
+    - Escaneo en `excel-a-convertir/` y `csv-convertido/` eliminando únicamente los archivos cuyo nombre contenga `-A3` o `- A3`.
+    - Eliminación de archivos auxiliares (que contengan `AuxGC` o `AuxLD`) junto al archivo consolidado `liquidaciones_unificadas.csv` en la carpeta `csv-unidos/`.
+    - Actualización automática del registro histórico `excel-convertidos.csv` (en `configuracion_parametros/`), removiendo los archivos A3 eliminados de la lista de lotes trabajados.
+    - Ejecución en segundo plano de un proceso de reunificación que regenera desde cero el archivo `liquidaciones_unificadas.csv` utilizando los archivos restantes válidos en la carpeta `csv-convertido`.
 - **Proceso (ETL) y Limpieza Automática:** Al hacer clic en "Iniciar Conversión y Unificación", el sistema ejecuta de forma silenciosa un **borrado automático** de liquidaciones anteriores (`csv-convertido/` y `csv-unidos/`) antes de procesar los nuevos archivos. Esto garantiza una conversión completamente limpia y previene la duplicación de datos. A diferencia del "Borrado de Liquidación" manual, este proceso automático **conserva intactos los archivos base en la carpeta `excel-a-convertir/`** para que puedan seguir siendo procesados. Los archivos leídos son luego transformados a CSV y unificados en un único archivo llamado `liquidaciones_unificadas.csv`.
 
 ### 1.2 Conversión de Novedades
@@ -399,4 +404,5 @@ Estas vistas requieren la coexistencia de ambos tipos de archivos para su correc
 - **Control GC Liquidacion a Eps**: Cruza la liquidación mensual contra las novedades de guardias críticas.
 - **Control GC No Liquidados**: Identifica novedades huérfanas sin contrapartida en la liquidación mensual.
 - **Control Residentes de Liquidacion a Novedades**: Realiza cálculos y cruces entre los agentes de planta residentes y sus novedades correspondientes, permitiendo guardar observaciones en `AuxResidentesLiquidacion.csv`.
+
 

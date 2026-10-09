@@ -2655,6 +2655,91 @@ app.delete('/api/borrar-liquidacion', (req, res) => {
     }
 });
 
+app.delete('/api/borrar-a3', (req, res) => {
+    try {
+        const regexA3 = /- ?A3/i;
+        let deletedCount = 0;
+
+        // 1. excel-a-convertir
+        const dirExcel = path.join(process.cwd(), 'excel-a-convertir');
+        if (fs.existsSync(dirExcel)) {
+            const files = fs.readdirSync(dirExcel);
+            for (const file of files) {
+                if (regexA3.test(file)) {
+                    const filePath = path.join(dirExcel, file);
+                    if (fs.lstatSync(filePath).isFile()) {
+                        fs.unlinkSync(filePath);
+                        deletedCount++;
+                    }
+                }
+            }
+        }
+
+        // 2. csv-convertido
+        const dirCsv = path.join(process.cwd(), 'csv-convertido');
+        if (fs.existsSync(dirCsv)) {
+            const files = fs.readdirSync(dirCsv);
+            for (const file of files) {
+                if (regexA3.test(file)) {
+                    const filePath = path.join(dirCsv, file);
+                    if (fs.lstatSync(filePath).isFile()) {
+                        fs.unlinkSync(filePath);
+                        deletedCount++;
+                    }
+                }
+            }
+        }
+
+        // 3. csv-unidos
+        const dirUnidos = path.join(process.cwd(), 'csv-unidos');
+        if (fs.existsSync(dirUnidos)) {
+            const files = fs.readdirSync(dirUnidos);
+            for (const file of files) {
+                const filePath = path.join(dirUnidos, file);
+                if (!fs.lstatSync(filePath).isFile()) continue;
+                
+                if (file === 'liquidaciones_unificadas.csv' || file.includes('AuxGC') || file.includes('AuxLD')) {
+                    fs.unlinkSync(filePath);
+                    deletedCount++;
+                }
+            }
+        }
+
+        
+        // 4. Actualizar excel-convertidos.csv
+        const trackingFile = path.join(CONFIG_DIR, 'excel-convertidos.csv');
+        if (fs.existsSync(trackingFile)) {
+            const contentConfig = fs.readFileSync(trackingFile, 'utf8');
+            const lines = contentConfig.split('\n');
+            const header = lines.length > 0 ? lines[0] : 'excel-convertidos';
+            const remainingLines = lines.slice(1).filter(line => line.trim() !== '' && !regexA3.test(line));
+            
+            if (remainingLines.length === 0) {
+                fs.unlinkSync(trackingFile);
+            } else {
+                const newContent = header + '\n' + remainingLines.join('\n') + '\n';
+                fs.writeFileSync(trackingFile, newContent, 'utf8');
+            }
+        }
+
+        // 5. Regenerar liquidaciones_unificadas.csv
+        const { unirCsv } = require('./services/unificador');
+        const finalCsvFile = unirCsv();
+        let rebuildMsg = "";
+        if (finalCsvFile) {
+            rebuildMsg = " y liquidaciones unificadas regeneradas.";
+        } else {
+            rebuildMsg = " (No quedaron archivos para unificar).";
+        }
+
+        res.json({ success: true, message: `Archivos borrados correctamente. (${deletedCount} archivos eliminados)${rebuildMsg}` });
+
+    } catch (e) {
+        console.error('Error al borrar archivos A3:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.delete('/api/borrar-novedad', (req, res) => {
     try {
         const dirs = [
