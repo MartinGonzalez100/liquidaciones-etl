@@ -48,7 +48,7 @@ Aquí se encuentra la navegación principal hacia los reportes analíticos de lo
 - **Botón de Menú Flotante:** La aplicación cuenta con un botón de menú anclado de forma fija en la esquina superior izquierda de la pantalla. Este control sigue dinámicamente al usuario mientras realiza "scroll" hacia abajo o a la derecha, garantizando el acceso permanente a la barra de navegación desde cualquier área de lectura sin necesidad de regresar al tope de la página.
 
 - **Ajuste de Control de Navegación (Visibilidad y Acceso):** Para poder interactuar con los diferentes módulos y reportes de la barra lateral, es **requisito obligatorio** que el sistema cuente con lotes de liquidaciones trabajados y lotes de novedades trabajadas de forma simultánea.
-  - Si falta alguno de los dos tipos de lotes (o ambos), la barra lateral ocultará automáticamente todos los accesos a los demás menús, submenús y acordeones de configuración, dejando únicamente visible el enlace de **Inicio (Conversión)**.
+  - Si falta alguno de los dos tipos de lotes (o ambos), la barra lateral ocultará automáticamente todos los accesos a los demás menús, submenús y acordeones de configuración, dejando únicamente visible el enlace de **Inicio (Conversión)**. Adicionalmente, el menú mostrará un mensaje de advertencia visual para informar de forma clara al usuario que es necesario cargar ambos lotes para desbloquear el resto de las secciones.
   - Asimismo, se restringe el acceso programático a cualquier otra sección; si los lotes son borrados mientras se visualiza un reporte, el sistema redirige automáticamente al usuario a la pantalla de **Inicio (Conversión)**. Los programadores conservan acceso a la Gestión de Usuarios en caso de ser necesario.
 
 ### 2.1 Controles Manuales
@@ -404,5 +404,6 @@ Estas vistas requieren la coexistencia de ambos tipos de archivos para su correc
 - **Control GC Liquidacion a Eps**: Cruza la liquidación mensual contra las novedades de guardias críticas.
 - **Control GC No Liquidados**: Identifica novedades huérfanas sin contrapartida en la liquidación mensual.
 - **Control Residentes de Liquidacion a Novedades**: Realiza cálculos y cruces entre los agentes de planta residentes y sus novedades correspondientes, permitiendo guardar observaciones en `AuxResidentesLiquidacion.csv`.
+
 
 

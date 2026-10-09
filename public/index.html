@@ -1353,6 +1353,11 @@
             </button>
         </div>
         
+        
+        <div id="missing-lotes-warning" style="display: none; background: rgba(230, 126, 34, 0.1); border-left: 4px solid #e67e22; padding: 12px; margin: 15px; border-radius: 4px; font-size: 12px; color: #d35400; line-height: 1.4;">
+            <i class="fas fa-exclamation-triangle" style="margin-bottom: 8px; font-size: 14px;"></i><br>
+            Para poder interactuar con los diferentes módulos y reportes de la barra lateral, es <strong>requisito obligatorio</strong> que el sistema cuente con lotes de liquidaciones y de novedades trabajadas de forma simultánea.
+        </div>
         <a href="#" id="menu-inicio" onclick="showSection('conversion-form'); closeNav()">Inicio (Conversión)</a>
         <a href="#" id="menu-controles-manuales">Controles Manuales</a>
         <a href="#" id="menu-detalle-vs-detalle" style="padding-left: 50px; font-size: 16px; color: #a29bfe;">└─ Detalle vs Detalle</a>
@@ -5349,6 +5354,11 @@
 
             // Ajuste de control: si no existen ambos lotes, solo se permite Inicio (Conversión), 'none' y 'gestion-usuarios-view' (solo programador)
             const bothLotesExist = (hasLotesLiquidaciones && hasLotesNovedades);
+            
+            const warningEl = document.getElementById('missing-lotes-warning');
+            if (warningEl) {
+                warningEl.style.display = (!bothLotesExist) ? 'block' : 'none';
+            }
             if (!bothLotesExist && sectionId !== 'conversion-form' && sectionId !== 'none') {
                 if (sectionId === 'gestion-usuarios-view' && user.role === 'programador') {
                     // Permitir acceso
@@ -5499,6 +5509,11 @@
             if (!user) return;
 
             const bothLotesExist = (hasLotesLiquidaciones && hasLotesNovedades);
+
+            const warningEl = document.getElementById('missing-lotes-warning');
+            if (warningEl) {
+                warningEl.style.display = (!bothLotesExist) ? 'block' : 'none';
+            }
 
             // 1. Mostrar/ocultar enlaces directos y submenús según permisos
             const allLinks = document.querySelectorAll('#mySidebar a');
