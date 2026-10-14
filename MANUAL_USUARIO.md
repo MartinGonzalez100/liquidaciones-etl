@@ -224,6 +224,15 @@ Este reporte, accesible desde el submenú de Novedades Residentes, permite visua
   - La columna `MODALIDAD` debe contener exactamente "CONTINUIDAD" o "ALTA".
 - **Agrupación y Cálculos:** Agrupa todos los registros válidos utilizando el `DNI` como clave unívoca y calcula la sumatoria acumulada de la columna `IMPORTE LIQUIDADO`, presentándola en el campo `SUMA_IMPORTE` junto con el apellido y nombre del agente.
 
+#### Novedades LD Auxiliar (AuxLdNovedades)
+- Expone y genera físicamente el archivo auxiliar consolidado `AuxLdNovedades.csv` dentro de la carpeta `csv-unidos-novedades/` a partir de `ld.csv`.
+- **Estructura y Nuevas Columnas (Orden de Dependencia):** Conserva todas las columnas del archivo original `ld.csv` incorporando al inicio cuatro columnas clave de control:
+  - `CLAVE_LD`: Ubicada al inicio, conformada por la unión estricta sin espacios de `DNI`, `CODIGO_OPTIMO`, `EFECTOR` y `NUMERO_LD_AGENTE`.
+  - `CODIGO_OPTIMO`: Derivado del valor de `TIPO LD`. Si posee una longitud de 5 caracteres se le añade 1 cero adelante (`0`), y si posee una longitud de 4 caracteres se le añaden 2 ceros adelante (`00`), estandarizando su longitud a 6 caracteres (ej. `003-38`, `032-95`).
+  - `IMPORTE_OPTIMO`: Réplica directa del monto consignado en la columna `IMPORTE LD`.
+  - `NUMERO_LD_AGENTE`: Contador general de códigos para un mismo agente (`DNI` / `NRO_DOCUMENTO`), que se incrementa correlativamente de a 1 por cada registro generado y se reinicia automáticamente en 1 al cambiar de documento.
+- **Regla de Ordenamiento Previo:** Antes de calcular el contador de `NUMERO_LD_AGENTE` y conformar la `CLAVE_LD`, el conjunto de datos se ordena numéricamente de forma ascendente por `DNI` (ASC) y, como segundo criterio, por `IMPORTE_OPTIMO` (ASC), garantizando consistencia determinística para cruces de auditoría.
+
 #### Novedades Residentes
 - Despliega el listado completo de los registros contenidos en el archivo `residentes.csv`. Este reporte es dinámico y muestra toda la información biográfica, administrativa y de haberes de la planta de Residentes procesada.
 - **Campos Detallados Clave:**

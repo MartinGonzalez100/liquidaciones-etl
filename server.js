@@ -668,7 +668,8 @@ function limpiarPlanillasAuxiliares() {
             path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxGcNovedades.csv'),
             path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv'),
             path.join(CSV_UNIDOS_DIR, 'AuxResidentesLiquidacion.csv'),
-            path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxLDNovedadesPorImporte.csv')
+            path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxLDNovedadesPorImporte.csv'),
+            path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxLdNovedades.csv')
         ];
         archivos.forEach(p => {
             if (fs.existsSync(p)) fs.unlinkSync(p);
@@ -2051,6 +2052,114 @@ async function generateAuxLDNovedadesPorImporte() {
     console.log(`[SERVER] 📊 AuxLDNovedadesPorImporte.csv generado con ${results.length} registros.`);
 }
 
+
+// Función auxiliar para generar AuxLdNovedades.csv
+async function generateAuxLdNovedades() {
+    const ldCsvPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'ld.csv');
+    const auxPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxLdNovedades.csv');
+
+    if (!fs.existsSync(ldCsvPath)) throw new Error('Archivo origen de Novedades LD (ld.csv) no encontrado');
+
+    const rows = [];
+    let origHeaders = [];
+
+    await new Promise((resolve, reject) => {
+        fs.createReadStream(ldCsvPath, { encoding: 'utf8' })
+            .pipe(csv({ mapHeaders: ({ header }) => header.trim().replace(/^\uFEFF/, '') }))
+            .on('headers', (headers) => {
+                origHeaders = headers.map(h => h.trim().replace(/^\uFEFF/, ''));
+            })
+            .on('data', (row) => {
+                const tipoLd = String(row['TIPO LD'] !== undefined ? row['TIPO LD'] : (row['TIPO_LD'] || '')).trim();
+                let codigoOptimo = tipoLd;
+                if (tipoLd.length === 5) {
+                    codigoOptimo = '0' + tipoLd;
+                } else if (tipoLd.length === 4) {
+                    codigoOptimo = '00' + tipoLd;
+                } else if (tipoLd.length > 0 && tipoLd.length < 6) {
+                    codigoOptimo = tipoLd.padStart(6, '0');
+                }
+
+                const importeLd = String(row['IMPORTE LD'] !== undefined ? row['IMPORTE LD'] : (row['IMPORTE_LD'] || '')).trim();
+
+                rows.push({
+                    ...row,
+                    CODIGO_OPTIMO: codigoOptimo,
+                    IMPORTE_OPTIMO: importeLd
+                });
+            })
+            .on('end', resolve)
+            .on('error', reject);
+    });
+
+    // Ordenar: por DNI ASC y por IMPORTE_OPTIMO ASC
+    rows.sort((a, b) => {
+        const dniA = parseInt(a['DNI'], 10) || 0;
+        const dniB = parseInt(b['DNI'], 10) || 0;
+        if (dniA !== dniB) {
+            return dniA - dniB;
+        }
+        const impA = parseFloat(a.IMPORTE_OPTIMO) || 0;
+        const impB = parseFloat(b.IMPORTE_OPTIMO) || 0;
+        return impA - impB;
+    });
+
+    // Contador NUMERO_LD_AGENTE y armado de CLAVE_LD
+    let currentDni = null;
+    let agenteCounter = 1;
+
+    for (const r of rows) {
+        const dniStr = String(r['DNI'] || '').trim();
+        if (dniStr === currentDni) {
+            agenteCounter++;
+        } else {
+            currentDni = dniStr;
+            agenteCounter = 1;
+        }
+        r.NUMERO_LD_AGENTE = agenteCounter;
+
+        const efStr = String(r['EFECTOR'] || '').trim();
+        r.CLAVE_LD = `${dniStr}${r.CODIGO_OPTIMO}${efStr}${agenteCounter}`;
+    }
+
+    const newHeadersPrefix = ['CLAVE_LD', 'CODIGO_OPTIMO', 'IMPORTE_OPTIMO', 'NUMERO_LD_AGENTE'];
+    const finalHeaders = [...newHeadersPrefix, ...origHeaders.filter(h => !newHeadersPrefix.includes(h))];
+
+    const csvContent = [
+        finalHeaders.join(','),
+        ...rows.map(row => finalHeaders.map(h => {
+            let val = (row[h] !== undefined && row[h] !== null) ? String(row[h]) : '';
+            if (val.includes(',') || val.includes('"') || val.includes('\n') || val.includes('\r')) {
+                val = `"${val.replace(/"/g, '""')}"`;
+            }
+            return val;
+        }).join(','))
+    ].join('\n');
+
+    fs.writeFileSync(auxPath, csvContent, 'utf8');
+    console.log(`[SERVER] 📊 AuxLdNovedades.csv generado con ${rows.length} registros.`);
+    return true;
+}
+
+app.get('/api/novedades/aux-ld-novedades', async (req, res) => {
+    try {
+        const auxPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxLdNovedades.csv');
+        if (!fs.existsSync(auxPath)) {
+            await generateAuxLdNovedades();
+        }
+
+        const results = [];
+        fs.createReadStream(auxPath, { encoding: 'utf8' })
+            .pipe(csv())
+            .on('data', (data) => results.push(data))
+            .on('end', () => res.json(results))
+            .on('error', (err) => res.status(500).json({ error: err.message }));
+    } catch (error) {
+        console.error('[SERVER] ❌ Error en /api/novedades/aux-ld-novedades:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/api/novedades/ld-importes-dni', async (req, res) => {
     try {
         const auxPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxLDNovedadesPorImporte.csv');
@@ -2591,9 +2700,17 @@ app.get('/api/novedades/residentes-no-liquidados', async (req, res) => {
     }
 });
 
-app.get('/api/novedades/:tipo', (req, res) => {
+app.get('/api/novedades/:tipo', async (req, res) => {
     const { tipo } = req.params;
     const csvPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, `${tipo}.csv`);
+
+    if (tipo.toLowerCase() === 'auxldnovedades' && !fs.existsSync(csvPath)) {
+        try {
+            await generateAuxLdNovedades();
+        } catch (e) {
+            console.error('[SERVER] Error al auto-generar AuxLdNovedades:', e);
+        }
+    }
 
     if (!fs.existsSync(csvPath)) {
         // En lugar de enviar un JSON con error que revienta Datatable, enviamos data vacía
