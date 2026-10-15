@@ -2092,16 +2092,16 @@ async function generateAuxLdNovedades() {
             .on('error', reject);
     });
 
-    // Ordenar: por DNI ASC y por IMPORTE_OPTIMO ASC
+    // Ordenar: por DNI ASC y por CODIGO_OPTIMO ASC
     rows.sort((a, b) => {
         const dniA = parseInt(a['DNI'], 10) || 0;
         const dniB = parseInt(b['DNI'], 10) || 0;
         if (dniA !== dniB) {
             return dniA - dniB;
         }
-        const impA = parseFloat(a.IMPORTE_OPTIMO) || 0;
-        const impB = parseFloat(b.IMPORTE_OPTIMO) || 0;
-        return impA - impB;
+        const codA = String(a.CODIGO_OPTIMO || '');
+        const codB = String(b.CODIGO_OPTIMO || '');
+        return codA.localeCompare(codB);
     });
 
     // Contador NUMERO_LD_AGENTE y armado de CLAVE_LD
@@ -2141,7 +2141,7 @@ async function generateAuxLdNovedades() {
     return true;
 }
 
-app.get('/api/novedades/aux-ld-novedades', async (req, res) => {
+app.get(['/api/novedades/aux-ld-novedades', '/api/novedades/ld-con-clave'], async (req, res) => {
     try {
         const auxPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxLdNovedades.csv');
         if (!fs.existsSync(auxPath)) {
@@ -2702,7 +2702,11 @@ app.get('/api/novedades/residentes-no-liquidados', async (req, res) => {
 
 app.get('/api/novedades/:tipo', async (req, res) => {
     const { tipo } = req.params;
-    const csvPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, `${tipo}.csv`);
+    let resolvedFile = `${tipo}.csv`;
+    if (tipo.toLowerCase() === 'ld-con-clave' || tipo.toLowerCase() === 'auxldnovedades') {
+        resolvedFile = 'AuxLdNovedades.csv';
+    }
+    const csvPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, resolvedFile);
 
     if (tipo.toLowerCase() === 'auxldnovedades' && !fs.existsSync(csvPath)) {
         try {
