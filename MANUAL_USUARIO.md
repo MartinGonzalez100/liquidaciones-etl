@@ -273,7 +273,7 @@ Esta sección es el "cerebro" del sistema, donde se definen las reglas de negoci
 
 Toda la vista de esta sección posee un diseño centrado con un ancho máximo de `1000px` para optimizar su legibilidad en pantallas de gran tamaño. Visualmente, el sistema se organiza en la siguiente estructura:
 - **Configuración de Paletas de Colores:** Situada en el nivel superior de manera independiente.
-- **Grupo Libre Disponibilidad:** Agrupa las configuraciones que tienen relación con esta área contable (como "Configuración de Libres Disponibilidad").
+- **Grupo Libre Disponibilidad:** Agrupa las configuraciones que tienen relación con esta área contable ("Configuración de Libres Disponibilidad" y "Configuración de LD Efectores").
 - **Grupo Guardias Críticas:** Agrupa todas las configuraciones específicas del módulo ("Configuración de Guardias Críticas", "Efectores Guardias Críticas", "Códigos Guardias Críticas Importes" y "Fines de Semana y Feriados"). Para facilitar la gestión del calendario de fines de semana y feriados (SDYF), el contenido interno de este sub-acordeón se visualiza en una sección compacta con un ancho máximo del `30%` y centrada en pantalla.
 - **Grupo Asignaciones:** Agrupa las configuraciones vinculadas a este rubro (como "Asignaciones A3").
 
@@ -337,8 +337,17 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
 
 *Nota:* Los paneles de configuración que son independientes del archivo de liquidaciones unificadas (como Paletas de Colores, Efectores, Códigos de Guardias Críticas, SDYF y Asignaciones A3) cargan y son totalmente editables incluso si no se ha realizado ninguna conversión o importación de archivos de liquidación en el sistema.
 
-### 3.7 Regeneración Automática de Reportes Auxiliares
-El sistema cuenta con un mecanismo de limpieza en segundo plano que garantiza la precisión de los datos auditados. Al modificar y guardar cualquier parámetro desde la pantalla de Configuración del Sistema (tales como Mapeo de LD/GC, Efectores, Códigos e Importes, Fines de Semana y Feriados, o Asignaciones A3), el servidor ejecuta de forma silenciosa el borrado de las planillas auxiliares generadas previamente (`AuxGcNovedades.csv`, `AuxGCLiquidacion.csv` y `AuxResidentesLiquidacion.csv`). 
+### 3.7 Configuración de LD Efectores
+- **Función:** Permite la gestión (Alta, Baja, Modificación) del catálogo de efectores y servicios de Libre Disponibilidad, mapeando cada combinación de efector y servicio origen hacia su correspondiente efector destino normalizado (`NUEVO EFECTOR`).
+- **Archivo de Persistencia:** Los datos se almacenan en el archivo `LD_config_efectores.csv` dentro de la carpeta `configuracion_parametros/`, utilizando delimitador de punto y coma (`;`).
+  - **Preservación de Caracteres (UTF-8 con BOM):** Al igual que en la configuración de Códigos de Guardias Críticas, este archivo se procesa en codificación UTF-8 e incluye la marca de orden de bytes (`\uFEFF`) al inicio. Esto asegura la total preservación e integridad de caracteres especiales, tildes y eñes (por ejemplo, en palabras como "MÉDICO", "SECCIÓN", "Dirección de Enfermería", "Direc. Epidemiología" o "Auditoría"), evitando corrupciones o caracteres de reemplazo tanto en la web como al abrir o editar la planilla en Excel.
+- **Herramientas de la Interfaz:**
+  - **Buscador en tiempo real:** Permite filtrar instantáneamente entre los más de 1.600 registros por cualquier coincidencia en efector, servicio o nuevo efector.
+  - **Contador dinámico:** Muestra el número total de registros cargados y la cantidad de filas visibles coincidentes con la búsqueda.
+  - **Renderizado de alto rendimiento:** Optimizado con `DocumentFragment` y asignación directa de propiedades DOM para una carga inmediata y fluida sin congelamientos de interfaz.
+
+### 3.8 Regeneración Automática de Reportes Auxiliares
+El sistema cuenta con un mecanismo de limpieza en segundo plano que garantiza la precisión de los datos auditados. Al modificar y guardar cualquier parámetro desde la pantalla de Configuración del Sistema (tales como Mapeo de LD/GC, Efectores LD o GC, Códigos e Importes, Fines de Semana y Feriados, o Asignaciones A3), el servidor ejecuta de forma silenciosa el borrado de las planillas auxiliares generadas previamente (`AuxGcNovedades.csv`, `AuxGCLiquidacion.csv`, `AuxResidentesLiquidacion.csv`, etc.). 
 Esta acción asegura que, la próxima vez que el usuario consulte un reporte de control, el sistema no utilice archivos cacheados obsoletos, sino que recalcule y regenere estas planillas instantáneamente leyendo la configuración más reciente.
 
 ---

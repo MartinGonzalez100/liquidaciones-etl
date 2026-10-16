@@ -22,6 +22,7 @@ const CSV_UNIDOS_NOVEDADES_DIR = path.join(process.cwd(), 'csv-unidos-novedades'
 const CONFIG_DIR = path.join(process.cwd(), 'configuracion_parametros');
 const LD_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config.csv');
 const GC_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config.csv');
+const LD_EFECTORES_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config_efectores.csv');
 const GC_EFECTORES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_efectores.csv');
 const GC_CODIGOS_IMPORTES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_codigos_importes.csv');
 const GC_SDYF_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_sdyf.csv');
@@ -42,7 +43,8 @@ const upload = multer({ dest: 'uploads/' });
 
 // Middleware para servir archivos estáticos (la interfaz HTML)
 app.use(express.static(path.join(process.cwd(), 'public')));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 //----------------
 
@@ -705,6 +707,64 @@ app.get('/api/config/load-ld', (req, res) => {
         .on('data', (data) => results.push(data.columna))
         .on('end', () => res.json({ columns: results }))
         .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 3.1 Cargar configuración de LD Efectores
+app.get('/api/config/load-ld-efectores', (req, res) => {
+    if (!fs.existsSync(LD_EFECTORES_CONFIG_FILE)) {
+        try {
+            fs.writeFileSync(LD_EFECTORES_CONFIG_FILE, '\uFEFFEFECTOR;SERVICIO;NUEVO EFECTOR\n', 'utf8');
+        } catch (e) {
+            console.error('Error al inicializar LD_config_efectores.csv:', e);
+        }
+        return res.json([]);
+    }
+
+    let separator = ';';
+    try {
+        const firstLine = fs.readFileSync(LD_EFECTORES_CONFIG_FILE, 'utf8').split('\n')[0] || '';
+        if (firstLine.includes(';')) {
+            separator = ';';
+        } else if (firstLine.includes(',')) {
+            separator = ',';
+        }
+    } catch (e) {}
+
+    const results = [];
+    fs.createReadStream(LD_EFECTORES_CONFIG_FILE, { encoding: 'utf8' })
+        .pipe(csv({ separator: separator, mapHeaders: ({ header }) => header.trim().replace(/^\uFEFF/, '') }))
+        .on('data', (data) => {
+            const efector = (data['EFECTOR'] || data['EFECTORES'] || '').trim();
+            const servicio = (data['SERVICIO'] || data['SERVICIOS'] || '').trim();
+            const nuevoEfector = (data['NUEVO EFECTOR'] || data['NUEVOS EFECTORES'] || data['NUEVO_EFECTOR'] || '').trim();
+            
+            if (efector || servicio || nuevoEfector) {
+                results.push({ efector, servicio, nuevoEfector });
+            }
+        })
+        .on('end', () => res.json(results))
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 3.2 Guardar configuración de LD Efectores (ABM)
+app.post('/api/config/save-ld-efectores', (req, res) => {
+    const data = req.body;
+    if (!Array.isArray(data)) return res.status(400).json({ error: 'Formato inválido. Debe ser un array.' });
+
+    try {
+        let content = '\uFEFFEFECTOR;SERVICIO;NUEVO EFECTOR\n';
+        data.forEach(row => {
+            const efector = (row.efector || '').replace(/;/g, ' ').replace(/\r?\n/g, ' ').trim();
+            const servicio = (row.servicio || '').replace(/;/g, ' ').replace(/\r?\n/g, ' ').trim();
+            const nuevoEfector = (row.nuevoEfector || '').replace(/;/g, ' ').replace(/\r?\n/g, ' ').trim();
+            content += `${efector};${servicio};${nuevoEfector}\n`;
+        });
+        fs.writeFileSync(LD_EFECTORES_CONFIG_FILE, content, 'utf8');
+        limpiarPlanillasAuxiliares();
+        res.json({ success: true, message: 'Configuración de LD Efectores guardada correctamente' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // 4. Guardar configuración de Guardias Críticas

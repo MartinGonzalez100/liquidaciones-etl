@@ -2050,6 +2050,49 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Acordeón: Efectores Libre Disponibilidad -->
+                    <div class="config-accordion-item" id="accordion-ld-efectores">
+                        <div class="config-accordion-header" onclick="toggleConfigAccordion('accordion-ld-efectores')">
+                            <h2><i class="fas fa-hospital" style="margin-right: 10px; color: #5c67f2;"></i> Configuracion de LD Efectores <span id="ld-efectores-count" style="font-size: 14px; font-weight: normal; color: #666; margin-left: 10px;"></span></h2>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="config-accordion-content">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap;">
+                                <p style="color: #666; margin: 0;">Detalle de equivalencias de efectores para Libre Disponibilidad. Puede agregar, editar o eliminar filas:</p>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="text" id="ld-efectores-search" placeholder="Buscar efector o servicio..." oninput="filterLDEfectores()" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; width: 260px;">
+                                    <button onclick="document.getElementById('ld-efectores-search').value=''; filterLDEfectores();" style="padding: 6px 12px; background: #95a5a6; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 12px;" title="Limpiar filtro"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                            <div style="overflow-x: auto; margin-bottom: 20px; max-height: 600px;">
+                                <table id="table-ld-efectores" style="width: 100%; border-collapse: collapse;">
+                                    <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                                        <tr style="background: #f8f9fa; border-bottom: 2px solid #5c67f2;">
+                                            <th style="padding: 10px; text-align: left;">EFECTOR (Origen)</th>
+                                            <th style="padding: 10px; text-align: left;">SERVICIO (Origen)</th>
+                                            <th style="padding: 10px; text-align: left;">NUEVO EFECTOR (Destino)</th>
+                                            <th style="padding: 10px; text-align: center; width: 50px;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ld-efectores-list">
+                                        <!-- Se llenará dinámicamente -->
+                                        <tr><td colspan="4" style="text-align: center; padding: 20px; color: #999;">Cargando efectores...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                                <button onclick="addLDEfectorRow()" style="background-color: #5c67f2;">
+                                    <i class="fas fa-plus"></i> Agregar Fila
+                                </button>
+                                <div>
+                                    <button id="btn-save-ld-efectores" onclick="saveLDEfectoresConfig()" style="background-color: #27ae60;">
+                                        <i class="fas fa-save"></i> Guardar Efectores
+                                    </button>
+                                    <span id="save-status-ld-efectores" style="margin-left: 15px; font-size: 14px;"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -4087,6 +4130,7 @@
                 document.getElementById('btn-save-gc').onclick = saveGCConfig;
 
                 // 6. Cargar configuración de Efectores y SDYF
+                loadLDEfectoresConfig();
                 loadGCEfectoresConfig();
                 loadGCCodigosEfectoresConfig();
                 loadGCSdyfConfig();
@@ -4158,6 +4202,160 @@
             } catch (err) {
                 statusLabel.innerText = "❌ Error: " + err.message;
                 statusLabel.style.color = "#e74c3c";
+            }
+        }
+
+        async function loadLDEfectoresConfig() {
+            const container = document.getElementById('ld-efectores-list');
+            const countLabel = document.getElementById('ld-efectores-count');
+            if (!container) return;
+            container.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #999;">Cargando efectores...</td></tr>';
+            if (countLabel) countLabel.innerText = '';
+
+            try {
+                const response = await fetch('/api/config/load-ld-efectores');
+                const data = await response.json();
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    container.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #999;">No hay efectores configurados.</td></tr>';
+                    if (countLabel) countLabel.innerText = '(0 registros)';
+                    return;
+                }
+
+                container.innerHTML = '';
+                const fragment = document.createDocumentFragment();
+                data.forEach(row => {
+                    const tr = createLDEfectorRowElement(row.efector, row.servicio, row.nuevoEfector);
+                    fragment.appendChild(tr);
+                });
+                container.appendChild(fragment);
+
+                if (countLabel) {
+                    countLabel.innerText = `(${data.length} registros)`;
+                }
+
+                filterLDEfectores();
+            } catch (err) {
+                container.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: #e74c3c;">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function createLDEfectorRowElement(efector = '', servicio = '', nuevoEfector = '') {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #eee';
+            tr.innerHTML = `
+                <td style="padding: 5px;"><input type="text" class="ld-efector-input" placeholder="Efector origen" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
+                <td style="padding: 5px;"><input type="text" class="ld-servicio-input" placeholder="Servicio origen" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
+                <td style="padding: 5px;"><input type="text" class="ld-nuevo-efector-input" placeholder="Nuevo efector destino" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></td>
+                <td style="padding: 5px; text-align: center;">
+                    <button onclick="this.closest('tr').remove(); updateLDEfectoresCount();" style="background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tr.querySelector('.ld-efector-input').value = efector || '';
+            tr.querySelector('.ld-servicio-input').value = servicio || '';
+            tr.querySelector('.ld-nuevo-efector-input').value = nuevoEfector || '';
+            return tr;
+        }
+
+        function addLDEfectorRow(efector = '', servicio = '', nuevoEfector = '') {
+            const container = document.getElementById('ld-efectores-list');
+            if (!container) return;
+            
+            if (container.querySelector('td[colspan="4"]')) {
+                container.innerHTML = '';
+            }
+
+            const tr = createLDEfectorRowElement(efector, servicio, nuevoEfector);
+            container.insertBefore(tr, container.firstChild);
+            updateLDEfectoresCount();
+            
+            const searchInput = document.getElementById('ld-efectores-search');
+            if (searchInput && searchInput.value) {
+                searchInput.value = '';
+                filterLDEfectores();
+            }
+            tr.querySelector('.ld-efector-input')?.focus();
+        }
+
+        function updateLDEfectoresCount() {
+            const countLabel = document.getElementById('ld-efectores-count');
+            if (!countLabel) return;
+            const rows = document.querySelectorAll('#ld-efectores-list tr');
+            const total = Array.from(rows).filter(r => !r.querySelector('td[colspan]')).length;
+            countLabel.innerText = `(${total} registros)`;
+        }
+
+        function filterLDEfectores() {
+            const term = (document.getElementById('ld-efectores-search')?.value || '').toLowerCase().trim();
+            const rows = document.querySelectorAll('#ld-efectores-list tr');
+            let visibleCount = 0;
+            let total = 0;
+            rows.forEach(tr => {
+                if (tr.querySelector('td[colspan]')) return;
+                total++;
+                const efector = (tr.querySelector('.ld-efector-input')?.value || '').toLowerCase();
+                const servicio = (tr.querySelector('.ld-servicio-input')?.value || '').toLowerCase();
+                const nuevo = (tr.querySelector('.ld-nuevo-efector-input')?.value || '').toLowerCase();
+                if (!term || efector.includes(term) || servicio.includes(term) || nuevo.includes(term)) {
+                    tr.style.display = '';
+                    visibleCount++;
+                } else {
+                    tr.style.display = 'none';
+                }
+            });
+            const countLabel = document.getElementById('ld-efectores-count');
+            if (countLabel && term) {
+                countLabel.innerText = `(${visibleCount} de ${total} visibles)`;
+            } else if (countLabel) {
+                countLabel.innerText = `(${total} registros)`;
+            }
+        }
+
+        async function saveLDEfectoresConfig() {
+            const rows = document.querySelectorAll('#ld-efectores-list tr');
+            const data = [];
+            const statusLabel = document.getElementById('save-status-ld-efectores');
+
+            rows.forEach(row => {
+                if (row.querySelector('td[colspan]')) return;
+                const efector = row.querySelector('.ld-efector-input')?.value.trim();
+                const servicio = row.querySelector('.ld-servicio-input')?.value.trim();
+                const nuevoEfector = row.querySelector('.ld-nuevo-efector-input')?.value.trim();
+                if (efector || servicio || nuevoEfector) {
+                    data.push({ efector, servicio, nuevoEfector });
+                }
+            });
+
+            if (statusLabel) {
+                statusLabel.innerText = "Guardando...";
+                statusLabel.style.color = "#666";
+            }
+
+            try {
+                const response = await fetch('/api/config/save-ld-efectores', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    if (statusLabel) {
+                        statusLabel.innerText = "✅ " + result.message;
+                        statusLabel.style.color = "#27ae60";
+                        setTimeout(() => { statusLabel.innerText = ""; }, 3000);
+                    }
+                    updateLDEfectoresCount();
+                } else {
+                    throw new Error(result.error || "Fallo desconocido");
+                }
+            } catch (err) {
+                if (statusLabel) {
+                    statusLabel.innerText = "❌ Error: " + err.message;
+                    statusLabel.style.color = "#e74c3c";
+                }
             }
         }
 
@@ -5305,6 +5503,7 @@
                 { id: "menu-configuracion", label: "Configuración de Parámetros (General)", elementId: "menu-configuracion" },
                 { id: "config-theme", label: "Sub-Menú: Paletas de Colores", elementId: "accordion-theme" },
                 { id: "config-ld", label: "Sub-Menú: Libres Disponibilidad", elementId: "accordion-ld" },
+                { id: "config-ld-efectores", label: "Sub-Menú: LD Efectores", elementId: "accordion-ld-efectores" },
                 { id: "config-gc", label: "Sub-Menú: Guardias Críticas", elementId: "accordion-gc" },
                 { id: "config-gc-efectores", label: "Sub-Menú: GC Efectores", elementId: "accordion-gc-efectores" },
                 { id: "config-gc-codigos-efectores", label: "Sub-Menú: GC Códigos Importes", elementId: "accordion-gc-codigos-efectores" },
@@ -5342,7 +5541,7 @@
             // 2. Fallback para usuarios existentes: Si el usuario tiene 'menu-configuracion'
             // pero no cuenta con NINGUNO de los 7 sub-permisos en su array de permisos,
             // se asume que es un usuario previo a este cambio y se le habilitan todos los submenús por defecto.
-            const subConfigPerms = ['config-theme', 'config-ld', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'];
+            const subConfigPerms = ['config-theme', 'config-ld', 'config-ld-efectores', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'];
             const hasAnySpecific = subConfigPerms.some(p => userPermissions.includes(p));
             if (userPermissions.includes('menu-configuracion') && !hasAnySpecific) {
                 return true;
@@ -5376,7 +5575,7 @@
             if (sectionId === 'conversion-form') return hasPermission(user.permissions, 'conversion-form', null);
             if (sectionId === 'gestion-usuarios-view') return user.role === 'programador';
             if (sectionId === 'configuracion-view') {
-                const subConfigPerms = ['config-theme', 'config-ld', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'];
+                const subConfigPerms = ['config-theme', 'config-ld', 'config-ld-efectores', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'];
                 const hasAnySubPerm = subConfigPerms.some(p => hasConfigPermission(user.permissions, p));
                 return hasPermission(user.permissions, 'menu-configuracion', null) || hasAnySubPerm;
             }
@@ -5572,7 +5771,7 @@
                     let allowed = false;
                     if (header) {
                         if (header.id === 'menu-configuracion') {
-                            const subConfigPerms = ['config-theme', 'config-ld', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'];
+                            const subConfigPerms = ['config-theme', 'config-ld', 'config-ld-efectores', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'];
                             const hasAnySubPerm = subConfigPerms.some(p => hasConfigPermission(user.permissions, p));
                             allowed = hasPermission(user.permissions, header.id, null) || hasAnySubPerm;
                         } else {
@@ -5607,6 +5806,7 @@
             const configAccordions = [
                 { permission: 'config-theme', elementId: 'accordion-theme' },
                 { permission: 'config-ld', elementId: 'accordion-ld' },
+                { permission: 'config-ld-efectores', elementId: 'accordion-ld-efectores' },
                 { permission: 'config-gc', elementId: 'accordion-gc' },
                 { permission: 'config-gc-efectores', elementId: 'accordion-gc-efectores' },
                 { permission: 'config-gc-codigos-efectores', elementId: 'accordion-gc-codigos-efectores' },
@@ -5628,7 +5828,7 @@
             // Mostrar/ocultar contenedores grupales basados en permisos de sus hijos
             const groupLd = document.getElementById('group-ld');
             if (groupLd) {
-                const isLdVisible = bothLotesExist && hasConfigPermission(user.permissions, 'config-ld');
+                const isLdVisible = bothLotesExist && ['config-ld', 'config-ld-efectores'].some(p => hasConfigPermission(user.permissions, p));
                 groupLd.style.display = isLdVisible ? 'block' : 'none';
             }
 
@@ -5964,7 +6164,7 @@
             // Rellenar checkboxes
             const checkboxes = document.querySelectorAll('.permission-checkbox');
             checkboxes.forEach(cb => {
-                const isConfigSubmenu = ['config-theme', 'config-ld', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'].includes(cb.value);
+                const isConfigSubmenu = ['config-theme', 'config-ld', 'config-ld-efectores', 'config-gc', 'config-gc-efectores', 'config-gc-codigos-efectores', 'config-gc-sdyf', 'config-asig-a3'].includes(cb.value);
                 if (isConfigSubmenu) {
                     cb.checked = user.permissions.includes('all') || hasConfigPermission(user.permissions, cb.value);
                 } else {
