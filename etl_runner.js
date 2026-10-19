@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { convertirExcelACsv } = require('./services/conversor');
+const { convertirExcelACsv, quitarFiltrosExcel, comprobarSinFiltrosExcel } = require('./services/conversor');
 const { limpiarColumnasCsv } = require('./services/limpiador');
 const { unirCsv } = require('./services/unificador');
 const { cargarCsvAPostgres } = require('./services/cargador');
@@ -52,6 +52,21 @@ async function ejecutarProcesoETL(excelFilesToProcess) {
             return { success: false, message: "No se encontraron archivos de Excel válidos para procesar." };
         }
 
+        // 0. REMOCIÓN Y COMPROBACIÓN DE FILTROS EN EXCEL (carpeta excel-a-convertir)
+        const { desfiltrados } = quitarFiltrosExcel(excelFilesToProcess);
+        const comprobacionFiltros = comprobarSinFiltrosExcel(excelFilesToProcess);
+
+        if (!comprobacionFiltros.ok) {
+            return {
+                success: false,
+                message: `El proceso se detuvo: los siguientes archivos Excel aún contienen filtros activos que no pudieron quitarse: ${comprobacionFiltros.archivosConFiltro.join(', ')}.`
+            };
+        }
+
+        const detalleFiltrosMsg = desfiltrados.length > 0
+            ? ` (Se quitaron filtros en ${desfiltrados.length} archivo(s) y se comprobó que ningún Excel tenga filtros activos).`
+            : ` (Comprobado: ningún archivo Excel posee filtros activos).`;
+
         // 1. CONVERSIÓN Y LIMPIEZA INDIVIDUAL (por cada archivo)
         for (const excelFile of excelFilesToProcess) {
             console.log(`\n[PROCESANDO] Archivo: ${excelFile}`);
@@ -74,12 +89,12 @@ async function ejecutarProcesoETL(excelFilesToProcess) {
         if (CARGA_ACTIVADA) {
             console.log(`\n[CARGA] ⚠️ La carga a PostgreSQL está activada.`);
             await cargarCsvAPostgres(finalCsvFile);
-            return { success: true, message: `Proceso completado. Datos cargados en PostgreSQL.` };
+            return { success: true, message: `Proceso completado. Datos cargados en PostgreSQL.${detalleFiltrosMsg}` };
         } else {
             console.log(`\n[CARGA] 🛑 La carga a PostgreSQL está DESACTIVADA (Modo Auditoría).`);
             return {
                 success: true,
-                message: `Proceso completado en Modo Auditoría. Revisa el archivo '${finalCsvFile}' en la carpeta 'csv-unidos'.`,
+                message: `Proceso completado en Modo Auditoría. Revisa el archivo '${finalCsvFile}' en la carpeta 'csv-unidos'.${detalleFiltrosMsg}`,
                 file: finalCsvFile
             };
         }

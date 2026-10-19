@@ -1748,7 +1748,7 @@ app.post('/api/process', upload.array('excelFiles'), async (req, res) => {
         if (processMode === 'default') {
             // Modo por defecto: Leer el contenido de la carpeta 'excel-a-convertir'
             excelFilesToProcess = fs.readdirSync(EXCEL_DIR)
-                .filter(file => file.match(/\.(xlsx|xls)$/i));
+                .filter(file => file.match(/\.(xlsx|xls)$/i) && !file.startsWith('~$'));
 
             if (excelFilesToProcess.length === 0) {
                 return res.status(400).json({ success: false, message: "No se encontraron archivos en la carpeta por defecto." });
