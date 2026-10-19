@@ -342,8 +342,8 @@ app.get('/api/calculo-ley100', (req, res) => {
             const planta = row.PLANTA ? row.PLANTA.trim() : '';
             if (planta === 'Reemplazante no permanente-LD' || planta === 'Reemplazante no permanente') return;
 
-            const ap100 = parseFloat(row.AP100_090_54);
-            if (isNaN(ap100) || ap100 > 0) return;
+            const ap100 = parseFloat(row.AP100_090_54) || 0; const app55 = parseFloat(row.APP_090_55) || 0;
+            if (ap100 !== 0 || app55 !== 0) return;
 
             const antiguedadRow = parseInt(row.ANTIGUEDAD, 10) || 0;
             if (antiguedadRow < minAntiguedad) return;

@@ -176,7 +176,7 @@ Este reporte, accesible desde el submenú de Novedades Residentes, permite visua
   1. El empleado corresponde a las zonas contables `A1`, `A26` o `A27` (`Area2`).
   2. El periodo imputado debe coincidir exactamente con el periodo liquidado (`PERIODO_IMPUTADO == PERIODO_LIQUIDADO`).
   3. No debe pertenecer a plantas precarias de reemplazos (`PLANTA` distinta de `Reemplazante no permanente` y `Reemplazante no permanente-LD`).
-  4. **No** debe estar cobrando la Ley 100% actualmente (el importe en `AP100_090_54` debe ser igual a cero o nulo/vacío).
+  4. **No** debe estar cobrando la Ley 100% actualmente (el importe en `AP100_090_54` y `APP_090_55` debe ser igual a cero o nulo/vacío).
   5. Su antigüedad calculada (`ANTIGUEDAD`) debe ser mayor o igual al parámetro numérico de Antigüedad mínima (ej. 30 años).
   6. La edad se calcula dinámicamente frente a la "Fecha de Cálculo" seleccionada. Si es mujer (`Sexo = F`), debe alcanzar o superar la `Edad F` ingresada (típicamente 60). Si es hombre (`Sexo = M`), debe alcanzar o superar la `Edad M` ingresada (típicamente 65).
   7. Se aplica una deduplicación, de forma que si un agente tiene múltiples cargos, solo se proyecta el de mayor `NUMERO_CARGO`.
