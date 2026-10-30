@@ -1242,16 +1242,9 @@ async function ensureAuxLDLiquidacionFiles() {
     }
 
     // Generar codigos
-    const codigosResults = [];
-    let currentDoc = null;
-    let numero_ld_agente = 1;
+    const codigosTemp = [];
 
     for (const row of results) {
-        if (row.NRO_DOCUMENTO !== currentDoc) {
-            currentDoc = row.NRO_DOCUMENTO;
-            numero_ld_agente = 1;
-        }
-
         let numero_Copia = 1;
         for (const col of Object.keys(row)) {
             if (col.includes('003_') || col.includes('031') || col.includes('032') || col.includes('033')) {
@@ -1280,25 +1273,51 @@ async function ensureAuxLDLiquidacionFiles() {
                 if (val > 0) {
                     const trimmedCol = col.replace(/\s+/g, '');
                     const last6 = trimmedCol.slice(-6).replace(/_/g, '-');
-                    
-                    const docStr = String(row.NRO_DOCUMENTO || '');
-                    const orgStr = String(row.ORGANISMO || '');
-                    const clave = `${docStr}${last6}${orgStr}${numero_ld_agente}`;
 
                     const newRow = {
-                        clave: clave,
                         Codigo_Optimo: last6,
                         Importe_Optimo: Number(val.toFixed(2)),
                         numero_Copia: numero_Copia,
-                        numero_ld_agente: numero_ld_agente,
                         ...row
                     };
-                    codigosResults.push(newRow);
+                    codigosTemp.push(newRow);
                     numero_Copia++;
-                    numero_ld_agente++;
                 }
             }
         }
+    }
+
+    // Ordenar numéricamente por NRO_DOCUMENTO (ASC) y, como segundo criterio, por Codigo_Optimo (ASC)
+    codigosTemp.sort((a, b) => {
+        const docA = parseInt(a.NRO_DOCUMENTO, 10) || 0;
+        const docB = parseInt(b.NRO_DOCUMENTO, 10) || 0;
+        if (docA !== docB) {
+            return docA - docB;
+        }
+        const codA = String(a.Codigo_Optimo || '');
+        const codB = String(b.Codigo_Optimo || '');
+        return codA.localeCompare(codB);
+    });
+
+    // Asignar numero_ld_agente y conformar clave
+    const codigosResults = [];
+    let currentDoc = null;
+    let numero_ld_agente = 1;
+
+    for (const r of codigosTemp) {
+        const docStr = String(r.NRO_DOCUMENTO || '').trim();
+        if (docStr === currentDoc) {
+            numero_ld_agente++;
+        } else {
+            currentDoc = docStr;
+            numero_ld_agente = 1;
+        }
+        r.numero_ld_agente = numero_ld_agente;
+
+        const orgStr = String(r.ORGANISMO || '').trim();
+        r.clave = `${docStr}${r.Codigo_Optimo}${orgStr}${numero_ld_agente}`;
+
+        codigosResults.push(r);
     }
     
     const headersCodigos = ['clave', 'Codigo_Optimo', 'Importe_Optimo', 'numero_Copia', 'numero_ld_agente', ...headersAuxLD];

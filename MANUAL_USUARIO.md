@@ -125,6 +125,7 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
   - `Codigo_Optimo`: Extraído del nombre de la columna.
   - `Importe_Optimo`: Valor numérico del importe a liquidar, formateado y almacenado con un máximo de dos decimales para garantizar su correcto ordenamiento matemático en las tablas visualizadas.
   - `numero_Copia`: Contador del código dentro del mismo registro original.
+- **Regla de Ordenamiento Previo:** Antes de calcular el contador de `numero_ld_agente`, el conjunto de datos se ordena numéricamente de forma ascendente por `NRO_DOCUMENTO` (ASC) y, como segundo criterio, por `Codigo_Optimo` (ASC), garantizando consistencia determinística para cruces de auditoría.
   - `numero_ld_agente`: Contador general de códigos para un mismo agente (`NRO_DOCUMENTO`), que se incrementa de a 1 por cada registro generado y se reinicia al cambiar de documento.
 - **Excepciones de cálculo:**
   - Si la columna es `LIB_003_34`, se toma como `Importe_Optimo` la suma de `LIB_003_34` + `LIB_032_34`.
