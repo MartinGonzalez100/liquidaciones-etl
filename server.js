@@ -2215,7 +2215,6 @@ async function generateAuxLdNovedades() {
         r.NUMERO_LD_AGENTE = agenteCounter;
 
         const efStr = String(r['EFECTOR'] || '').trim();
-        r.CLAVE_LD = `${dniStr}${r.CODIGO_OPTIMO}${efStr}${agenteCounter}`;
 
         // Asignar ORGANISMO buscando por EFECTOR en el mapa de configuración
         const org = efectoresMap.get(efStr)
@@ -2223,6 +2222,8 @@ async function generateAuxLdNovedades() {
             || efectoresMap.get(normalizeStr(efStr))
             || '';
         r.ORGANISMO = org;
+
+        r.CLAVE_LD = `${dniStr}${r.CODIGO_OPTIMO}${org}${agenteCounter}`;
     }
 
     const newHeadersPrefix = ['CLAVE_LD', 'CODIGO_OPTIMO', 'IMPORTE_OPTIMO', 'NUMERO_LD_AGENTE'];
