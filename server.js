@@ -2120,6 +2120,42 @@ async function generateAuxLdNovedades() {
 
     if (!fs.existsSync(ldCsvPath)) throw new Error('Archivo origen de Novedades LD (ld.csv) no encontrado');
 
+    // 1. Cargar configuración de efectores para mapear EFECTOR a ORGANISMO (NUEVO EFECTOR)
+    const configPath = fs.existsSync(LD_EFECTORES_CONFIG_FILE)
+        ? LD_EFECTORES_CONFIG_FILE
+        : (fs.existsSync(path.join(CONFIG_DIR, 'LD_config_efector.csv'))
+            ? path.join(CONFIG_DIR, 'LD_config_efector.csv')
+            : null);
+
+    const efectoresMap = new Map();
+    if (configPath && fs.existsSync(configPath)) {
+        let separator = ';';
+        try {
+            const firstLine = fs.readFileSync(configPath, 'utf8').split('\n')[0] || '';
+            if (firstLine.includes(';')) {
+                separator = ';';
+            } else if (firstLine.includes(',')) {
+                separator = ',';
+            }
+        } catch (e) {}
+
+        await new Promise((resolve, reject) => {
+            fs.createReadStream(configPath, { encoding: 'utf8' })
+                .pipe(csv({ separator: separator, mapHeaders: ({ header }) => header.trim().replace(/^\uFEFF/, '') }))
+                .on('data', (data) => {
+                    const efector = (data['EFECTOR'] || data['EFECTORES'] || '').trim();
+                    const nuevoEfector = (data['NUEVO EFECTOR'] || data['NUEVOS EFECTORES'] || data['NUEVO_EFECTOR'] || data['ORGANISMO'] || '').trim();
+                    if (efector) {
+                        efectoresMap.set(efector, nuevoEfector);
+                        efectoresMap.set(efector.toUpperCase(), nuevoEfector);
+                        efectoresMap.set(normalizeStr(efector), nuevoEfector);
+                    }
+                })
+                .on('end', resolve)
+                .on('error', reject);
+        });
+    }
+
     const rows = [];
     let origHeaders = [];
 
@@ -2164,7 +2200,7 @@ async function generateAuxLdNovedades() {
         return codA.localeCompare(codB);
     });
 
-    // Contador NUMERO_LD_AGENTE y armado de CLAVE_LD
+    // Contador NUMERO_LD_AGENTE, armado de CLAVE_LD y asignación de ORGANISMO
     let currentDni = null;
     let agenteCounter = 1;
 
@@ -2180,10 +2216,18 @@ async function generateAuxLdNovedades() {
 
         const efStr = String(r['EFECTOR'] || '').trim();
         r.CLAVE_LD = `${dniStr}${r.CODIGO_OPTIMO}${efStr}${agenteCounter}`;
+
+        // Asignar ORGANISMO buscando por EFECTOR en el mapa de configuración
+        const org = efectoresMap.get(efStr)
+            || efectoresMap.get(efStr.toUpperCase())
+            || efectoresMap.get(normalizeStr(efStr))
+            || '';
+        r.ORGANISMO = org;
     }
 
     const newHeadersPrefix = ['CLAVE_LD', 'CODIGO_OPTIMO', 'IMPORTE_OPTIMO', 'NUMERO_LD_AGENTE'];
-    const finalHeaders = [...newHeadersPrefix, ...origHeaders.filter(h => !newHeadersPrefix.includes(h))];
+    const origFiltered = origHeaders.filter(h => !newHeadersPrefix.includes(h) && h !== 'ORGANISMO');
+    const finalHeaders = [...newHeadersPrefix, ...origFiltered, 'ORGANISMO'];
 
     const csvContent = [
         finalHeaders.join(','),
@@ -2197,7 +2241,7 @@ async function generateAuxLdNovedades() {
     ].join('\n');
 
     fs.writeFileSync(auxPath, csvContent, 'utf8');
-    console.log(`[SERVER] 📊 AuxLdNovedades.csv generado con ${rows.length} registros.`);
+    console.log(`[SERVER] 📊 AuxLdNovedades.csv generado con ${rows.length} registros (columna ORGANISMO agregada al final).`);
     return true;
 }
 
@@ -2768,7 +2812,7 @@ app.get('/api/novedades/:tipo', async (req, res) => {
     }
     const csvPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, resolvedFile);
 
-    if (tipo.toLowerCase() === 'auxldnovedades' && !fs.existsSync(csvPath)) {
+    if ((tipo.toLowerCase() === 'auxldnovedades' || tipo.toLowerCase() === 'ld-con-clave') && !fs.existsSync(csvPath)) {
         try {
             await generateAuxLdNovedades();
         } catch (e) {

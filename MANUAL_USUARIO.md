@@ -230,11 +230,12 @@ Este reporte, accesible desde el submenú de Novedades Residentes, permite visua
 #### Novedades LD con Clave
 - (Submenú de Novedades LD) Muestra y expone la planilla auxiliar con clave generada a partir de las novedades de Libre Disponibilidad (`AuxLdNovedades.csv`).
 - Expone y genera físicamente el archivo auxiliar consolidado `AuxLdNovedades.csv` dentro de la carpeta `csv-unidos-novedades/` a partir de `ld.csv`.
-- **Estructura y Nuevas Columnas (Orden de Dependencia):** Conserva todas las columnas del archivo original `ld.csv` incorporando al inicio cuatro columnas clave de control:
+- **Estructura y Nuevas Columnas (Orden de Dependencia):** Conserva todas las columnas del archivo original `ld.csv` incorporando al inicio cuatro columnas clave de control y una columna de homologación al final:
   - `CLAVE_LD`: Ubicada al inicio, conformada por la unión estricta sin espacios de `DNI`, `CODIGO_OPTIMO`, `EFECTOR` y `NUMERO_LD_AGENTE`.
   - `CODIGO_OPTIMO`: Derivado del valor de `TIPO LD`. Si posee una longitud de 5 caracteres se le añade 1 cero adelante (`0`), y si posee una longitud de 4 caracteres se le añaden 2 ceros adelante (`00`), estandarizando su longitud a 6 caracteres (ej. `003-38`, `032-95`).
   - `IMPORTE_OPTIMO`: Réplica directa del monto consignado en la columna `IMPORTE LD`.
   - `NUMERO_LD_AGENTE`: Contador general de códigos para un mismo agente (`DNI` / `NRO_DOCUMENTO`), que se incrementa correlativamente de a 1 por cada registro generado y se reinicia automáticamente en 1 al cambiar de documento.
+  - `ORGANISMO`: Ubicada al final de la estructura, extrae de manera óptima el valor homologado del efector a partir del cruce de `EFECTOR` contra el archivo `LD_config_efectores.csv` (columna `NUEVO EFECTOR`).
 - **Regla de Ordenamiento Previo:** Antes de calcular el contador de `NUMERO_LD_AGENTE` y conformar la `CLAVE_LD`, el conjunto de datos se ordena numéricamente de forma ascendente por `DNI` (ASC) y, como segundo criterio, por `CODIGO_OPTIMO` (ASC), garantizando consistencia determinística para cruces de auditoría.
 - **Filtros por Modalidad:** Al igual que en Novedades LD, la interfaz provee tres botones de filtrado rápido en la barra superior:
   - **Todos:** Muestra el universo completo de novedades con clave.
