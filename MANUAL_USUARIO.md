@@ -158,11 +158,12 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
      - Se recorre la lista ordenada controlando el cambio de documento (`currentDoc`):
        - Si el registro pertenece al mismo `NRO_DOCUMENTO`, el contador `numero_ld_agente` se incrementa en 1.
        - Si cambia el `NRO_DOCUMENTO`, el contador `numero_ld_agente` se reinicia en 1.
+     - **Asignación de `Codigo_para_clave`:** Se consulta la tabla de equivalencias de códigos normatizados (`LD_config_Conv_Codigo.csv`) buscando por `Codigo_Optimo` para asignar a cada registro su respectivo `Codigo_para_clave` normalizado.
      - **Construcción de la Llave Única:** Se conforma la columna `clave` concatenando sin espacios:
        `clave = NRO_DOCUMENTO + Codigo_Optimo + ORGANISMO + numero_ld_agente`
 
   6. **Estructuración y Persistencia Final:**
-     - Se colocan al inicio las cinco nuevas columnas de control (`clave`, `Codigo_Optimo`, `Importe_Optimo`, `numero_Copia`, `numero_ld_agente`) seguidas de todas las columnas provenientes de `AuxLDLiquidacion.csv`, y se guarda físicamente el archivo `csv-unidos/AuxLDLiquidacionCodigos.csv`.
+     - Se colocan al inicio las seis columnas de control (`clave`, `Codigo_Optimo`, `Importe_Optimo`, `numero_Copia`, `numero_ld_agente`, `Codigo_para_clave`) seguidas de todas las columnas provenientes de `AuxLDLiquidacion.csv`, y se guarda físicamente el archivo `csv-unidos/AuxLDLiquidacionCodigos.csv`.
 
 #### GC Liquidación
 - Similar a LD, el sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Guardias Críticas" durante la pestaña de Configuración e integrarla al cálculo final.
@@ -343,7 +344,7 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
 1. **Reportes Específicos:** Los submenús "LD Liquidación" y "GC Liquidación" solo filtran registros que tengan valores distintos de cero en las columnas mapeadas.
 2. **Generación de Auxiliares de Libre Disponibilidad:** A partir de las columnas configuradas en `LD_config.csv`, el sistema genera automáticamente:
    - `AuxLDLiquidacion.csv`: Filtra y proyecta las filas de liquidación que poseen valores en los conceptos de LD mapeados.
-   - `AuxLDLiquidacionCodigos.csv`: Desglosa cada concepto contable de LD con importe (`003_`, `031`, `032`, `033`) en registros individuales por código. En este paso se deriva `Codigo_Optimo` extrayendo los últimos 6 caracteres formateados de la columna (ej. `003-34`, `032-95`), se aplican las sumas consolidadas en excepciones (`LIB_003_34` + `LIB_032_34` y `LIB_031_34` + `LIB_033_34`) y se arma la `clave` determinística para auditoría.
+   - `AuxLDLiquidacionCodigos.csv`: Desglosa cada concepto contable de LD con importe (`003_`, `031`, `032`, `033`) en registros individuales por código. En este paso se deriva `Codigo_Optimo` extrayendo los últimos 6 caracteres formateados de la columna (ej. `003-34`, `032-95`), se aplican las sumas consolidadas en excepciones (`LIB_003_34` + `LIB_032_34` y `LIB_031_34` + `LIB_033_34`), se asigna `Codigo_para_clave` a partir de `LD_config_Conv_Codigo.csv` y se arma la `clave` determinística para auditoría.
 3. **Cálculo de Control GC:** La columna `SUMA_GC` de la tabla auxiliar `AuxGCLiquidacion.csv` se calcula sumando únicamente las columnas mapeadas como GC.
 4. **Dashboards:** Los gráficos de sectores (Tortas/Donuts) de LD y GC en el Informe de Liquidación se alimentan directamente de estos mapeos.
 5. **Resumen de Gestión:** Las hojas de cálculo de áreas inyectan estos montos si están configurados.

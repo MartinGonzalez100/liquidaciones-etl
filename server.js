@@ -672,7 +672,9 @@ function limpiarPlanillasAuxiliares() {
             path.join(CSV_UNIDOS_DIR, 'AuxGCLiquidacion.csv'),
             path.join(CSV_UNIDOS_DIR, 'AuxResidentesLiquidacion.csv'),
             path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxLDNovedadesPorImporte.csv'),
-            path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxLdNovedades.csv')
+            path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxLdNovedades.csv'),
+            path.join(CSV_UNIDOS_DIR, 'AuxLDLiquidacionCodigos.csv'),
+            path.join(CSV_UNIDOS_DIR, 'AuxLDLiquidacion.csv')
         ];
         archivos.forEach(p => {
             if (fs.existsSync(p)) fs.unlinkSync(p);
@@ -1369,6 +1371,32 @@ async function ensureAuxLDLiquidacionFiles() {
         return codA.localeCompare(codB);
     });
 
+    // Cargar mapa de Códigos Normatizados para obtener Codigo_para_clave
+    const convCodigoMap = new Map();
+    if (fs.existsSync(LD_CONV_CODIGO_CONFIG_FILE)) {
+        let separator = ';';
+        try {
+            const firstLine = fs.readFileSync(LD_CONV_CODIGO_CONFIG_FILE, 'utf8').split('\n')[0] || '';
+            if (firstLine.includes(';')) separator = ';';
+            else if (firstLine.includes(',')) separator = ',';
+        } catch (e) {}
+
+        await new Promise((resolve, reject) => {
+            fs.createReadStream(LD_CONV_CODIGO_CONFIG_FILE, { encoding: 'utf8' })
+                .pipe(csv({ separator: separator, mapHeaders: ({ header }) => header.trim().replace(/^\uFEFF/, '') }))
+                .on('data', (data) => {
+                    const codOpt = (data['Codigo Optimo'] || data['CODIGO OPTIMO'] || data['codigo_optimo'] || data['CODIGO_OPTIMO'] || '').trim();
+                    const codClave = (data['codigo_para_clave'] || data['CODIGO_PARA_CLAVE'] || data['CODIGO PARA CLAVE'] || data['Codigo Para Clave'] || '').trim();
+                    if (codOpt) {
+                        convCodigoMap.set(codOpt, codClave);
+                        convCodigoMap.set(codOpt.toUpperCase(), codClave);
+                    }
+                })
+                .on('end', resolve)
+                .on('error', reject);
+        });
+    }
+
     // Asignar numero_ld_agente y conformar clave
     const codigosResults = [];
     let currentDoc = null;
@@ -1384,13 +1412,17 @@ async function ensureAuxLDLiquidacionFiles() {
         }
         r.numero_ld_agente = numero_ld_agente;
 
+        const codOptStr = String(r.Codigo_Optimo || '').trim();
+        const codParaClave = convCodigoMap.get(codOptStr) || convCodigoMap.get(codOptStr.toUpperCase()) || '';
+        r.Codigo_para_clave = codParaClave;
+
         const orgStr = String(r.ORGANISMO || '').trim();
         r.clave = `${docStr}${r.Codigo_Optimo}${orgStr}${numero_ld_agente}`;
 
         codigosResults.push(r);
     }
     
-    const headersCodigos = ['clave', 'Codigo_Optimo', 'Importe_Optimo', 'numero_Copia', 'numero_ld_agente', ...headersAuxLD];
+    const headersCodigos = ['clave', 'Codigo_Optimo', 'Importe_Optimo', 'numero_Copia', 'numero_ld_agente', 'Codigo_para_clave', ...headersAuxLD];
     if (codigosResults.length > 0 || headersCodigos.length > 5) {
         await writeCsvFile(auxLDCodigosPath, headersCodigos, codigosResults);
     } else {
