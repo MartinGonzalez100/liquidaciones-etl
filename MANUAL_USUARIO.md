@@ -310,7 +310,7 @@ Esta sección es el "cerebro" del sistema, donde se definen las reglas de negoci
 
 Toda la vista de esta sección posee un diseño centrado con un ancho máximo de `1000px` para optimizar su legibilidad en pantallas de gran tamaño. Visualmente, el sistema se organiza en la siguiente estructura:
 - **Configuración de Paletas de Colores:** Situada en el nivel superior de manera independiente.
-- **Grupo Libre Disponibilidad:** Agrupa las configuraciones que tienen relación con esta área contable ("Configuración de Libres Disponibilidad" y "Configuración de LD Efectores").
+- **Grupo Libre Disponibilidad:** Agrupa las configuraciones que tienen relación con esta área contable ("Configuración de Libres Disponibilidad", "Configuración de LD Efectores" y "Configuración de LD Códigos Normatizados").
 - **Grupo Guardias Críticas:** Agrupa todas las configuraciones específicas del módulo ("Configuración de Guardias Críticas", "Efectores Guardias Críticas", "Códigos Guardias Críticas Importes" y "Fines de Semana y Feriados"). Para facilitar la gestión del calendario de fines de semana y feriados (SDYF), el contenido interno de este sub-acordeón se visualiza en una sección compacta con un ancho máximo del `30%` y centrada en pantalla.
 - **Grupo Asignaciones:** Agrupa las configuraciones vinculadas a este rubro (como "Asignaciones A3").
 
@@ -375,7 +375,7 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
   - `PLANTA`: Categoría o régimen de contratación (Ej. Reemplazante no permanente).
   - `ORGANISMO`: Efector o entidad de prestación de servicio.
 
-*Nota:* Los paneles de configuración que son independientes del archivo de liquidaciones unificadas (como Paletas de Colores, Efectores, Códigos de Guardias Críticas, SDYF y Asignaciones A3) cargan y son totalmente editables incluso si no se ha realizado ninguna conversión o importación de archivos de liquidación en el sistema.
+*Nota:* Los paneles de configuración que son independientes del archivo de liquidaciones unificadas (como Paletas de Colores, Efectores, Códigos Normatizados, Códigos de Guardias Críticas, SDYF y Asignaciones A3) cargan y son totalmente editables incluso si no se ha realizado ninguna conversión o importación de archivos de liquidación en el sistema.
 
 ### 3.7 Configuración de LD Efectores
 - **Función:** Permite la gestión (Alta, Baja, Modificación) del catálogo de efectores y servicios de Libre Disponibilidad, mapeando cada combinación de efector y servicio origen hacia su correspondiente efector destino normalizado (`NUEVO EFECTOR`).
@@ -386,7 +386,18 @@ La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_con
   - **Contador dinámico:** Muestra el número total de registros cargados y la cantidad de filas visibles coincidentes con la búsqueda.
   - **Renderizado de alto rendimiento:** Optimizado con `DocumentFragment` y asignación directa de propiedades DOM para una carga inmediata y fluida sin congelamientos de interfaz.
 
-### 3.8 Regeneración Automática de Reportes Auxiliares
+### 3.8 Configuración de LD Códigos Normatizados
+- **Función:** Permite la gestión (Alta, Baja, Modificación) de la tabla de equivalencias de códigos normatizados para Libre Disponibilidad, mapeando cada código óptimo de origen (`Codigo Optimo`) hacia su código normalizado correspondiente utilizado para la clave de auditoría (`codigo_para_clave`).
+- **Archivo de Persistencia:** Los datos se almacenan en el archivo `LD_config_Conv_Codigo.csv` dentro de la carpeta `configuracion_parametros/`, utilizando delimitador de punto y coma (`;`).
+  - **Preservación de Caracteres (UTF-8 con BOM):** El archivo se procesa y persiste con codificación UTF-8 e incluye la marca de orden de bytes (`\uFEFF`) al inicio, garantizando máxima compatibilidad e integridad al visualizar o manipular la planilla tanto en la interfaz web como en programas externos como Microsoft Excel.
+- **Herramientas y Diseño de la Interfaz:**
+  - **Diseño Centrado y Compacto:** Para optimizar la ergonomía y legibilidad de esta tabla de códigos, el contenido del panel se presenta centralizado en pantalla con un ancho máximo del `35%` (`max-width: 35%`), adaptándose dinámicamente en pantallas más pequeñas.
+  - **Buscador en tiempo real:** Dispone de un campo de búsqueda reactiva con botón de limpieza rápida (`X`) que filtra al instante por código óptimo o por código destino para clave.
+  - **Contador dinámico:** Informa de manera inmediata la cantidad total de códigos configurados y la cantidad de filas visibles según el filtro aplicado.
+  - **Acciones de Edición (ABM):** Permite agregar nuevos registros con el botón *"Agregar Fila"*, modificar los valores directamente en las celdas de entrada y eliminar registros individuales mediante el botón de papelera, recalculando el contador automáticamente en pantalla.
+  - **Guardado y Notificación:** Al pulsar *"Guardar Códigos"*, el sistema persiste la tabla completa en el archivo CSV y notifica el resultado mediante un indicador de estado visual, disparando además el proceso de limpieza y regeneración de planillas auxiliares.
+
+### 3.9 Regeneración Automática de Reportes Auxiliares
 El sistema cuenta con un mecanismo de limpieza en segundo plano que garantiza la precisión de los datos auditados. Al modificar y guardar cualquier parámetro desde la pantalla de Configuración del Sistema (tales como Mapeo de LD/GC, Efectores LD o GC, Códigos e Importes, Fines de Semana y Feriados, o Asignaciones A3), el servidor ejecuta de forma silenciosa el borrado de las planillas auxiliares generadas previamente (`AuxGcNovedades.csv`, `AuxGCLiquidacion.csv`, `AuxResidentesLiquidacion.csv`, etc.). 
 Esta acción asegura que, la próxima vez que el usuario consulte un reporte de control, el sistema no utilice archivos cacheados obsoletos, sino que recalcule y regenere estas planillas instantáneamente leyendo la configuración más reciente.
 
@@ -421,7 +432,7 @@ El usuario con rol de **Programador** dispone de una sección dedicada accesible
 - **Registrar Nuevo Usuario:** Formulario interactivo que permite añadir un nuevo usuario ingresando su nombre, contraseña, rol y seleccionando mediante casillas de verificación las pantallas específicas del sistema a las que tendrá autorización.
 - **Editar Usuario Existente:** Permite modificar la contraseña, cambiar el rol asignado y reconfigurar en tiempo real las pantallas autorizadas.
 - **Eliminar Usuario:** Permite remover definitivamente una cuenta de usuario del sistema (a excepción de la cuenta raíz `progra`).
-- **Control Granular de Configuración:** Permite habilitar o deshabilitar de forma independiente cada uno de los 7 submenús (acordeones) de la sección de Configuración de Parámetros. Si el usuario cuenta con el permiso general de Configuración o es una cuenta antigua (sin sub-permisos definidos en su registro), dispondrá de acceso completo por defecto hasta que se restrinja selectivamente.
+- **Control Granular de Configuración:** Permite habilitar o deshabilitar de forma independiente cada uno de los 8 submenús (acordeones) de la sección de Configuración de Parámetros. Si el usuario cuenta con el permiso general de Configuración o es una cuenta antigua (sin sub-permisos definidos en su registro), dispondrá de acceso completo por defecto hasta que se restrinja selectivamente.
 - **Persistencia de Datos:** Todos los usuarios, credenciales y permisos se guardan y persisten de manera estructurada en el archivo `usuarios.json` en la carpeta `configuracion_parametros/`.
 
 ### 4.4 Lógica de Permisos Dinámicos y Granularidad de Submenús

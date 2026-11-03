@@ -23,6 +23,7 @@ const CONFIG_DIR = path.join(process.cwd(), 'configuracion_parametros');
 const LD_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config.csv');
 const GC_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config.csv');
 const LD_EFECTORES_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config_efectores.csv');
+const LD_CONV_CODIGO_CONFIG_FILE = path.join(CONFIG_DIR, 'LD_config_Conv_Codigo.csv');
 const GC_EFECTORES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_efectores.csv');
 const GC_CODIGOS_IMPORTES_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_codigos_importes.csv');
 const GC_SDYF_CONFIG_FILE = path.join(CONFIG_DIR, 'GC_config_sdyf.csv');
@@ -762,6 +763,72 @@ app.post('/api/config/save-ld-efectores', (req, res) => {
         fs.writeFileSync(LD_EFECTORES_CONFIG_FILE, content, 'utf8');
         limpiarPlanillasAuxiliares();
         res.json({ success: true, message: 'Configuración de LD Efectores guardada correctamente' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 3.3 Cargar configuración de LD Códigos Normatizados
+app.get('/api/config/load-ld-conv-codigo', (req, res) => {
+    if (!fs.existsSync(LD_CONV_CODIGO_CONFIG_FILE)) {
+        try {
+            fs.writeFileSync(LD_CONV_CODIGO_CONFIG_FILE, '\uFEFFCodigo Optimo;codigo_para_clave\n', 'utf8');
+        } catch (e) {
+            console.error('Error al inicializar LD_config_Conv_Codigo.csv:', e);
+        }
+        return res.json([]);
+    }
+
+    let separator = ';';
+    try {
+        const firstLine = fs.readFileSync(LD_CONV_CODIGO_CONFIG_FILE, 'utf8').split('\n')[0] || '';
+        if (firstLine.includes(';')) {
+            separator = ';';
+        } else if (firstLine.includes(',')) {
+            separator = ',';
+        }
+    } catch (e) {}
+
+    const results = [];
+    const seen = new Set();
+    fs.createReadStream(LD_CONV_CODIGO_CONFIG_FILE, { encoding: 'utf8' })
+        .pipe(csv({ separator: separator, mapHeaders: ({ header }) => header.trim().replace(/^\uFEFF/, '') }))
+        .on('data', (data) => {
+            const codigoOptimo = (data['Codigo Optimo'] || data['CODIGO OPTIMO'] || data['codigo_optimo'] || data['CODIGO_OPTIMO'] || '').trim();
+            const codigoParaClave = (data['codigo_para_clave'] || data['CODIGO_PARA_CLAVE'] || data['CODIGO PARA CLAVE'] || data['Codigo Para Clave'] || '').trim();
+            
+            if (codigoOptimo || codigoParaClave) {
+                const key = `${codigoOptimo.toUpperCase()}|||${codigoParaClave.toUpperCase()}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    results.push({ codigoOptimo, codigoParaClave });
+                }
+            }
+        })
+        .on('end', () => {
+            results.sort((a, b) => (a.codigoOptimo || '').localeCompare(b.codigoOptimo || ''));
+            res.json(results);
+        })
+        .on('error', (err) => res.status(500).json({ error: err.message }));
+});
+
+// 3.4 Guardar configuración de LD Códigos Normatizados (ABM)
+app.post('/api/config/save-ld-conv-codigo', (req, res) => {
+    const data = req.body;
+    if (!Array.isArray(data)) return res.status(400).json({ error: 'Formato inválido. Debe ser un array.' });
+
+    try {
+        let content = '\uFEFFCodigo Optimo;codigo_para_clave\n';
+        data.forEach(row => {
+            const codigoOptimo = (row.codigoOptimo || '').replace(/;/g, ' ').replace(/\r?\n/g, ' ').trim();
+            const codigoParaClave = (row.codigoParaClave || '').replace(/;/g, ' ').replace(/\r?\n/g, ' ').trim();
+            if (codigoOptimo || codigoParaClave) {
+                content += `${codigoOptimo};${codigoParaClave}\n`;
+            }
+        });
+        fs.writeFileSync(LD_CONV_CODIGO_CONFIG_FILE, content, 'utf8');
+        limpiarPlanillasAuxiliares();
+        res.json({ success: true, message: 'Configuración de LD Códigos Normatizados guardada correctamente' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
