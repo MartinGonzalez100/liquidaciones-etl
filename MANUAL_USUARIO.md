@@ -116,21 +116,53 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
 - Utiliza el filtro que extrae aquellos empleados cuya `PLANTA` corresponda a reemplazos (ej: `Reemplazante no permanente` o `Reemplazante no permanente-LD`), agrupándolos por Nivel Educativo y Organismo/Efector.
 
 #### LD Liquidación
-- Utiliza combinaciones configurables. El sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Libre Disponibilidad" durante la pestaña de Configuración e integrarla al cálculo final. Genera automáticamente de forma física el archivo `AuxLDLiquidacion.csv` ordenado numéricamente por documento y período de liquidación si no existe.
+- Utiliza combinaciones configurables. El sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Libre Disponibilidad" durante la pestaña de Configuración (`LD_config.csv`) para integrarlas al cálculo final, filtrando aquellos agentes que posean al menos un concepto con importe distinto de cero y proyectando los 33 campos base junto con los conceptos de LD. Genera automáticamente de forma física el archivo `AuxLDLiquidacion.csv` ordenado numéricamente por `NRO_DOCUMENTO` (ASC) y `PERIODO_IMPUTADO` (DESC) si no existe.
 
 ##### LD Codigos Separados
-- (Submenú de LD Liquidación) Genera y visualiza códigos separados provenientes de los datos de LD Liquidación. Detecta las columnas que contienen los códigos predefinidos (ej. 003, 031, 032, 033) con importes mayores a cero.
-- Por cada columna encontrada, crea un registro individual que incluye nuevas columnas de control:
-  - `clave`: Ubicada al inicio, conformada por la unión sin espacios de `NRO_DOCUMENTO`, `Codigo_Optimo`, `ORGANISMO` y `numero_ld_agente`.
-  - `Codigo_Optimo`: Extraído del nombre de la columna.
-  - `Importe_Optimo`: Valor numérico del importe a liquidar, formateado y almacenado con un máximo de dos decimales para garantizar su correcto ordenamiento matemático en las tablas visualizadas.
-  - `numero_Copia`: Contador del código dentro del mismo registro original.
-- **Regla de Ordenamiento Previo:** Antes de calcular el contador de `numero_ld_agente`, el conjunto de datos se ordena numéricamente de forma ascendente por `NRO_DOCUMENTO` (ASC) y, como segundo criterio, por `Codigo_Optimo` (ASC), garantizando consistencia determinística para cruces de auditoría.
-  - `numero_ld_agente`: Contador general de códigos para un mismo agente (`NRO_DOCUMENTO`), que se incrementa de a 1 por cada registro generado y se reinicia al cambiar de documento.
-- **Excepciones de cálculo:**
-  - Si la columna es `LIB_003_34`, se toma como `Importe_Optimo` la suma de `LIB_003_34` + `LIB_032_34`.
-  - Si la columna es `LIB_031_34`, se toma como `Importe_Optimo` la suma de `LIB_031_34` + `LIB_033_34`.
-  - Las columnas `LIB_032_34` y `LIB_033_34` no generan un registro individual de código separado por sí solas.
+- (Submenú de LD Liquidación) Genera y visualiza códigos separados tomando como origen directo el archivo `AuxLDLiquidacion.csv` (el cual ya contiene filtrados y trabajados los conceptos de Libre Disponibilidad), persistiendo el resultado físicamente en `AuxLDLiquidacionCodigos.csv` dentro de la carpeta `csv-unidos/`.
+
+- **Lógica de Obtención y Armado de `AuxLDLiquidacionCodigos.csv`:**
+  El propósito lógico de este proceso es **despivotar y normalizar** los registros ya trabajados en `AuxLDLiquidacion.csv`. Dado que en `AuxLDLiquidacion.csv` los conceptos de Libre Disponibilidad de un agente se ubican horizontalmente en distintas columnas, el sistema los transforma en registros individuales verticales (una fila por cada código liquidado) para poder auditarlos frente a las novedades autorizadas:
+
+  1. **Origen de Datos (`AuxLDLiquidacion.csv`):**
+     - Parte directamente de los registros estructurados en `AuxLDLiquidacion.csv`, donde ya se encuentran proyectados los campos del agente y todas las columnas de conceptos de Libre Disponibilidad.
+
+  2. **Barrido de Columnas y Despivotado a Filas Individuales:**
+     - El sistema recorre cada fila de `AuxLDLiquidacion.csv` e inspecciona horizontalmente sus columnas buscando aquellos conceptos que contengan las secuencias identificadoras de Libre Disponibilidad (`003_`, `031`, `032` o `033`), o bien cuyos últimos 6 caracteres correspondan a los códigos especiales `003G46`, `031G46`, `003G47` y `031G47`.
+     - **Exclusión de Columnas Satélite:** Las columnas `LIB_032_34` y `LIB_033_34` **no generan un registro de código por sí solas**; se omiten como generadoras directas.
+     - **Consolidación Aritmética (Absorción de Adicionales):**
+       - Si la columna evaluada es `LIB_003_34`, el sistema busca en esa misma fila de `AuxLDLiquidacion.csv` el valor de `LIB_032_34` y lo suma al importe: `Importe = LIB_003_34 + LIB_032_34`.
+       - Si la columna evaluada es `LIB_031_34`, el sistema busca en esa misma fila de `AuxLDLiquidacion.csv` el valor de `LIB_033_34` y lo suma al importe: `Importe = LIB_031_34 + LIB_033_34`.
+     - **Criterio de Generación por Importe:**
+       - Para los conceptos generales (`003_`, `031`, `032`, `033`), se emite una nueva fila individual únicamente si el importe consolidado resulta estrictamente mayor a cero (`> 0`).
+       - **Regla para Códigos `003G46`, `031G46`, `003G47` y `031G47`:** Cuando los últimos 6 caracteres de la columna correspondan a cualquiera de estos cuatro códigos y su importe sea **distinto de cero (`!== 0`)**, también generan su registro individual en `AuxLDLiquidacionCodigos.csv` asignando como `Codigo_Optimo` el valor `003G46`, `031G46`, `003G47` o `031G47` según corresponda.
+
+  3. **Derivación y Formateo de `Codigo_Optimo`:**
+     - **Limpieza:** Se eliminan los espacios en blanco del nombre técnico de la columna evaluada (ej. `LIB 003_34` $\rightarrow$ `LIB_003_34`).
+     - **Extracción de Cadena:** Se extraen de forma estricta los **últimos 6 caracteres** del nombre de la columna mediante `.slice(-6)`.
+     - **Sustitución de Separador:** Se reemplaza cualquier guion bajo (`_`) por un guion medio (`-`), estandarizando el código a 6 caracteres (ej. formato `XXX-YY`).
+     - *Ejemplos prácticos:*
+       - Columna `LIB_003_34` $\rightarrow$ últimos 6 caracteres `003_34` $\rightarrow$ reemplaza `_` por `-` $\rightarrow$ `Codigo_Optimo`: `003-34`.
+       - Columna `LIB_031_34` $\rightarrow$ últimos 6 caracteres `031_34` $\rightarrow$ reemplaza `_` por `-` $\rightarrow$ `Codigo_Optimo`: `031-34`.
+       - Columna `LIB_032_95` $\rightarrow$ últimos 6 caracteres `032_95` $\rightarrow$ reemplaza `_` por `-` $\rightarrow$ `Codigo_Optimo`: `032-95`.
+       - Columna `LIB_003_38` $\rightarrow$ últimos 6 caracteres `003_38` $\rightarrow$ reemplaza `_` por `-` $\rightarrow$ `Codigo_Optimo`: `003-38`.
+     - **Homologación con Novedades LD:** Este código estandarizado de 6 caracteres es equivalente al campo `CODIGO_OPTIMO` generado en Novedades LD (`AuxLdNovedades.csv`), permitiendo el cruce exacto entre ambos archivos.
+     - **Asignaciones Complementarias:** Se guarda el `Importe_Optimo` redondeado a dos decimales (`.toFixed(2)`) y un contador secuencial local (`numero_Copia = 1, 2, ...`) que numera cada código extraído dentro de un mismo registro de `AuxLDLiquidacion.csv`.
+
+  4. **Ordenamiento Determinístico Previo:**
+     - Todos los registros desglosados se ordenan bajo dos criterios estrictos:
+       1. Primer nivel: `NRO_DOCUMENTO` numéricamente ascendente (`parseInt(docA) - parseInt(docB)`).
+       2. Segundo nivel (desempate): `Codigo_Optimo` en orden alfabético/ascendente (`localeCompare`).
+
+  5. **Numeración Secuencial por Agente y Armado de la `clave`:**
+     - Se recorre la lista ordenada controlando el cambio de documento (`currentDoc`):
+       - Si el registro pertenece al mismo `NRO_DOCUMENTO`, el contador `numero_ld_agente` se incrementa en 1.
+       - Si cambia el `NRO_DOCUMENTO`, el contador `numero_ld_agente` se reinicia en 1.
+     - **Construcción de la Llave Única:** Se conforma la columna `clave` concatenando sin espacios:
+       `clave = NRO_DOCUMENTO + Codigo_Optimo + ORGANISMO + numero_ld_agente`
+
+  6. **Estructuración y Persistencia Final:**
+     - Se colocan al inicio las cinco nuevas columnas de control (`clave`, `Codigo_Optimo`, `Importe_Optimo`, `numero_Copia`, `numero_ld_agente`) seguidas de todas las columnas provenientes de `AuxLDLiquidacion.csv`, y se guarda físicamente el archivo `csv-unidos/AuxLDLiquidacionCodigos.csv`.
 
 #### GC Liquidación
 - Similar a LD, el sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Guardias Críticas" durante la pestaña de Configuración e integrarla al cálculo final.
@@ -309,9 +341,12 @@ Independientemente de la configuración de LD o GC, el sistema siempre proyecta 
 ### 3.4 Impacto de la Configuración en Reportes
 La configuración guardada se almacena en los archivos `LD_config.csv` y `GC_config.csv` dentro de la carpeta `configuracion_parametros/`. Su impacto es:
 1. **Reportes Específicos:** Los submenús "LD Liquidación" y "GC Liquidación" solo filtran registros que tengan valores distintos de cero en las columnas mapeadas.
-2. **Cálculo de Control GC:** La columna `SUMA_GC` de la tabla auxiliar `AuxGCLiquidacion.csv` se calcula sumando únicamente las columnas mapeadas como GC.
-3. **Dashboards:** Los gráficos de sectores (Tortas/Donuts) de LD y GC en el Informe de Liquidación se alimentan directamente de estos mapeos.
-4. **Resumen de Gestión:** Las hojas de cálculo de áreas inyectan estos montos si están configurados.
+2. **Generación de Auxiliares de Libre Disponibilidad:** A partir de las columnas configuradas en `LD_config.csv`, el sistema genera automáticamente:
+   - `AuxLDLiquidacion.csv`: Filtra y proyecta las filas de liquidación que poseen valores en los conceptos de LD mapeados.
+   - `AuxLDLiquidacionCodigos.csv`: Desglosa cada concepto contable de LD con importe (`003_`, `031`, `032`, `033`) en registros individuales por código. En este paso se deriva `Codigo_Optimo` extrayendo los últimos 6 caracteres formateados de la columna (ej. `003-34`, `032-95`), se aplican las sumas consolidadas en excepciones (`LIB_003_34` + `LIB_032_34` y `LIB_031_34` + `LIB_033_34`) y se arma la `clave` determinística para auditoría.
+3. **Cálculo de Control GC:** La columna `SUMA_GC` de la tabla auxiliar `AuxGCLiquidacion.csv` se calcula sumando únicamente las columnas mapeadas como GC.
+4. **Dashboards:** Los gráficos de sectores (Tortas/Donuts) de LD y GC en el Informe de Liquidación se alimentan directamente de estos mapeos.
+5. **Resumen de Gestión:** Las hojas de cálculo de áreas inyectan estos montos si están configurados.
 
 ### 3.5 Configuración de Códigos Guardias Críticas Importes
 - **Función:** Gestiona los códigos arancelarios y sus montos aplicables a los distintos niveles y tipos de Guardias Críticas.

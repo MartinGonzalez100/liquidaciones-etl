@@ -1244,12 +1244,16 @@ async function ensureAuxLDLiquidacionFiles() {
     // Generar codigos
     const codigosTemp = [];
 
+    const codigosEspecialesG = ['003G46', '031G46', '003G47', '031G47'];
+
     for (const row of results) {
         let numero_Copia = 1;
         for (const col of Object.keys(row)) {
-            if (col.includes('003_') || col.includes('031') || col.includes('032') || col.includes('033')) {
-                const cleanCol = col.replace(/\s+/g, '');
-                
+            const cleanCol = col.replace(/\s+/g, '');
+            const last6Raw = cleanCol.slice(-6);
+            const esCodigoG = codigosEspecialesG.includes(last6Raw);
+
+            if (col.includes('003_') || col.includes('031') || col.includes('032') || col.includes('033') || esCodigoG) {
                 // Excepciones: estas columnas no generan registro por sí solas
                 if (cleanCol === 'LIB_032_34' || cleanCol === 'LIB_033_34') {
                     continue;
@@ -1270,9 +1274,8 @@ async function ensureAuxLDLiquidacionFiles() {
                     }
                 }
 
-                if (val > 0) {
-                    const trimmedCol = col.replace(/\s+/g, '');
-                    const last6 = trimmedCol.slice(-6).replace(/_/g, '-');
+                if (esCodigoG ? (!isNaN(val) && val !== 0) : (val > 0)) {
+                    const last6 = esCodigoG ? last6Raw : last6Raw.replace(/_/g, '-');
 
                     const newRow = {
                         Codigo_Optimo: last6,
