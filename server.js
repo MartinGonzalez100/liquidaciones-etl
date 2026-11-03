@@ -1417,7 +1417,7 @@ async function ensureAuxLDLiquidacionFiles() {
         r.Codigo_para_clave = codParaClave;
 
         const orgStr = String(r.ORGANISMO || '').trim();
-        r.clave = `${docStr}${r.Codigo_Optimo}${orgStr}${numero_ld_agente}`;
+        r.clave = `${docStr}${r.Codigo_para_clave}${orgStr}${numero_ld_agente}`;
 
         codigosResults.push(r);
     }

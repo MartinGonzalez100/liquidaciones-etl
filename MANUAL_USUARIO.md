@@ -160,7 +160,7 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
        - Si cambia el `NRO_DOCUMENTO`, el contador `numero_ld_agente` se reinicia en 1.
      - **Asignación de `Codigo_para_clave`:** Se consulta la tabla de equivalencias de códigos normatizados (`LD_config_Conv_Codigo.csv`) buscando por `Codigo_Optimo` para asignar a cada registro su respectivo `Codigo_para_clave` normalizado.
      - **Construcción de la Llave Única:** Se conforma la columna `clave` concatenando sin espacios:
-       `clave = NRO_DOCUMENTO + Codigo_Optimo + ORGANISMO + numero_ld_agente`
+       `clave = NRO_DOCUMENTO + Codigo_para_clave + ORGANISMO + numero_ld_agente`
 
   6. **Estructuración y Persistencia Final:**
      - Se colocan al inicio las seis columnas de control (`clave`, `Codigo_Optimo`, `Importe_Optimo`, `numero_Copia`, `numero_ld_agente`, `Codigo_para_clave`) seguidas de todas las columnas provenientes de `AuxLDLiquidacion.csv`, y se guarda físicamente el archivo `csv-unidos/AuxLDLiquidacionCodigos.csv`.
