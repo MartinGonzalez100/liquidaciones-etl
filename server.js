@@ -1481,6 +1481,84 @@ app.get('/api/ld-codigos-separados', async (req, res) => {
     }
 });
 
+// 7.2 Reporte LD Control de Liq a Efector
+app.get('/api/ld-control-liq-efector', async (req, res) => {
+    try {
+        const success = await ensureAuxLDLiquidacionFiles();
+        if (!success) {
+            return res.json([]);
+        }
+
+        const auxLDCodigosPath = path.join(CSV_UNIDOS_DIR, 'AuxLDLiquidacionCodigos.csv');
+        if (!fs.existsSync(auxLDCodigosPath)) return res.json([]);
+
+        const auxNovedadesPath = path.join(CSV_UNIDOS_NOVEDADES_DIR, 'AuxLdNovedades.csv');
+        if (!fs.existsSync(auxNovedadesPath)) {
+            try {
+                await generateAuxLdNovedades();
+            } catch (err) {
+                console.error('[SERVER] Error al autogenerar AuxLdNovedades en control LD:', err);
+            }
+        }
+
+        const clavesNovedadesSet = new Set();
+        const dnisNovedadesSet = new Set();
+
+        if (fs.existsSync(auxNovedadesPath)) {
+            await new Promise((resolve, reject) => {
+                fs.createReadStream(auxNovedadesPath, { encoding: 'utf8' })
+                    .pipe(csv())
+                    .on('data', (r) => {
+                        const clave = (r['CLAVE_LD'] || r['clave_ld'] || '').trim();
+                        const dni = (r['DNI'] || r['dni'] || '').trim();
+                        if (clave) clavesNovedadesSet.add(clave);
+                        if (dni) dnisNovedadesSet.add(dni);
+                    })
+                    .on('end', resolve)
+                    .on('error', reject);
+            });
+        }
+
+        const results = [];
+        fs.createReadStream(auxLDCodigosPath, { encoding: 'utf8' })
+            .pipe(csv())
+            .on('data', (row) => {
+                const pImputado = (row.PERIODO_IMPUTADO || '').trim();
+                const pLiquidado = (row.PERIODO_LIQUIDADO || '').trim();
+
+                // Filtrar desde un inicio: solo registros donde PERIODO_IMPUTADO === PERIODO_LIQUIDADO
+                if (pImputado !== pLiquidado) {
+                    return;
+                }
+
+                const clave = (row.clave || '').trim();
+                const doc = (row.NRO_DOCUMENTO || '').trim();
+
+                let obs = '';
+                if (!clavesNovedadesSet.has(clave)) {
+                    obs = 'No Enviado a Liquidar';
+                    if (dnisNovedadesSet.has(doc)) {
+                        obs += '-Agente con LD';
+                    }
+                }
+
+                if (row.Importe_Optimo !== undefined) {
+                    row.Importe_Optimo = parseFloat(row.Importe_Optimo);
+                }
+
+                results.push({
+                    Observacion_Liq_Novedad: obs,
+                    ...row
+                });
+            })
+            .on('end', () => res.json(results))
+            .on('error', (err) => res.status(500).json({ error: err.message }));
+    } catch (e) {
+        console.error('[SERVER] Error en /api/ld-control-liq-efector:', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // 8. Reporte GC Liquidacion (Filtrado por columnas configuradas en GC_config.csv)
 app.get('/api/gc-liquidacion', (req, res) => {
     const csvPath = path.join(CSV_UNIDOS_DIR, FINAL_CSV_NAME);

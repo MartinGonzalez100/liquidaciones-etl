@@ -1381,6 +1381,7 @@
                 <a href="#" id="menu-reemplazos">└─ Reemplazos</a>
                 <a href="#" id="menu-ld-liquidacion">└─ LD Liquidación</a>
                 <a href="#" id="menu-ld-codigos-separados" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ LD Codigos Separados</a>
+                <a href="#" id="menu-ld-control-liq-efector" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ LD Control de Liq a Efector</a>
                 <a href="#" id="menu-gc-liquidacion">└─ GC Liquidación</a>
                 <a href="#" id="menu-gc-control" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ GC Para Control</a>
                 <a href="#" id="menu-gc-control-retro" style="padding-left: 70px !important; font-size: 14px !important; color: #999 !important;">└─ GC Para Control Retro</a>
@@ -3201,6 +3202,16 @@
                     e.preventDefault();
                     resetHelpIcon();
                     loadDataAndRenderTable('/api/ld-codigos-separados', 'Liquidación: LD Codigos Separados');
+                    closeNav();
+                });
+            }
+
+            const menuLDControl = document.getElementById('menu-ld-control-liq-efector');
+            if (menuLDControl) {
+                menuLDControl.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetHelpIcon();
+                    loadDataAndRenderTable('/api/ld-control-liq-efector', 'Liquidación: LD Control de Liq a Efector');
                     closeNav();
                 });
             }
@@ -5667,6 +5678,7 @@
                 { id: "menu-reemplazos", label: "Reemplazos", elementId: "menu-reemplazos" },
                 { id: "menu-ld-liquidacion", label: "LD Liquidación", elementId: "menu-ld-liquidacion" },
                 { id: "menu-ld-codigos-separados", label: "LD Codigos Separados", elementId: "menu-ld-codigos-separados" },
+                { id: "menu-ld-control-liq-efector", label: "LD Control de Liq a Efector", elementId: "menu-ld-control-liq-efector" },
                 { id: "menu-gc-liquidacion", label: "GC Liquidación", elementId: "menu-gc-liquidacion" },
                 { id: "menu-gc-control", label: "GC Para Control", elementId: "menu-gc-control" },
                 { id: "menu-gc-control-retro", label: "GC Para Control Retro", elementId: "menu-gc-control-retro" },
@@ -5785,7 +5797,7 @@
             if (sectionId === 'liquidacion-completa-view') {
                 const allowedMenus = [
                     'menu-liquidacion-completa', 'menu-unicos-planta', 'menu-observar-importes', 'menu-observar-planta',
-                    'menu-gc-liquidacion-eps', 'menu-gc-no-liquidados', 'menu-reemplazos', 'menu-ld-liquidacion', 'menu-ld-codigos-separados',
+                    'menu-gc-liquidacion-eps', 'menu-gc-no-liquidados', 'menu-reemplazos', 'menu-ld-liquidacion', 'menu-ld-codigos-separados', 'menu-ld-control-liq-efector',
                     'menu-gc-liquidacion', 'menu-gc-control', 'menu-gc-control-retro', 'menu-residentes', 'menu-residentes-control',
                     'menu-ley100', 'menu-calculo-ley100',
                     'menu-asignaciones', 'menu-asignaciones-familiares', 'menu-asignaciones-familiares-reemp',
@@ -6162,6 +6174,7 @@
                 'menu-reemplazos',
                 'menu-ld-liquidacion',
                 'menu-ld-codigos-separados',
+                'menu-ld-control-liq-efector',
                 'menu-gc-liquidacion',
                 'menu-residentes',
                 'menu-novedades-gc',

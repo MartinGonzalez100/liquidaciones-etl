@@ -165,6 +165,19 @@ Muestra una tabla masiva utilizando *DataTables* con **todos** los registros enc
   6. **Estructuración y Persistencia Final:**
      - Se colocan al inicio las seis columnas de control (`clave`, `Codigo_Optimo`, `Importe_Optimo`, `numero_Copia`, `numero_ld_agente`, `Codigo_para_clave`) seguidas de todas las columnas provenientes de `AuxLDLiquidacion.csv`, y se guarda físicamente el archivo `csv-unidos/AuxLDLiquidacionCodigos.csv`.
 
+##### LD Control de Liq a Efector
+- **Función:** Vista de auditoría cruzada entre las liquidaciones desglosadas por código y las novedades autorizadas por los efectores, permitiendo identificar conceptos liquidados sin respaldo en las novedades o con inconsistencias en el efector asignado.
+- **Origen de Datos:** Toma como base los registros de `AuxLDLiquidacionCodigos.csv` (en `csv-unidos/`) y los cruza en memoria contra `AuxLdNovedades.csv` (en `csv-unidos-novedades/`).
+- **Filtro de Período Inicial:**
+  - Se procesan exclusivamente los registros de `AuxLDLiquidacionCodigos.csv` donde el período imputado coincide con el período liquidado (`PERIODO_IMPUTADO === PERIODO_LIQUIDADO`), omitiendo registros retroactivos para focalizar el control en el mes en curso.
+- **Columna de Control (`Observacion_Liq_Novedad`):**
+  - Se inserta al inicio de la tabla (primera columna) y se determina mediante las siguientes reglas:
+    1. **Cruce por Clave:** Se compara el campo `clave` del registro de liquidación contra `CLAVE_LD` del archivo de novedades.
+       - Si existe coincidencia exacta: el campo queda **vacío (`""`)**, indicando que la liquidación cuenta con su novedad autorizada idéntica en código, efector y secuencia.
+    2. **Cruce Secundario por DNI:** Si no existe coincidencia por clave, se asigna inicialmente `"No Enviado a Liquidar"` y se evalúa si el agente (`NRO_DOCUMENTO`) figura en la columna `DNI` de `AuxLdNovedades.csv`:
+       - **Si el DNI coincide en novedades:** Se concatena `"-Agente con LD"`, resultando en la observación: `"No Enviado a Liquidar-Agente con LD"`. Esto alerta que el profesional tiene conceptos de Libre Disponibilidad informados en novedades pero difiere en efector, secuencia o código con respecto a lo liquidado.
+       - **Si el DNI no figura en novedades:** Permanece como `"No Enviado a Liquidar"`, señalando que no existe registro de Libre Disponibilidad para ese agente en las novedades del período.
+
 #### GC Liquidación
 - Similar a LD, el sistema intercepta las columnas contables específicas que el usuario ha mapeado a "Guardias Críticas" durante la pestaña de Configuración e integrarla al cálculo final.
 
@@ -478,6 +491,7 @@ Estas pantallas muestran datos provenientes del procesamiento de archivos Excel 
 Estas vistas requieren la coexistencia de ambos tipos de archivos para su correcto análisis:
 - **Control GC Liquidacion a Eps**: Cruza la liquidación mensual contra las novedades de guardias críticas.
 - **Control GC No Liquidados**: Identifica novedades huérfanas sin contrapartida en la liquidación mensual.
+- **LD Control de Liq a Efector**: Cruza `AuxLDLiquidacionCodigos.csv` contra `AuxLdNovedades.csv` mediante la clave única y el documento del agente para auditar conceptos liquidados y su envío por parte de los efectores.
 - **Control Residentes de Liquidacion a Novedades**: Realiza cálculos y cruces entre los agentes de planta residentes y sus novedades correspondientes, permitiendo guardar observaciones en `AuxResidentesLiquidacion.csv`.
 
 
